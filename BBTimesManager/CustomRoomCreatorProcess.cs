@@ -1780,8 +1780,13 @@ namespace BBTimes.Manager
 						container.functions = []; // Initializes the functions bruh
 						container.gameObject.ConvertToPrefab(true);
 
-						if (!LevelLoaderPlugin.Instance.roomSettings.TryGetValue(roomName, out var settings))
-							settings = LevelLoaderPlugin.Instance.roomSettings[asset.category.ToStringExtended()]; // If the roomName is not correct, just use the category as last resort
+						if (
+							!LevelLoaderPlugin.Instance.roomSettings.TryGetValue(roomData.type, out var settings) &&
+							!LevelLoaderPlugin.Instance.roomSettings.TryGetValue(roomName, out settings) // As last resort
+							)
+						{
+							throw new System.Exception($"This room (\'{roomData.type}\') has no roomSettings available! Skipping!");
+						}
 
 						settings.container = container; // Sets the container for this category
 					}
@@ -1808,7 +1813,7 @@ namespace BBTimes.Manager
 					}
 					foreach (var obj in roomData.items)
 					{
-						if (!LevelLoaderPlugin.Instance.basicObjects.ContainsKey(obj.item))
+						if (!LevelLoaderPlugin.Instance.itemObjects.ContainsKey(obj.item))
 							Debug.Log($"\'{obj.item}\' Item does not exist in loader.");
 					}
 				}
