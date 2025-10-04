@@ -1,15 +1,20 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using BBTimes.CustomContent.Events;
 using BBTimes.Extensions;
 using BBTimes.Manager;
+using BBTimes.Plugin;
+using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI.Registers;
+using PixelInternalAPI.Extensions;
 using PlusLevelStudio;
 using PlusLevelStudio.Editor;
 using PlusLevelStudio.Editor.Tools;
 using PlusStudioLevelFormat;
+using PlusStudioLevelLoader;
 using UnityEngine;
 
 namespace BBTimes.CompatibilityModule.EditorCompat
@@ -17,6 +22,28 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 	internal static class EditorIntegration
 	{
 		private static AssetManager _editorAssetMan;
+
+		// CONSTANT FIELDS for registering content
+		const string TimesPrefix = "times_";
+		// NPCs
+		static readonly string[] allNpcs = [
+			"ZeroPrize", "Adverto", "Bubbly", "Camerastand",
+				"CheeseMan", "CoolMop", "DetentionBot", "Dribble",
+				"EverettTreewood", "Faker", "Glubotrony",
+				"HappyHolidays", "InkArtist", "JerryTheAC",
+				"Leapy", "Magicalstudent", "Mopliss", "Mimicry",
+				"MrKreye", "Mugh", "NoseMan", "OfficeChair",
+				"PencilBoy", "Phawillow", "Penny", "Pran",
+				"Pix", "Quiker", "Rollingbot", "SerOran",
+				"ScienceTeacher", "Snowfolke", "Stunly",
+				"Superintendent", "Superintendentjr",
+				"Watcher", "VacuumCleaner", "Winterry", "ZapZap"
+			];
+
+		// Random Events
+		static readonly string[] allEvents = [
+				"Principalout", "FrozenEvent", "CurtainsClosed", "HologramPast", "SkateboardDay", "Earthquake", "SuperFans", "LightningEvent", "SuperMysteryRoom", "NatureEvent"
+			];
 
 		internal static void Initialize(AssetManager man)
 		{
@@ -39,10 +66,8 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			foreach (string file in files)
 			{
 				string name = Path.GetFileNameWithoutExtension(file);
-				if (!name.StartsWith("Ignore_"))
-				{
-					_editorAssetMan.Add("UI/" + name, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(file), 40f));
-				}
+				Debug.Log($"Adding icon \'UI/{name}\'");
+				_editorAssetMan.Add("UI/" + name, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(file), 40f));
 			}
 
 			// Load and process item sprites
@@ -104,55 +129,56 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			EditorInterface.AddObjectVisualWithCustomSphereCollider("JoeSign", man.Get<GameObject>("editorPrefab_JoeSign"), 2f, Vector3.zero);
 			for (int i = 1; i <= 8; i++)
 				EditorInterface.AddObjectVisualWithCustomSphereCollider("TimesGenericOutsideFlower_" + i, man.Get<GameObject>("editorPrefab_TimesGenericOutsideFlower_" + i), 1.5f, Vector3.zero);
-			for (int i = 1; i <= 6; i++)
+			for (int i = 1; i <= 4; i++)
 				EditorInterface.AddObjectVisual("TimesGenericCornerLamp_" + i, man.Get<GameObject>("editorPrefab_TimesGenericCornerLamp_" + i), true);
 
 			// SECRET ENDING OBJECTS
-			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
-			// EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
-			// EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
-			// EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
-			// EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
-			// EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
-			// EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
-			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
-			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
-			// EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
-			// for (int i = 1; i <= 4; i++)
-			// 	EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
+			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
+			EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
+			EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
+			EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
+			EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
+			EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
+			EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
+			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
+			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
+			EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
+			for (int i = 1; i <= 4; i++)
+				EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
 
 			// NPCs
-			var allNpcs = new string[]
-			{
-				"ZeroPrize", "Adverto", "Bubbly", "Camerastand",
-				"CheeseMan", "CoolMop", "DetentionBot", "Dribble",
-				"EverettTreewood", "Faker", "Glubotrony",
-				"HappyHolidays", "InkArtist", "JerryTheAC",
-				"Leapy", "Magicalstudent", "Mopliss", "Mimicry",
-				"MrKreye", "Mugh", "NoseMan", "OfficeChair",
-				"PencilBoy", "Phawillow", "Penny", "Pran",
-				"Pix", "Quiker", "Rollingbot", "SerOran",
-				"ScienceTeacher", "Snowfolke", "Stunly",
-				"Superintendent", "Superintendentjr", "TickTock",
-				"Watcher", "VacuumCleaner", "Winterry", "ZapZap"
-			};
-
 			foreach (var npcName in allNpcs)
 			{
 				var en = EnumExtensions.GetFromExtendedName<Character>(npcName);
 				var meta = NPCMetaStorage.Instance.Find(x => x.character == en && BBTimesManager.plug.Info == x.info);
 				if (meta != null)
 				{
-					EditorInterface.AddNPCVisual("times_" + npcName, meta.value);
+					EditorInterface.AddNPCVisual(TimesPrefix + npcName, meta.value);
 				}
 			}
 
 			// Special case for oldsweep
-			var sweepMeta = NPCMetaStorage.Instance.All().FirstOrDefault(m => m.prefabs.Any(p => p.Value.GetComponent<CustomContent.NPCs.ClassicGottaSweep>()));
-			if (sweepMeta != null)
-			{
-				EditorInterface.AddNPCVisual("times_oldsweep", sweepMeta.value);
-			}
+			EditorInterface.AddNPCVisual("times_oldsweep", BBTimesManager.man.Get<NPC>("NPC_oldsweep"));
+
+
+			// Rooms
+			EditorInterface.AddRoomVisualManager<OutsideRoomVisualManager>("SnowyPlayground");
+			EditorInterface.AddRoomVisualManager<OutsideRoomVisualManager>("IceRink");
+
+			// Random Events
+			foreach (var evName in allEvents)
+				LevelStudioPlugin.Instance.eventSprites.Add(TimesPrefix + evName, GetSprite($"UI/event_{evName}", $"UI/Event_{evName}"));
+
+			// ** Markers **
+
+			// SuperFans
+			var superFan = ((SuperFans)BBTimesManager.man.Get<RandomEvent>("Event_SuperFans")).superFanPre;
+			var superFanDisplay = ObjectCreationExtensions.CreateSpriteBillboard(superFan.renderer.sprite, true);
+			superFanDisplay.gameObject.ConvertToPrefab(true);
+			superFanDisplay.name = "SuperFanMarker";
+
+			EditorInterface.AddMarkerGenericVisual("timessuperfansmarker", superFanDisplay.gameObject);
+			LevelStudioPlugin.Instance.markerTypes.Add("timessuperfansmarker", typeof(SuperFanMarker));
 		}
 
 		/// <summary>
@@ -188,41 +214,42 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			foreach (var itm in itemsToAdd)
 			{
 				string itmEnum = itm.itemType == Items.Points ? itm.name : itm.itemType.ToStringExtended();
-				string key = "times_" + itmEnum;
+				string key = TimesPrefix + itmEnum;
 				Sprite icon = _editorAssetMan.Get<Sprite>("UI/ITM_" + itmEnum);
 				EditorInterfaceModes.AddToolToCategory(mode, "items", new ItemTool(key, icon));
 			}
 
 			// Add NPC tools
-			string[] npcToolData =
+			foreach (string npcName in allNpcs)
 			{
-				"ZeroPrize", "Adverto", "Bubbly", "Camerastand", "CheeseMan", "CoolMop", "oldsweep", "DetentionBot", "Dribble",
-				"EverettTreewood", "Faker", "Glubotrony", "HappyHolidays", "InkArtist", "JerryTheAC", "Leapy", "Magicalstudent",
-				"Mopliss", "Mimicry", "MrKreye", "Mugh", "NoseMan", "OfficeChair", "PencilBoy", "Phawillow", "Penny",
-				"Pran", "Pix", "Quiker", "Rollingbot", "SerOran", "ScienceTeacher", "Snowfolke", "Stunly",
-				"Superintendent", "Superintendentjr", "TickTock", "Watcher", "VacuumCleaner", "Winterry", "ZapZap"
-			};
-			foreach (string npcName in npcToolData)
-			{
-				string key = "times_" + npcName;
+				string key = TimesPrefix + npcName;
 				Sprite icon = GetSprite($"UI/Npc_{npcName}", $"UI/npc_{npcName}");
 				EditorInterfaceModes.AddToolToCategory(mode, "npcs", new NPCTool(key, icon));
 			}
 
 			// Add Room tools
 			string[] roomNames =
-			{
+			[
 				"Bathroom", "AbandonedRoom", "BasketballArea", "ComputerRoom", "DribbleRoom", "Forest", "Kitchen",
 				"FocusRoom", "SuperMystery", "ExibitionRoom", "SnowyPlayground", "IceRink"
-			};
-			foreach (string roomName in roomNames)
-			{
-				Sprite icon = GetSprite($"UI/Floor_{roomName}", $"UI/floor_{roomName}");
-				EditorInterfaceModes.AddToolToCategory(mode, "rooms", new RoomTool(roomName, icon));
-			}
+			];
+			foreach (var room in roomNames)
+				EditorInterfaceModes.AddToolToCategory(mode, "rooms", new RoomTool(room, GetSprite($"UI/Floor_{room}", $"UI/floor_{room}")));
 
 			// Add Object tools
 			AddObjectTools(mode);
+
+			// Random Events
+			foreach (var evName in allEvents)
+				mode.availableRandomEvents.Add(TimesPrefix + evName);
+
+			// Markers
+			string[] markerNames =
+			[
+				"timessuperfansmarker"
+			];
+			foreach (var marker in markerNames)
+				EditorInterfaceModes.AddToolToCategory(mode, "structures", new CellMarkerTool(marker, GetSprite($"UI/Marker_{marker}", $"UI/marker_{marker}")));
 		}
 		/// <summary>
 		/// Add object tools.
@@ -243,25 +270,25 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				new("SecretBread", false), new("TimesKitchenSteak", false), new("JoeSign", false)
 			};
 			for (int i = 1; i <= 8; i++) objectTools.Add(new("TimesGenericOutsideFlower_" + i, false));
-			for (int i = 1; i <= 6; i++) objectTools.Add(new("TimesGenericCornerLamp_" + i, false));
+			for (int i = 1; i <= 4; i++) objectTools.Add(new("TimesGenericCornerLamp_" + i, false));
 
 			// SECRET ENDING OBJECTS
-			// objectTools.Add(new("Times_SecretBaldi", true, 5f));
-			// objectTools.Add(new("Times_InvisibleWall", true, 5f));
-			// objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
-			// objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
-			// objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
-			// objectTools.Add(new("Times_SecretGenerator", true, 5f));
-			// objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
-			// objectTools.Add(new("Times_theYAYComputer", true, 5f));
-			// objectTools.Add(new("Times_TrueLorePaper", true, 5f));
-			// objectTools.Add(new("Times_GeneratorLever", true, 5f));
-			// for (int i = 1; i <= 4; i++)
-			// 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
+			objectTools.Add(new("Times_SecretBaldi", true, 5f));
+			objectTools.Add(new("Times_InvisibleWall", true, 5f));
+			objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
+			objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
+			objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
+			objectTools.Add(new("Times_SecretGenerator", true, 5f));
+			objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
+			objectTools.Add(new("Times_theYAYComputer", true, 5f));
+			objectTools.Add(new("Times_TrueLorePaper", true, 5f));
+			objectTools.Add(new("Times_GeneratorLever", true, 5f));
+			for (int i = 1; i <= 4; i++)
+				objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
 
 			foreach (var pair in objectTools)
 			{
-				Sprite icon = GetSprite($"UI/Obj_{pair.prefab}", $"UI/obj_{pair.prefab}");
+				Sprite icon = GetSprite($"UI/Object_{pair.prefab}", $"UI/object_{pair.prefab}");
 				if (pair.rotatable) // isRotatable
 					EditorInterfaceModes.AddToolToCategory(mode, "objects", new ObjectTool(pair.prefab, icon, pair.offset));
 				else
@@ -269,19 +296,22 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			}
 
 			// Special Bulk Object Tool
-			Sprite multiStallSprite = GetSprite("UI/Obj_fullStall", "UI/obj_fullStall");
-			EditorInterfaceModes.AddToolToCategory(mode, "objects", new BulkObjectTool("fullStall", multiStallSprite, [
+			EditorInterfaceModes.AddToolToCategory(mode, "objects", new BulkObjectTool("fullStall", GetSprite("UI/Object_fullStall", "UI/object_fullStall"), [
 					new("bathStall", new Vector3(-5f, 0f, 0f), new(0f, 90f)),
-					new("bathDoor", new Vector3(0f, 0f, 4f), Vector3.zero),
+					new("bathDoor", new Vector3(0f, 0f, 4f)),
 					new("bathStall", new Vector3(5f, 0f, 0f), new(0f, 90f))
 				]
 			));
 
-
 		}
 
-		private static Sprite GetSprite(string key1, string key2) =>
-			_editorAssetMan.ContainsKey(key1) ? _editorAssetMan.Get<Sprite>(key1) : _editorAssetMan.Get<Sprite>(key2);
+		private static Sprite GetSprite(string key1, string key2)
+		{
+			var spr = _editorAssetMan.ContainsKey(key1) ? _editorAssetMan.Get<Sprite>(key1) : _editorAssetMan.Get<Sprite>(key2);
+			Debug.Log($"Getting sprite: {(_editorAssetMan.ContainsKey(key1) ? key1 : key2)}");
+			return spr;
+		}
+
 
 		private readonly struct ObjectData(string prefab, bool rotatable)
 		{
@@ -291,6 +321,27 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			readonly public string prefab = prefab;
 			readonly public bool rotatable = rotatable;
 			readonly public float offset = 0f;
+		}
+	}
+
+	[HarmonyPatch]
+	[ConditionalPatchMod(Storage.guid_LevelStudio)]
+	internal static class EditorLevelPatches
+	{
+		[HarmonyPatch(typeof(EditorLevelData), nameof(EditorLevelData.FinalizeCompile))]
+		[HarmonyPostfix]
+		static void TimesFinalizeCompile(BaldiLevel toFinalize)
+		{
+			for (int i = 0; i < toFinalize.levelSize.x; i++)
+			{
+				for (int j = 0; j < toFinalize.levelSize.y; j++)
+				{
+					if (toFinalize.cells[i, j].roomId != 0 && toFinalize.rooms[toFinalize.cells[i, j].roomId - 1].type == "SuperMystery")
+					{
+						toFinalize.secretCells[i, j] = true;
+					}
+				}
+			}
 		}
 	}
 }

@@ -1,18 +1,25 @@
 ﻿using BBTimes.CustomComponents;
+using BBTimes.Manager;
 using MTM101BaldAPI.ObjectCreation;
-using BBTimes.Plugin;
+using PlusStudioLevelLoader;
 
 namespace BBTimes.Helpers
 {
-    public static partial class CreatorExtensions
+	public static partial class CreatorExtensions
 	{
 
 		public static RandomEvent SetupEvent(this RandomEvent ev)
 		{
 			var data = ev.gameObject.GetComponent<IObjectPrefab>();
-			data.Name = ev.name;
-			data.SetupPrefab();
-			BasePlugin._cstData.Add(data);
+			if (data != null)
+			{
+				data.Name = ev.name;
+				data.SetupPrefab();
+				BasePlugin._cstData.Add(data);
+			}
+
+			LevelLoaderPlugin.Instance.randomEventAliases.Add("times_" + ev.name, ev);
+			BBTimesManager.man.Add($"Event_{ev.name}", ev);
 			return ev;
 		}
 

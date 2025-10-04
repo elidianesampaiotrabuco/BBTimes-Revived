@@ -1,5 +1,6 @@
 ﻿using BBTimes.CustomComponents;
 using BBTimes.Extensions;
+using BBTimes.Manager;
 using MTM101BaldAPI;
 using UnityEngine;
 using static UnityEngine.Object;
@@ -18,14 +19,13 @@ namespace BBTimes.Helpers
 			var w = window.windowPre.gameObject.AddComponent<CustomWindowComponent>();
 			w.unbreakable = unbreakable;
 
-			
-
 			if (window.windowPre.audMan.audioDevice)
 				Destroy(window.windowPre.audMan.audioDevice); // I know you're existing
 			if (AudioManager.totalIds > 0)
 				AudioManager.totalIds--;
 			window.windowPre.audMan.sourceId = 0;
 
+			BBTimesManager.man.Add("Window_" + name, window);
 
 			return window;
 		}

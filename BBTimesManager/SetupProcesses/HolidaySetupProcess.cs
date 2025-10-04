@@ -28,7 +28,7 @@ namespace BBTimes.Manager
 
             // --- Assign audio and present references ---
             christmasBaldi.audMan = christmasBaldi.gameObject.CreatePropagatedAudioManager(95f, 175f);
-            christmasBaldi.present = man.Get<ItemObject>("times_itemObject_Present");
+            christmasBaldi.present = man.Get<ItemObject>("Item_Present");
             christmasBaldi.audBell = man.Get<SoundObject>("audRing");
             christmasBaldi.audIntro = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_PresentIntro.wav")), "Vfx_BAL_Pitstop_PresentIntro_1", SoundType.Voice, Color.green);
             christmasBaldi.audIntro.additionalKeys = [

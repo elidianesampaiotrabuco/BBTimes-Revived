@@ -51,6 +51,7 @@ namespace BBTimes.Manager
 			Texture2D floorTex = null; // Used for floor textures
 			int commonRoomWeight = 0; // Used for snowy playground/ice rink weights
 			WeightedRoomAsset classWeightPre = null; // Used for classroom/faculty/office base
+			int christmasIncreaseFactor = Storage.IsChristmas ? 100 : 0;
 
 			// --- Common references and textures ---
 			var lightPre = new WeightedTransform() { selection = Resources.FindObjectsOfTypeAll<RoomAsset>().First(x => x.GetInstanceID() > 0 && x.category == RoomCategory.Class).lightPre, weight = 100 };
@@ -600,7 +601,7 @@ namespace BBTimes.Manager
 			mtm.tresentPre.sprsPrepareExplosion = [.. treSprites.Take(9)];
 			mtm.tresentPre.sprsExploding = [.. treSprites.Skip(9).Take(3)];
 
-			mtm.tresentPre.bonkerPre = (ITM_Hammer)man.Get<Item>("times_itemPrefab_Hammer");
+			mtm.tresentPre.bonkerPre = (ITM_Hammer)man.Get<ItemObject>("Item_Hammer").item;
 
 			mtm.tresentPre.audMan = mtm.tresentPre.gameObject.CreatePropagatedAudioManager(35f, 65f);
 			mtm.tresentPre.audThrow = man.Get<SoundObject>("audGenericThrow");
@@ -615,7 +616,6 @@ namespace BBTimes.Manager
 			mtm.tresentPre.text.color = Color.white;
 			mtm.tresentPre.text.fontSize = 7f;
 			mtm.tresentPre.text.gameObject.SetActive(false);
-
 
 			mtm.tresentPre.entity = mtm.tresentPre.gameObject.CreateEntity(1f, rendererBase: tresentRenderbase);
 
@@ -657,6 +657,13 @@ namespace BBTimes.Manager
 			col.enabled = true;
 			col.type = ParticleSystemCollisionType.World;
 			col.enableDynamicColliders = false;
+
+			// Tresent addition to the floors
+			floorDatas[F2].WeightedNaturalObjects.Add(new(mtm101.gameObject, 25 + christmasIncreaseFactor));
+			floorDatas[F3].WeightedNaturalObjects.Add(new(mtm101.gameObject, 30 + christmasIncreaseFactor));
+			floorDatas[F4].WeightedNaturalObjects.Add(new(mtm101.gameObject, 45 + christmasIncreaseFactor));
+			floorDatas[F5].WeightedNaturalObjects.Add(new(mtm101.gameObject, 60 + christmasIncreaseFactor));
+			floorDatas[END].WeightedNaturalObjects.Add(new(mtm101.gameObject, 15 + christmasIncreaseFactor));
 
 			// ------------------------------------------------------------------------------------------
 			// -------------------------- ICE RINK ROOM STRUCTURES --------------------------------------
@@ -792,18 +799,6 @@ namespace BBTimes.Manager
 				.gameObject.SetAsPrefab(true)
 				.AddBoxCollider(Vector3.zero, new Vector3(0.8f, 10f, 0.8f), false).transform, weight = 45 },
 				];
-
-			TextureExtensions.LoadSpriteSheet(3, 1, 40f, MiscPath, TextureFolder, GetAssetName("SugaLamps.png")).Do(x =>
-			{
-				transformsList.Add(new()
-				{
-					selection = ObjectCreationExtensions.CreateSpriteBillboard(x)
-				.AddSpriteHolder(out _, 3.1f, LayerStorage.ignoreRaycast)
-				.gameObject.SetAsPrefab(true)
-				.AddBoxCollider(Vector3.zero, new Vector3(0.8f, 10f, 0.8f), false).transform,
-					weight = 38
-				});
-			});
 
 			for (int i = 0; i < transformsList.Count; i++)
 			{
@@ -1296,7 +1291,7 @@ namespace BBTimes.Manager
 
 			sets = RegisterSpecialRoom("SnowyPlayground", Color.cyan);
 
-			commonRoomWeight = Storage.IsChristmas ? 165 : 75;
+			commonRoomWeight = christmasIncreaseFactor + 75;
 
 			room = GetAllAssets(GetRoomAsset("SnowyPlayground"), commonRoomWeight, 1, cont: playgroundClonedRoomContainer, mapBg: Storage.HasCrispyPlus ? AssetLoader.TextureFromFile(GetRoomAsset("SnowyPlayground", "mapIcon_snow.png")) : null, squaredShape: true, keepTextures: true, autoSizeLimitControl: -1);
 			floorTex = AssetLoader.TextureFromFile(GetRoomAsset("SnowyPlayground", "snowyPlaygroundFloor.png"));
@@ -1340,7 +1335,7 @@ namespace BBTimes.Manager
 
 			sets = RegisterSpecialRoom("IceRink", Color.cyan);
 
-			commonRoomWeight = Storage.IsChristmas ? 265 : 85;
+			commonRoomWeight = christmasIncreaseFactor + 85;
 
 			room = GetAllAssets(GetRoomAsset("IceRink"), commonRoomWeight, 1, cont: playgroundClonedRoomContainer, mapBg: Storage.HasCrispyPlus ? AssetLoader.TextureFromFile(GetRoomAsset("IceRink", "mapIcon_iceRink.png")) : null, squaredShape: true, keepTextures: true, autoSizeLimitControl: -1);
 			floorTex = AssetLoader.TextureFromFile(GetRoomAsset("IceRink", "IceRinkFloor.png"));
@@ -1371,35 +1366,71 @@ namespace BBTimes.Manager
 
 			//Classrooms
 
-			classWeightPre = FindRoomGroupOfName("Class");
+			classWeightPre = FindRoomGroupOfNameWithNoActivity("Class"); // Notebooks-only
 
 			room = GetAllAssets(GetRoomAsset("Class"), classWeightPre.selection.maxItemValue, classWeightPre.weight, classWeightPre.selection.offLimits, classWeightPre.selection.roomFunctionContainer, autoSizeLimitControl: 6.5f);
 			if (!plug.enableBigRooms.Value)
 				RemoveBigRooms(room, 6.56f);
+			var fullClassCopy = new List<WeightedRoomAsset>(room);
+			var assignClassWeightPreForClassrooms = new System.Action(() =>
+				room.ForEach(x =>
+				{
+					x.selection.posters = classWeightPre.selection.posters;
+					x.selection.posterChance = classWeightPre.selection.posterChance;
+					x.selection.windowChance = classWeightPre.selection.windowChance;
+					x.selection.windowObject = classWeightPre.selection.windowObject;
+					x.selection.lightPre = classWeightPre.selection.lightPre;
+					x.selection.keepTextures = false;
+					x.selection.basicSwaps = classWeightPre.selection.basicSwaps;
+				}
+			));
 
-			room.ForEach(x =>
-			{
-				x.selection.posters = classWeightPre.selection.posters;
-				x.selection.posterChance = classWeightPre.selection.posterChance;
-				x.selection.windowChance = classWeightPre.selection.windowChance;
-				x.selection.windowObject = classWeightPre.selection.windowObject;
-				x.selection.lightPre = classWeightPre.selection.lightPre;
-				x.selection.keepTextures = false;
-				x.selection.basicSwaps = classWeightPre.selection.basicSwaps;
-			});
+			// F1 (Notebook) classrooms
+			room.RemoveAll(room => room.selection.activity.prefab is not NoActivity); // No activity allowed!
+			assignClassWeightPreForClassrooms();
 
-			floorDatas[F1].Classrooms.AddRange(room.Where(x => x.selection.activity.prefab is NoActivity).ToList().FilterRoomAssetsByFloor());
-			var activityRooms = room.Where(x => x.selection.activity.prefab is not NoActivity).ToList().FilterRoomAssetsByFloor();
+			floorDatas[F1].Classrooms.AddRange(room.FilterRoomAssetsByFloor());
+			room.Clear();
 
-			floorDatas[END].Classrooms.AddRange(activityRooms);
-			floorDatas[F2].Classrooms.AddRange(activityRooms);
-			floorDatas[F3].Classrooms.AddRange(activityRooms);
-			floorDatas[F4].Classrooms.AddRange(activityRooms);
-			floorDatas[F5].Classrooms.AddRange(activityRooms);
+			// F2+ (Math Machines) classrooms
+			classWeightPre = FindRoomGroupOfNameWithActivity<MathMachine>("Class"); // Math machine
+			room.AddRange(fullClassCopy);
+			room.RemoveAll(room => room.selection.activity.prefab is not MathMachine); // Only math machines allowed!
+			assignClassWeightPreForClassrooms();
+
+			floorDatas[END].Classrooms.AddRange(room);
+			floorDatas[F2].Classrooms.AddRange(room);
+			floorDatas[F3].Classrooms.AddRange(room);
+			floorDatas[F4].Classrooms.AddRange(room);
+			floorDatas[F5].Classrooms.AddRange(room);
+
+			room.Clear();
+			// F3+ (Match and other activities) classrooms
+			// Don't exist layouts for these yet, but I'm adding the code here
+			// classWeightPre = FindRoomGroupOfNameWithActivity<MatchActivity>("Class"); // Match
+			// room.AddRange(fullClassCopy);
+			// room.RemoveAll(room => room.selection.activity.prefab is not MatchActivity); // Only matches allowed
+
+			// floorDatas[F3].Classrooms.AddRange(room);
+			// floorDatas[F4].Classrooms.AddRange(room);
+			// floorDatas[F5].Classrooms.AddRange(room);
+
+			// // Balloon buster thing
+			// room.Clear();
+
+			// classWeightPre = FindRoomGroupOfNameWithActivity<BalloonBuster>("Class"); // Balloon Buster
+			// room.AddRange(fullClassCopy);
+			// room.RemoveAll(room => room.selection.activity.prefab is not BalloonBuster); // Only matches allowed
+
+			// floorDatas[F3].Classrooms.AddRange(room);
+			// floorDatas[F4].Classrooms.AddRange(room);
+			// floorDatas[F5].Classrooms.AddRange(room);
 
 
 			// ****** Focus Room (A classroom variant, but with a new npc) ******
 			PosterObject[] wallClock = [man.Get<PosterObject>("WallClock")];
+
+			classWeightPre = FindRoomGroupOfNameWithNoActivity("Class"); // Notebooks-only
 
 			sets = RegisterRoom("FocusRoom", new(0f, 1f, 0.5f),
 				ObjectCreators.CreateDoorDataObject("FocusRoomDoor",
@@ -1619,12 +1650,51 @@ namespace BBTimes.Manager
 
 			static WeightedRoomAsset FindRoomGroupOfName(string name)
 			{
+				foreach (var sco in Resources.FindObjectsOfTypeAll<SceneObject>())
+				{
+					foreach (var lvl in sco.GetCustomLevelObjects())
+					{
+						var lvlGroup = lvl.roomGroup.FirstOrDefault(x => x.name == name);
+						if (lvlGroup != null)
+							return lvlGroup.potentialRooms[0];
+					}
+				}
+				return null;
+			}
+
+			static WeightedRoomAsset FindRoomGroupOfNameWithActivity<T>(string name) where T : Activity
+			{
 				foreach (var lvl in Resources.FindObjectsOfTypeAll<LevelObject>())
 				{
 					var lvlGroup = lvl.roomGroup.FirstOrDefault(x => x.name == name);
 					if (lvlGroup != null)
-						return lvlGroup.potentialRooms[0];
+					{
+						var potRooms = lvlGroup.potentialRooms;
+						for (int i = 0; i < potRooms.Length; i++)
+						{
+							if (potRooms[i].selection.hasActivity || potRooms[i].selection.activity.prefab is T)
+								return potRooms[i];
+						}
+					}
+					return lvlGroup.potentialRooms[0];
+				}
+				return null;
+			}
 
+			static WeightedRoomAsset FindRoomGroupOfNameWithNoActivity(string name)
+			{
+				foreach (var lvl in Resources.FindObjectsOfTypeAll<LevelObject>())
+				{
+					var lvlGroup = lvl.roomGroup.FirstOrDefault(x => x.name == name);
+					if (lvlGroup != null)
+					{
+						var potRooms = lvlGroup.potentialRooms;
+						for (int i = 0; i < potRooms.Length; i++)
+						{
+							if (potRooms[i].selection.hasActivity && potRooms[i].selection.activity.prefab is NoActivity)
+								return potRooms[i];
+						}
+					}
 				}
 				return null;
 			}
@@ -1838,8 +1908,6 @@ namespace BBTimes.Manager
 			{
 				for (int i = 0; i < newAss.Count; i++)
 				{
-					// This logic parses metadata from the filename (e.g., floor targeting, weights)
-					// It is preserved as it's part of the mod's content organization.
 					string[] rawData = newAss[i].selection.name.Split('!');
 
 					if (rawData.Length > 2)

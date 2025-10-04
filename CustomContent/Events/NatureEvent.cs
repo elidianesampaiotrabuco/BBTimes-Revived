@@ -144,13 +144,13 @@ namespace BBTimes.CustomContent.Events
 		public override void AfterUpdateSetup(System.Random rng)
 		{
 			base.AfterUpdateSetup(rng);
-			spots = ec.mainHall.GetTilesOfShape(TileShapeMask.Corner | TileShapeMask.Single, CellCoverage.Down, false);
-			spots.ForEach(cell =>
-			{
-				var grass = Instantiate(grassPre, cell.TileTransform);
-				grass.transform.localPosition = Vector3.up * defaultYOffsetForFlowers;
-				cell.HardCover(CellCoverage.Down);
-			});
+			FindSpotsForFlowers();
+		}
+
+		public override void PremadeSetup()
+		{
+			base.PremadeSetup();
+			FindSpotsForFlowers();
 		}
 
 		public void SpawnRandomFlower(Cell cell)
@@ -164,6 +164,17 @@ namespace BBTimes.CustomContent.Events
 
 		public void RemoveFlower(Plant flower) =>
 			flowers.Remove(flower);
+
+		void FindSpotsForFlowers()
+		{
+			spots = ec.mainHall.GetTilesOfShape(TileShapeMask.Corner | TileShapeMask.Single, CellCoverage.Down, false);
+			spots.ForEach(cell =>
+			{
+				var grass = Instantiate(grassPre, cell.TileTransform);
+				grass.transform.localPosition = Vector3.up * defaultYOffsetForFlowers;
+				cell.HardCover(CellCoverage.Down);
+			});
+		}
 
 		[SerializeField]
 		WeightedSelection<Plant>[] flowerPres;

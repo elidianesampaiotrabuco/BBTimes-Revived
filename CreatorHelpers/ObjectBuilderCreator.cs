@@ -1,10 +1,11 @@
-﻿using MTM101BaldAPI;
+﻿using BBTimes.CustomComponents;
+using BBTimes.Manager;
+using MTM101BaldAPI;
 using UnityEngine;
-using BBTimes.CustomComponents;
 
 namespace BBTimes.Helpers
 {
-    public static partial class CreatorExtensions
+	public static partial class CreatorExtensions
 	{
 		public static StructureWithParameters CreateObjectBuilder<O>(string name, out O builder, string obstacleName = null) where O : StructureBuilder
 		{
@@ -17,6 +18,8 @@ namespace BBTimes.Helpers
 			BasePlugin._cstData.Add(data);
 
 			data.SetupPrefab();
+
+			BBTimesManager.man.Add("Builder_" + name, builder);
 
 			return data.SetupBuilderPrefabs();
 		}

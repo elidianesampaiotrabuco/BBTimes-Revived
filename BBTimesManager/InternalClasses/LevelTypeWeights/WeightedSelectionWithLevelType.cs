@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using MTM101BaldAPI;
 
 namespace BBTimes.Manager.InternalClasses.LevelTypeWeights;
 
@@ -87,6 +86,11 @@ internal class WeightedStructureWithParametersWithLevelType(StructureWithParamet
     public override WeightedStructureWithParameters GetWeightedSelection() => new() { selection = selection, weight = weight };
 }
 
+
+internal class WeightedGameObjectWithLevelType(UnityEngine.GameObject selection, int weight, params LevelType[] levelTypes) : WeightedSelectionWithLevelType<WeightedGameObject, UnityEngine.GameObject>(selection, weight, levelTypes)
+{
+    public override WeightedGameObject GetWeightedSelection() => new() { selection = selection, weight = weight };
+}
 // ******************************************************
 // ************* Forced LevelType Types ******************
 // ******************************************************

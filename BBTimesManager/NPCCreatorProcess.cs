@@ -424,21 +424,6 @@ namespace BBTimes.Manager
 
 			floorDatas[F1].NPCs.Add(new(npc, 20));
 
-			// Tick Tock
-			npc = new NPCBuilder<TickTock>(plug.Info)
-				.SetMinMaxAudioDistance(30f, 100f)
-				.SetEnum("TickTock")
-				.AddSpawnableRoomCategories(RoomCategory.Faculty, RoomCategory.Office)
-				.SetMetaTags([NEITHER_TAG])
-				.SetMetaName("PST_TickTock_Name")
-				.SetName("TickTock")
-				.AddTrigger()
-				.Build()
-				.SetupNPCData("TickTock", "PST_TickTock_Name", "PST_TickTock_Desc", -1.12f);
-
-			floorDatas[F1].NPCs.Add(new(npc, 45));
-			floorDatas[END].NPCs.Add(new(npc, 20));
-
 			// Quiker
 			npc = new NPCBuilder<Quiker>(plug.Info)
 				.SetMinMaxAudioDistance(30f, 100f)

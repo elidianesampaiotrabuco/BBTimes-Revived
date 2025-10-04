@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using BaldisBasicsPlusAdvanced.API;
-using BaldisBasicsPlusAdvanced.Game.Objects;
+using BaldisBasicsPlusAdvanced.Game.Activities;
 using BBTimes.Manager;
 using BBTimes.Plugin;
 using HarmonyLib;
@@ -25,7 +25,7 @@ namespace BBTimes.CompatibilityModule
 	internal class AdvancedPatches
 	{
 		[HarmonyPatch(typeof(AdvancedMathMachine), "GenerateProblem")]
-		[HarmonyPostfix]
+		[HarmonyPrefix]
 		static void ChangeMaxAnswer(ref int ___maxAnswer, List<MathMachineNumber> ___currentNumbers) =>
 			___maxAnswer = ___currentNumbers.Count - 1;
 	}

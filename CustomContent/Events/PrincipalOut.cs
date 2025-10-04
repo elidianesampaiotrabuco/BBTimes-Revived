@@ -1,14 +1,14 @@
 ﻿using System.Collections.Generic;
-using UnityEngine;
-using PixelInternalAPI.Extensions;
-using MTM101BaldAPI.Components;
 using BBTimes.CustomComponents;
 using BBTimes.Extensions;
+using MTM101BaldAPI.Components;
+using PixelInternalAPI.Extensions;
+using UnityEngine;
 
 
 namespace BBTimes.CustomContent.Events
 {
-    public class PrincipalOut : RandomEvent, IObjectPrefab
+	public class PrincipalOut : RandomEvent, IObjectPrefab
 	{
 		public void SetupPrefab()
 		{
@@ -19,8 +19,9 @@ namespace BBTimes.CustomContent.Events
 				];
 		}
 		public void SetupPrefabPost() { }
-		public string Name { get; set; } public string Category => "events";
-		
+		public string Name { get; set; }
+		public string Category => "events";
+
 		// ---------------------------------------------------
 		public override void Begin()
 		{
@@ -29,7 +30,7 @@ namespace BBTimes.CustomContent.Events
 			foreach (NPC npc in ec.Npcs)
 			{
 				var data = npc.GetComponent<INPCPrefab>();
-				if (npc.Navigator.enabled && (npc.Character == Character.Principal || (data != null && data.ReplacesCharacter(Character.Principal)))) // Reminder to change for 
+				if (npc.Navigator.enabled && npc.IsAPrincipal()) // Reminder to change for 
 				{
 					NavigationState_PrincipalOut navigationState_PartyEvent = new(npc, 88, office);
 					navigationStates.Add(navigationState_PartyEvent);
@@ -43,7 +44,7 @@ namespace BBTimes.CustomContent.Events
 			base.End();
 			foreach (var state in navigationStates)
 				state.End();
-			
+
 		}
 
 		RoomController office;
@@ -89,7 +90,7 @@ namespace BBTimes.CustomContent.Events
 		{
 			priority = 0;
 			npc.behaviorStateMachine.RestoreNavigationState();
-			
+
 		}
 	}
 }

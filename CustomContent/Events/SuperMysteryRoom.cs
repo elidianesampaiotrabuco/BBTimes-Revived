@@ -1,8 +1,8 @@
-﻿using BBTimes.CustomComponents;
+﻿using System.Collections.Generic;
+using BBTimes.CustomComponents;
 using BBTimes.Extensions;
 using MTM101BaldAPI;
 using PixelInternalAPI.Extensions;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.Events
@@ -18,10 +18,10 @@ namespace BBTimes.CustomContent.Events
 		}
 		public void SetupPrefabPost() =>
 			target = EnumExtensions.GetFromExtendedName<RoomCategory>("SuperMystery");
-		
+
 		public string Name { get; set; }
 		public string Category => "events";
-		
+
 		// ---------------------------------------------------
 		public override void Begin()
 		{
@@ -89,7 +89,7 @@ namespace BBTimes.CustomContent.Events
 
 		public override void PremadeSetup()
 		{
-			foreach (RoomController roomController in this.ec.rooms)
+			foreach (RoomController roomController in ec.rooms)
 			{
 				if (roomController.category == target)
 				{

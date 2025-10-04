@@ -1,16 +1,17 @@
-﻿using BBTimes.CustomComponents;
+﻿using System.Collections.Generic;
+using BBTimes.CustomComponents;
 using BBTimes.CustomComponents.EventSpecificComponents;
+using BBTimes.Extensions;
+using MTM101BaldAPI;
 using MTM101BaldAPI.Registers;
 using PixelInternalAPI.Extensions;
-using System.Collections.Generic;
+using PlusStudioLevelLoader;
 using UnityEngine;
-using MTM101BaldAPI;
-using BBTimes.Extensions;
 
 
 namespace BBTimes.CustomContent.Events
 {
-    public class SuperFans : RandomEvent, IObjectPrefab
+	public class SuperFans : RandomEvent, IObjectPrefab
 	{
 		public void SetupPrefab()
 		{
@@ -22,7 +23,7 @@ namespace BBTimes.CustomContent.Events
 
 			Cumulo cloud = (Cumulo)NPCMetaStorage.Instance.Get(Character.Cumulo).value;
 
-			var storedSprites = this.GetSpriteSheet(3, 3, 75f, "fan.png");
+			var storedSprites = this.GetSpriteSheet(5, 1, 75f, "fan.png");
 
 			var superFanRend = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[0], false);
 			superFanRend.gameObject.ConvertToPrefab(true);
@@ -40,10 +41,13 @@ namespace BBTimes.CustomContent.Events
 			superFan.windGraphics = superFan.windGraphicsParent.GetComponentsInChildren<MeshRenderer>();
 
 			superFanPre = superFan;
+
+			LevelLoaderPlugin.Instance.basicObjects.Add("timessuperfansmarker", superFan.gameObject);
 		}
 		public void SetupPrefabPost() { }
-		public string Name { get; set; } public string Category => "events";
-		
+		public string Name { get; set; }
+		public string Category => "events";
+
 		// ---------------------------------------------------
 
 		public override void PremadeSetup()
@@ -51,7 +55,14 @@ namespace BBTimes.CustomContent.Events
 			base.PremadeSetup();
 			foreach (var su in FindObjectsOfType<SuperFan>())
 			{
-				su.Initialize(ec, IntVector2.GetGridPosition(su.transform.position), ec.CellFromPosition(su.transform.position).RandomConstDirection(crng).GetOpposite(), out _);
+				var chosenDirection = ec.CellFromPosition(su.transform.position).RandomConstDirection(crng);
+				if (chosenDirection == Direction.Null)
+				{
+					Debug.LogWarning("A Super Fan was located on a spot with no available wall to be chosen! Destroying it instead.", this);
+					Destroy(su.gameObject);
+					continue;
+				}
+				su.Initialize(ec, IntVector2.GetGridPosition(su.transform.position), chosenDirection.GetOpposite(), out _);
 				superFans.Add(su);
 			}
 		}
@@ -62,10 +73,8 @@ namespace BBTimes.CustomContent.Events
 			List<Cell> list = ec.AllCells();
 
 			for (int i = 0; i < list.Count; i++)
-				if (!list[i].TileMatches(ec.mainHall)|| list[i].HasAnyHardCoverage || list[i].open || !list[i].HasAllFreeWall || (!list[i].shape.HasFlag(TileShapeMask.Single) && !list[i].shape.HasFlag(TileShapeMask.Corner)))
+				if (!list[i].TileMatches(ec.mainHall) || !list[i].HasHardFreeWall || list[i].open || (!list[i].shape.HasFlag(TileShapeMask.Single) && !list[i].shape.HasFlag(TileShapeMask.Corner)))
 					list.RemoveAt(i--);
-
-
 
 			int fans = rng.Next(minFans, maxFans + 1);
 			for (int i = 0; i < fans; i++)

@@ -36,6 +36,7 @@ namespace BBTimes.Helpers
 			BasePlugin._cstData.Add(data);
 
 			LevelLoaderPlugin.Instance.npcAliases.Add("times_" + EnumExtensions.GetExtendedName<Character>((int)npc.Character), npc);
+			BBTimesManager.man.Add("NPC_" + name, npc);
 
 			return npc;
 		}
@@ -88,6 +89,8 @@ namespace BBTimes.Helpers
 			BasePlugin._cstData.Add(data);
 
 			LevelLoaderPlugin.Instance.npcAliases.Add("times_" + name, npc);
+
+			BBTimesManager.man.Add("NPC_" + name, npc);
 
 			return npc;
 		}

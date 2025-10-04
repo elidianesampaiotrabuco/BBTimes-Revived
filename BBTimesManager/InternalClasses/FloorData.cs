@@ -30,6 +30,7 @@ internal class FloorData()
     // Object Builders
     public readonly List<StructureWithParametersWithLevelType> ForcedObjectBuilders = [];
     public readonly List<WeightedStructureWithParametersWithLevelType> WeightedObjectBuilders = []; // Basically unused at this point
+    public readonly List<WeightedGameObjectWithLevelType> WeightedNaturalObjects = [];
 
     //readonly List<GenericHallBuilder> _genericHallBuilders = [];
     //public List<GenericHallBuilder> GenericHallBuilders => _genericHallBuilders;

@@ -126,7 +126,7 @@ namespace BBTimes
 		internal ConfigEntry<bool>
 		disableOutside, disableHighCeilings, disableRedEndingCutscene,
 		enableBigRooms, enableReplacementNPCsAsNormalOnes, enableYoutuberMode, forceChristmasMode, disableArcadeRennovationsSupport, disableSchoolhouseEscape, enableUnbalancedLegacyMode;
-		internal List<string> disabledCharacters = [], disabledItems = [], disabledEvents = [], disabledBuilders = [];
+		internal List<string> disabledCharacters = [], disabledItems = [], disabledEvents = [], disabledBuilders = [], disableNaturalObject = [];
 		// internal bool HasInfiniteFloors => Chainloader.PluginInfos.ContainsKey("mtm101.rulerp.baldiplus.endlessfloors") ||
 		//	Chainloader.PluginInfos.ContainsKey("Rad.cmr.baldiplus.arcaderenovations");
 
@@ -218,6 +218,9 @@ namespace BBTimes
 
 				foreach (var ld in lds)
 				{
+					if (ld.IsModifiedByMod(Info)) continue; // We don't want to modify the same LD twice
+					ld.MarkAsModifiedByMod(Info);
+
 					bool shouldDisableOutside = ld.type == LevelType.Factory; // Factory has ceiling, so...
 					ld.SetCustomModValue(Info, "Times_GenConfig_DisableOutside", shouldDisableOutside);
 					ld.MarkAsNeverUnload(); // Maybe?
@@ -242,7 +245,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(9, 9));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -282,7 +284,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(9, 12));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -322,7 +323,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(10, 13));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -363,7 +363,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(10, 15));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -404,7 +403,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(12, BBTimesManager.MaximumNumballs));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -445,7 +443,6 @@ namespace BBTimes
 					{
 						// Custom datas
 						ld.SetCustomModValue(Info, "Times_EnvConfig_MathMachineNumballsMinMax", new IntVector2(9, 14));
-						ld.MarkAsModifiedByMod(Info);
 
 						// Legacy mode
 						if (legacy)
@@ -562,6 +559,7 @@ namespace BBTimes
 
 				foreach (var ld in sco.GetCustomLevelObjects())
 				{
+					if (ld.IsModifiedByMod(Info)) continue; // We don't want to modify the same LD twice
 
 					// ----- Items -----
 					for (int i = 0; i < floordata.Items.Count; i++)
@@ -659,6 +657,39 @@ namespace BBTimes
 						}
 					}
 
+					// ----- Weighted Game Objects -----
+					StructureWithParameters naturalBuilder = null;
+					for (int i = 0; i < ld.forcedStructures.Length; i++)
+					{
+						var str = ld.forcedStructures[i];
+						if (str.prefab is Structure_EnvironmentObjectPlacer)
+						{
+							naturalBuilder = str;
+							break;
+						}
+					}
+					if (naturalBuilder != null)
+					{
+						for (int i = 0; i < floordata.WeightedNaturalObjects.Count; i++)
+						{
+							string objName = floordata.WeightedNaturalObjects[i].selection.name;
+							// --- Filter disabled weighted object builders and add to potentialStructures ---
+							if (!Config.Bind("Naturally Spawning Objects Settings", $"Enable {objName}", true,
+								"If set to true, this object will naturally spawn in the same way as Payphones and other structures, in maps made by the Level Generator (eg. Hide and Seek).").Value)
+							{
+								if (!disableNaturalObject.Contains(objName))
+									disableNaturalObject.Add(objName);
+								floordata.WeightedNaturalObjects.RemoveAt(i--);
+								continue;
+							}
+							if (floordata.WeightedNaturalObjects[i].AcceptsLevelType(ld.type))
+							{
+								markModifiedByMod = true;
+								naturalBuilder.parameters.prefab = naturalBuilder.parameters.prefab.AddToArray(floordata.WeightedNaturalObjects[i].GetWeightedSelection());
+							}
+						}
+					}
+
 
 					// ----- Room Groups and Special Rooms -----
 					for (int i = 0; i < floordata.RoomAssets.Count; i++)
@@ -685,6 +716,13 @@ namespace BBTimes
 					}
 
 					// Only these below ignores level types, even halls.
+					//Debug.Log($"Adding rooms to {floorName}. Classrooms -> Faculties -> Offices.");
+					//Debug.Log("---");
+					//foreach (var classroom in floordata.Classrooms)
+					//{
+					//	Debug.Log($"{classroom.selection.activity.prefab.name}");
+					//}
+
 					RoomGroup[] groups = [ld.roomGroup.First(x => x.name == "Class"), ld.roomGroup.First(x => x.name == "Faculty"), ld.roomGroup.First(x => x.name == "Office")];
 					groups[0].potentialRooms = groups[0].potentialRooms.AddRangeToArray([.. floordata.Classrooms]);
 					groups[1].potentialRooms = groups[1].potentialRooms.AddRangeToArray([.. floordata.Faculties]);
@@ -807,6 +845,7 @@ namespace BBTimes
 
 			plug.disabledCharacters.ForEach(x => tags.Add($"Times_DisabledCharacterTag_{x}"));
 			plug.disabledBuilders.ForEach(x => tags.Add($"Times_DisabledBuilderTag_{x}"));
+			plug.disableNaturalObject.ForEach(x => tags.Add($"Times_NaturalObjectTag_{x}"));
 			plug.disabledEvents.ForEach(x => tags.Add($"Times_DisabledEventTag_{x}"));
 			plug.disabledItems.ForEach(x => tags.Add($"Times_DisabledItemTag_{x}"));
 

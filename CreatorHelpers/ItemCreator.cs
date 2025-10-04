@@ -20,7 +20,6 @@ namespace BBTimes.Helpers
 			Build(itmB, name, itemsEnum: Items.None);
 		public static ItemObject Build(this ItemBuilder itmB, string name, Items itemsEnum = Items.None)
 		{
-
 			var en = itemsEnum == Items.None ? EnumExtensions.ExtendEnum<Items>(name) : itemsEnum; // Make enum
 			itmB.SetEnum(en);
 			var actualItem = itmB.Build();
@@ -28,8 +27,7 @@ namespace BBTimes.Helpers
 			actualItem.name = name;
 			actualItem.item.gameObject.GetComponent<IItemPrefab>().SetupItemData(name, actualItem);
 
-			BBTimesManager.man.Add("times_itemPrefab_" + name, actualItem.item);
-			BBTimesManager.man.Add("times_itemObject_" + name, actualItem);
+			BBTimesManager.man.Add("Item_" + name, actualItem);
 
 			return actualItem;
 		}

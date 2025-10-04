@@ -267,11 +267,12 @@
             <param name="modeToModify"></param>
             <param name="includeNonVanillaComplaintTools">If true, includes tools that require editor exclusive rooms</param>
         </member>
-        <member name="M:PlusLevelStudio.EditorInterfaceModes.AddVanillaObjects(PlusLevelStudio.Editor.EditorMode)">
+        <member name="M:PlusLevelStudio.EditorInterfaceModes.AddVanillaObjects(PlusLevelStudio.Editor.EditorMode,System.Boolean)">
             <summary>
             Adds the vanilla objects to the specified editor mode.
             </summary>
             <param name="modeToModify"></param>
+            /// <param name="includeNonVanillaComplaintTools">If true, includes tools that require editor exclusive rooms</param>
         </member>
         <member name="M:PlusLevelStudio.EditorInterfaceModes.InsertToolsInCategory(PlusLevelStudio.Editor.EditorMode,System.String,System.String,System.Collections.Generic.IEnumerable{PlusLevelStudio.Editor.EditorTool})">
             <summary>
@@ -410,11 +411,6 @@
             <param name="worldOffset"></param>
             <param name="cellOffset"></param>
             <param name="sizeDifference"></param>
-        </member>
-        <member name="T:PlusLevelStudio.Editor.RoomTechnicalStructureBase">
-            <summary>
-            An abstract "structure" that will only work correctly in the "room" editor mode.
-            </summary>
         </member>
         <member name="M:PlusLevelStudio.Editor.EditorController.AddUndo">
             <summary>
@@ -830,6 +826,11 @@
             <param name="position"></param>
             <param name="dir"></param>
             <returns>Whether the placement was successful. If it was, the tool is returned.</returns>
+        </member>
+        <member name="T:PlusLevelStudio.Editor.Tools.PointTechnicalMarkerTool">
+            <summary>
+            Same as CellMarkerTool, but with the "technical_" id.
+            </summary>
         </member>
         <member name="M:PlusLevelStudio.EditorExtensions.ToCellVector(UnityEngine.Vector3)">
             <summary>
