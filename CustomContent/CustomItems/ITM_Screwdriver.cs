@@ -35,27 +35,60 @@ namespace BBTimes.CustomContent.CustomItems
 				}
 				else
 				{
-					var lockdownDoor = hit.transform.GetComponentInParent<LockdownDoor>();
-					if (lockdownDoor && !lockdownDoor.IsOpen && !lockdownDoor.moving)
+					var matchMachine = hit.transform.GetComponentInParent<MatchActivity>();
+					if (matchMachine && !matchMachine.IsCompleted)
 					{
-						lockdownDoor.Open(true, false);
+						matchMachine.Completed(0, true);
 						success = true;
 					}
 					else
 					{
-						var facultyOnlyDoor = hit.transform.GetComponentInParent<FacultyOnlyDoor>();
-						if (facultyOnlyDoor && !facultyOnlyDoor.IsOpen)
+						var balloonPopper = hit.transform.GetComponentInParent<BalloonBuster>();
+						if (balloonPopper && !balloonPopper.IsCompleted)
 						{
-							facultyOnlyDoor.gameObject.AddComponent<FacultyDoorOpener>(); // Faculty Only Door killer lol
+							balloonPopper.unpoppedBalloons.Clear();
+							int num = 0;
+							for (int i = 0; i < balloonPopper.startingTotal; i++)
+							{
+								if (!balloonPopper.balloon[i].popped)
+								{
+									balloonPopper.balloon[i].Disable();
+									num++;
+									balloonPopper.unpoppedBalloons.Add(balloonPopper.balloon[i]);
+								}
+							}
+							balloonPopper.Completed(0, true);
+							balloonPopper.audMan.PlaySingle(balloonPopper.audWin);
+							Singleton<BaseGameManager>.Instance.PleaseBaldi(balloonPopper.baldiPause + balloonPopper.poppedBallonBaldiPauseRate * balloonPopper.poppedBalloons);
+							Singleton<CoreGameManager>.Instance.AddPoints(balloonPopper.bonusMode ? balloonPopper.bonusPoints : balloonPopper.normalPoints, 0, true);
+							Singleton<CoreGameManager>.Instance.GetPlayer(0).plm.AddStamina(Singleton<CoreGameManager>.Instance.GetPlayer(0).plm.staminaMax, true);
 							success = true;
 						}
 						else
 						{
-							var machine = hit.transform.GetComponent<IItemAcceptor>();
-							if (machine != null && machine.ItemFits(item))
+							var lockdownDoor = hit.transform.GetComponentInParent<LockdownDoor>();
+							if (lockdownDoor && !lockdownDoor.IsOpen && !lockdownDoor.moving)
 							{
-								machine.InsertItem(pm, pm.ec);
+								lockdownDoor.Open(true, false);
 								success = true;
+							}
+							else
+							{
+								var facultyOnlyDoor = hit.transform.GetComponentInParent<FacultyOnlyDoor>();
+								if (facultyOnlyDoor && !facultyOnlyDoor.IsOpen)
+								{
+									facultyOnlyDoor.gameObject.AddComponent<FacultyDoorOpener>(); // Faculty Only Door killer lol
+									success = true;
+								}
+								else
+								{
+									var machine = hit.transform.GetComponent<IItemAcceptor>();
+									if (machine != null && machine.ItemFits(item))
+									{
+										machine.InsertItem(pm, pm.ec);
+										success = true;
+									}
+								}
 							}
 						}
 					}

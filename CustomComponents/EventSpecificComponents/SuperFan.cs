@@ -32,6 +32,7 @@ namespace BBTimes.CustomComponents.EventSpecificComponents
 
 			for (int i = 0; i < windGraphics.Length; i++)
 				windGraphics[i].sharedMaterial = windManager.newMaterial;
+			initialized = true;
 		}
 
 		public void TurnMe(bool turn)
@@ -71,6 +72,8 @@ namespace BBTimes.CustomComponents.EventSpecificComponents
 
 		void Update()
 		{
+			if (!initialized) return;
+
 			frame += ec.EnvironmentTimeScale * Time.deltaTime * animSpeed;
 			frame %= sprites.Length;
 			renderer.sprite = sprites[Mathf.FloorToInt(frame)];
@@ -79,11 +82,10 @@ namespace BBTimes.CustomComponents.EventSpecificComponents
 			else
 				animSpeed += animSpeedFactor * ec.EnvironmentTimeScale * Time.deltaTime * pushForce * 1.6f;
 			animSpeed = Mathf.Clamp(animSpeed, 0, maxAnimSpeed);
-
-
 		}
 
 		float frame = 0f, animSpeed = 0f;
+		bool initialized = false;
 		public bool IsActive => turns > 0;
 		int turns = 0;
 		Cell tileA, tileB;

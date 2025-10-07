@@ -66,7 +66,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			foreach (string file in files)
 			{
 				string name = Path.GetFileNameWithoutExtension(file);
-				Debug.Log($"Adding icon \'UI/{name}\'");
+				// Debug.Log($"Adding icon \'UI/{name}\'");
 				_editorAssetMan.Add("UI/" + name, AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(file), 40f));
 			}
 
@@ -133,18 +133,18 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				EditorInterface.AddObjectVisual("TimesGenericCornerLamp_" + i, man.Get<GameObject>("editorPrefab_TimesGenericCornerLamp_" + i), true);
 
 			// SECRET ENDING OBJECTS
-			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
-			EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
-			EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
-			EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
-			EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
-			EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
-			EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
-			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
-			EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
-			EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
-			for (int i = 1; i <= 4; i++)
-				EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
+			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
+			// EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
+			// EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
+			// EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
+			// EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
+			// EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
+			// EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
+			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
+			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
+			// EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
+			// for (int i = 1; i <= 4; i++)
+			// 	EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
 
 			// NPCs
 			foreach (var npcName in allNpcs)
@@ -172,10 +172,17 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// ** Markers **
 
 			// SuperFans
+			// Ed_Tool_marker_timessuperfansmarker
 			var superFan = ((SuperFans)BBTimesManager.man.Get<RandomEvent>("Event_SuperFans")).superFanPre;
-			var superFanDisplay = ObjectCreationExtensions.CreateSpriteBillboard(superFan.renderer.sprite, true);
+			var superFanDisplay = ObjectCreationExtensions.CreateSpriteBillboard(superFan.renderer.sprite, true).AddSpriteHolder(out var superFanRenderer, 5f);
+			superFanRenderer.transform.localScale = Vector3.one * 3f;
 			superFanDisplay.gameObject.ConvertToPrefab(true);
 			superFanDisplay.name = "SuperFanMarker";
+
+			var superFanCollider = superFanDisplay.gameObject.AddComponent<SphereCollider>();
+			superFanCollider.radius = 3f;
+			superFanCollider.center = Vector3.up * 5f;
+			superFanCollider.isTrigger = true;
 
 			EditorInterface.AddMarkerGenericVisual("timessuperfansmarker", superFanDisplay.gameObject);
 			LevelStudioPlugin.Instance.markerTypes.Add("timessuperfansmarker", typeof(SuperFanMarker));
@@ -217,6 +224,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				string key = TimesPrefix + itmEnum;
 				Sprite icon = _editorAssetMan.Get<Sprite>("UI/ITM_" + itmEnum);
 				EditorInterfaceModes.AddToolToCategory(mode, "items", new ItemTool(key, icon));
+				// Debug.Log("{\"key\": \"Ed_Tool_item_" + key + "_Desc\", \"value\":\"[DESCRIPTION]\"},");
 			}
 
 			// Add NPC tools
@@ -273,18 +281,18 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			for (int i = 1; i <= 4; i++) objectTools.Add(new("TimesGenericCornerLamp_" + i, false));
 
 			// SECRET ENDING OBJECTS
-			objectTools.Add(new("Times_SecretBaldi", true, 5f));
-			objectTools.Add(new("Times_InvisibleWall", true, 5f));
-			objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
-			objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
-			objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
-			objectTools.Add(new("Times_SecretGenerator", true, 5f));
-			objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
-			objectTools.Add(new("Times_theYAYComputer", true, 5f));
-			objectTools.Add(new("Times_TrueLorePaper", true, 5f));
-			objectTools.Add(new("Times_GeneratorLever", true, 5f));
-			for (int i = 1; i <= 4; i++)
-				objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
+			// objectTools.Add(new("Times_SecretBaldi", true, 5f));
+			// objectTools.Add(new("Times_InvisibleWall", true, 5f));
+			// objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
+			// objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
+			// objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
+			// objectTools.Add(new("Times_SecretGenerator", true, 5f));
+			// objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
+			// objectTools.Add(new("Times_theYAYComputer", true, 5f));
+			// objectTools.Add(new("Times_TrueLorePaper", true, 5f));
+			// objectTools.Add(new("Times_GeneratorLever", true, 5f));
+			// for (int i = 1; i <= 4; i++)
+			// 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
 
 			foreach (var pair in objectTools)
 			{
@@ -293,10 +301,13 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 					EditorInterfaceModes.AddToolToCategory(mode, "objects", new ObjectTool(pair.prefab, icon, pair.offset));
 				else
 					EditorInterfaceModes.AddToolToCategory(mode, "objects", new ObjectToolNoRotation(pair.prefab, icon, pair.offset));
+				// Debug.Log("{\"key\": \"Ed_Tool_object_" + pair.prefab + "_Name\", \"value\":\"" + pair.prefab.ToFriendlyName() + "\"},");
+				// Debug.Log("{\"key\": \"Ed_Tool_object_" + pair.prefab + "_Desc\", \"value\":\"[DESCRIPTION]\"},");
 			}
 
 			// Special Bulk Object Tool
-			EditorInterfaceModes.AddToolToCategory(mode, "objects", new BulkObjectTool("fullStall", GetSprite("UI/Object_fullStall", "UI/object_fullStall"), [
+			// Uses "Ed_Tool_bulkobject_" prefix for these things
+			EditorInterfaceModes.AddToolToCategory(mode, "objects", new BulkObjectTool("fullStall", GetSprite("UI/Helper_fullStall", "UI/helper_fullStall"), [
 					new("bathStall", new Vector3(-5f, 0f, 0f), new(0f, 90f)),
 					new("bathDoor", new Vector3(0f, 0f, 4f)),
 					new("bathStall", new Vector3(5f, 0f, 0f), new(0f, 90f))
@@ -308,7 +319,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 		private static Sprite GetSprite(string key1, string key2)
 		{
 			var spr = _editorAssetMan.ContainsKey(key1) ? _editorAssetMan.Get<Sprite>(key1) : _editorAssetMan.Get<Sprite>(key2);
-			Debug.Log($"Getting sprite: {(_editorAssetMan.ContainsKey(key1) ? key1 : key2)}");
+			// Debug.Log($"Getting sprite: {(_editorAssetMan.ContainsKey(key1) ? key1 : key2)}");
 			return spr;
 		}
 

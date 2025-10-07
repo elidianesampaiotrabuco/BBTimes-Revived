@@ -23,7 +23,7 @@ namespace BBTimes.CustomContent.Events
 
 			Cumulo cloud = (Cumulo)NPCMetaStorage.Instance.Get(Character.Cumulo).value;
 
-			var storedSprites = this.GetSpriteSheet(5, 1, 75f, "fan.png");
+			var storedSprites = this.GetSpriteSheet(5, 1, 50f, "fan.png");
 
 			var superFanRend = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[0], false);
 			superFanRend.gameObject.ConvertToPrefab(true);
@@ -55,7 +55,7 @@ namespace BBTimes.CustomContent.Events
 			base.PremadeSetup();
 			foreach (var su in FindObjectsOfType<SuperFan>())
 			{
-				var chosenDirection = ec.CellFromPosition(su.transform.position).RandomConstDirection(crng);
+				var chosenDirection = ec.CellFromPosition(su.transform.position).RandomUncoveredDirection(crng);
 				if (chosenDirection == Direction.Null)
 				{
 					Debug.LogWarning("A Super Fan was located on a spot with no available wall to be chosen! Destroying it instead.", this);

@@ -230,95 +230,95 @@ namespace BBTimes.Manager
             sceneObjectClone.levelObject = null;
 
 
-            // using (BinaryReader reader = new(File.OpenRead(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLevel.bpl"))))
-            // {
-            //     // --- Setup secret ending level asset and textures ---
-            //     sceneObjectClone.levelAsset = LevelImporter.LoadLevelAsset(BaldiLevel.Read(reader));
-            //     sceneObjectClone.levelAsset.name = "TimesSecretEndingAsset";
-            //     sceneObjectClone.levelAsset.rooms[0].ceilTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabCeiling.png"));
-            //     sceneObjectClone.levelAsset.rooms[0].wallTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabWall.png"));
-            //     sceneObjectClone.levelAsset.rooms[0].florTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabFloor.png"));
+            using (BinaryReader reader = new(File.OpenRead(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLevel.bpl"))))
+            {
+                // --- Setup secret ending level asset and textures ---
+                sceneObjectClone.levelAsset = LevelImporter.LoadLevelAsset(BaldiLevel.Read(reader));
+                sceneObjectClone.levelAsset.name = "TimesSecretEndingAsset";
+                sceneObjectClone.levelAsset.rooms[0].ceilTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabCeiling.png"));
+                sceneObjectClone.levelAsset.rooms[0].wallTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabWall.png"));
+                sceneObjectClone.levelAsset.rooms[0].florTex = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretLabFloor.png"));
 
-            //     // --- Setup door materials and mask ---
-            //     sceneObjectClone.levelAsset.rooms[0].doorMats = ObjectCreators.CreateDoorDataObject("TimesSecretLabMetalDoor",
-            //         AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "smallMetalDoorOpen.png")),
-            //         AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "smallMetalDoorClosed.png")));
+                // --- Setup door materials and mask ---
+                sceneObjectClone.levelAsset.rooms[0].doorMats = ObjectCreators.CreateDoorDataObject("TimesSecretLabMetalDoor",
+                    AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "smallMetalDoorOpen.png")),
+                    AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "smallMetalDoorClosed.png")));
 
-            //     var doorTextureMask = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "metalDoorMask.png"));
-            //     sceneObjectClone.levelAsset.rooms[0].doorMats.open.SetTexture("_Mask", doorTextureMask);
-            //     sceneObjectClone.levelAsset.rooms[0].doorMats.shut.SetTexture("_Mask", doorTextureMask);
+                var doorTextureMask = AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "metalDoorMask.png"));
+                sceneObjectClone.levelAsset.rooms[0].doorMats.open.SetTexture("_Mask", doorTextureMask);
+                sceneObjectClone.levelAsset.rooms[0].doorMats.shut.SetTexture("_Mask", doorTextureMask);
 
-            //     // --- Add posters to the secret ending room ---
-            //     sceneObjectClone.levelAsset.posters.Add(new()
-            //     {
-            //         poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "liveTubeMakeUp.png"))]),
-            //         position = new(16, 12),
-            //         direction = Direction.North
-            //     });
-            //     sceneObjectClone.levelAsset.posters.Add(new()
-            //     {
-            //         poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "levelGenMakeUp.png"))]),
-            //         position = new(15, 10),
-            //         direction = Direction.South
-            //     });
-            //     sceneObjectClone.levelAsset.posters.Add(new()
-            //     {
-            //         poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_funFormula.png"))]),
-            //         position = new(15, 7),
-            //         direction = Direction.South
-            //     });
-            //     sceneObjectClone.levelAsset.posters.Add(new()
-            //     {
-            //         poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_theNoWinFormula.png"))]),
-            //         position = new(15, 9),
-            //         direction = Direction.North
-            //     });
-            //     sceneObjectClone.levelAsset.posters.Add(new()
-            //     {
-            //         poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_noRealWin.png"))]),
-            //         position = new(16, 8),
-            //         direction = Direction.East
-            //     });
-            //     sceneObjectClone.levelAsset.rooms[0].hasActivity = false;
-            //     sceneObjectClone.levelAsset.rooms[0].activity = null;
-            //     // --- Setup door clone ---
-            //     var newDoor = (StandardDoor)sceneObjectClone.levelAsset.doors[0].doorPre.SafeDuplicatePrefab(true);
-            //     newDoor.audDoorShut = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorShut.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
-            //     newDoor.audDoorOpen = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorOpen.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
-            //     newDoor.name = "SmallMetalDoor";
+                // --- Add posters to the secret ending room ---
+                sceneObjectClone.levelAsset.posters.Add(new()
+                {
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "liveTubeMakeUp.png"))]),
+                    position = new(16, 12),
+                    direction = Direction.North
+                });
+                sceneObjectClone.levelAsset.posters.Add(new()
+                {
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "levelGenMakeUp.png"))]),
+                    position = new(15, 10),
+                    direction = Direction.South
+                });
+                sceneObjectClone.levelAsset.posters.Add(new()
+                {
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_funFormula.png"))]),
+                    position = new(15, 7),
+                    direction = Direction.South
+                });
+                sceneObjectClone.levelAsset.posters.Add(new()
+                {
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_theNoWinFormula.png"))]),
+                    position = new(15, 9),
+                    direction = Direction.North
+                });
+                sceneObjectClone.levelAsset.posters.Add(new()
+                {
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "chk_noRealWin.png"))]),
+                    position = new(16, 8),
+                    direction = Direction.East
+                });
+                sceneObjectClone.levelAsset.rooms[0].hasActivity = false;
+                sceneObjectClone.levelAsset.rooms[0].activity = null;
+                // --- Setup door clone ---
+                var newDoor = (StandardDoor)sceneObjectClone.levelAsset.doors[0].doorPre.SafeDuplicatePrefab(true);
+                newDoor.audDoorShut = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorShut.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
+                newDoor.audDoorOpen = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorOpen.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
+                newDoor.name = "SmallMetalDoor";
 
-            //     sceneObjectClone.levelAsset.doors.ForEach(d => d.doorPre = newDoor);
-            // }
+                sceneObjectClone.levelAsset.doors.ForEach(d => d.doorPre = newDoor);
+            }
 
-            // // --- Setup secret ending manager object ---
-            // var newManager = new BaseGameManagerBuilder<TimesSecretEndingManager>()
-            // .SetObjectName("TimesSecretEndingManager")
-            // .SetNPCSpawnMode(GameManagerNPCAutomaticSpawn.Never)
-            // .SetNameKey("???")
-            // .SetLevelNumber(99)
-            // .Build();
+            // --- Setup secret ending manager object ---
+            var newManager = new BaseGameManagerBuilder<TimesSecretEndingManager>()
+            .SetObjectName("TimesSecretEndingManager")
+            .SetNPCSpawnMode(GameManagerNPCAutomaticSpawn.Never)
+            .SetNameKey("???")
+            .SetLevelNumber(99)
+            .Build();
 
-            // newManager.canvas = ObjectCreationExtensions.CreateCanvas();
-            // newManager.canvas.transform.SetParent(newManager.transform);
-            // newManager.canvas.gameObject.SetActive(false);
-            // newManager.canvas.name = newManager.name + "Canvas";
+            newManager.canvas = ObjectCreationExtensions.CreateCanvas();
+            newManager.canvas.transform.SetParent(newManager.transform);
+            newManager.canvas.gameObject.SetActive(false);
+            newManager.canvas.name = newManager.name + "Canvas";
 
-            // newManager.activeImage = ObjectCreationExtensions.CreateImage(newManager.canvas, TextureExtensions.CreateSolidTexture(480, 360, Color.black));
-            // newManager.activeImage.name = "TimesEndScreen";
-            // var baldiReference = GenericExtensions.FindResourceObject<Baldi>();
+            newManager.activeImage = ObjectCreationExtensions.CreateImage(newManager.canvas, TextureExtensions.CreateSolidTexture(480, 360, Color.black));
+            newManager.activeImage.name = "TimesEndScreen";
+            var baldiReference = GenericExtensions.FindResourceObject<Baldi>();
 
-            // newManager.audSlap = baldiReference.slap;
-            // newManager.audLoseSounds = baldiReference.loseSounds;
+            newManager.audSlap = baldiReference.slap;
+            newManager.audLoseSounds = baldiReference.loseSounds;
 
-            // newManager.timesScreen = AssetLoader.SpriteFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretTimesEnd.jpg"), Vector2.one * 0.5f);
-            // newManager.audSeeYaSoon = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence_End.wav")), "Vfx_SecBAL_EndSequence_SeeYa", SoundType.Voice, Color.green);
+            newManager.timesScreen = AssetLoader.SpriteFromFile(Path.Combine(MiscPath, TextureFolder, "SecretEnding", "secretTimesEnd.jpg"), Vector2.one * 0.5f);
+            newManager.audSeeYaSoon = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence_End.wav")), "Vfx_SecBAL_EndSequence_SeeYa", SoundType.Voice, Color.green);
 
-            // newManager.audMan = newManager.gameObject.CreateAudioManager(15f, 25f).MakeAudioManagerNonPositional();
-            // newManager.audHummmmm = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "spookyNoisesForEnding.mp3")), string.Empty, SoundType.Music, Color.white);
-            // newManager.audHummmmm.subtitle = false;
+            newManager.audMan = newManager.gameObject.CreateAudioManager(15f, 25f).MakeAudioManagerNonPositional();
+            newManager.audHummmmm = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "spookyNoisesForEnding.mp3")), string.Empty, SoundType.Music, Color.white);
+            newManager.audHummmmm.subtitle = false;
 
-            // sceneObjectClone.manager = newManager;
-            // MainGameManagerPatches.secretEndingObj = sceneObjectClone;
+            sceneObjectClone.manager = newManager;
+            MainGameManagerPatches.secretEndingObj = sceneObjectClone;
         }
     }
 }
