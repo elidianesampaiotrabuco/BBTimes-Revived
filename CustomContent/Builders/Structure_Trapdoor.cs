@@ -21,7 +21,6 @@ namespace BBTimes.CustomContent.Builders
 			var trapdoorholder = new GameObject("TrapDoor").AddComponent<Trapdoor>();
 			trapdoorholder.gameObject.ConvertToPrefab(true);
 
-
 			var text = new GameObject("TrapdoorText").AddComponent<TextMeshPro>();
 			text.gameObject.layer = LayerStorage.billboardLayer;
 			text.transform.SetParent(trapdoorholder.transform);

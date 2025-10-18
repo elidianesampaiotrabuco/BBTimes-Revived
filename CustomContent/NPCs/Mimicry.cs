@@ -242,7 +242,7 @@ namespace BBTimes.CustomContent.NPCs
 			behaviorStateMachine.ChangeState(new Mimicry_Wander(this));
 			if (laugh)
 			{
-				SetGuilt(5f, "Bullying");
+				SetGuilt(guiltCooldown, "Bullying");
 				StartCoroutine(LaughterDelay());
 			}
 		}
@@ -338,7 +338,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal Image jumpscareImg;
 
 		[SerializeField]
-		internal float wanderingCooldown = 30f, waitingDisguisedCooldown = 60f, entitySlownessCooldown = 15f, speedToReachRoom = 35f, normalSpeed = 15f;
+		internal float wanderingCooldown = 30f, waitingDisguisedCooldown = 60f, entitySlownessCooldown = 15f, speedToReachRoom = 35f, normalSpeed = 15f, guiltCooldown = 5f;
 
 		[SerializeField]
 		[Range(0f, 1f)]

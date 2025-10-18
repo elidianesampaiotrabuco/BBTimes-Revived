@@ -78,7 +78,7 @@ namespace BBTimes.CustomContent.NPCs
 
 				var potion = potionObj.gameObject.AddComponent<T>();
 
-				potion.entity = potionObj.gameObject.CreateEntity(2f, 2f, potionRendBase.transform);
+				potion.entity = potionObj.gameObject.CreateEntity(potionEntitySize, potionEntitySize, potionRendBase.transform);
 				potion.entity.SetGrounded(false);
 				potion.collider = (CapsuleCollider)potion.entity.Trigger;
 				potion.realCollider = (CapsuleCollider)potion.entity.collider;
@@ -91,7 +91,7 @@ namespace BBTimes.CustomContent.NPCs
 				potion.splashRenderer.name = $"{potionObj.name}_SplashRenderer";
 				potion.splashRenderer.gameObject.layer = 0;
 				potion.splashRenderer.transform.SetParent(potionRendBase.transform);
-				potion.splashRenderer.transform.localPosition = Vector3.down * 4.95f;
+				potion.splashRenderer.transform.localPosition = Vector3.down * splashRendererYOffset;
 				potion.splashRenderer.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 				potion.splashRenderer.enabled = false;
 
@@ -126,8 +126,8 @@ namespace BBTimes.CustomContent.NPCs
 		public void FoundPlayer()
 		{
 			audMan.PlayRandomAudio(audFindPlayer);
-			navigator.maxSpeed = 17f;
-			navigator.SetSpeed(17f);
+			navigator.maxSpeed = foundPlayerSpeed;
+			navigator.SetSpeed(foundPlayerSpeed);
 		}
 
 		public void Wander()
@@ -135,8 +135,8 @@ namespace BBTimes.CustomContent.NPCs
 			footStepAudMan.maintainLoop = true;
 			footStepAudMan.SetLoop(true);
 			footStepAudMan.QueueAudio(audWalking);
-			navigator.maxSpeed = 10.2f;
-			navigator.SetSpeed(10.2f);
+			navigator.maxSpeed = wanderSpeed;
+			navigator.SetSpeed(wanderSpeed);
 		}
 
 		public void ThrowPotion(Vector3 direction)
@@ -194,7 +194,8 @@ namespace BBTimes.CustomContent.NPCs
 		internal SpriteRenderer renderer;
 
 		[SerializeField]
-		internal float potionThrowDistanceBuffer = 25f, throwSpeed = 20f, potionDespawnCooldown = 30f, potionThrowSpeed = 3f, minRefillPotCooldown = 45f, maxRefillPotCooldown = 75f;
+		internal float potionThrowDistanceBuffer = 25f, throwSpeed = 20f, potionDespawnCooldown = 30f, potionThrowSpeed = 3f, minRefillPotCooldown = 45f,
+			maxRefillPotCooldown = 75f, foundPlayerSpeed = 17f, wanderSpeed = 10.2f, guiltDuration = 5f, potionEntitySize = 2f, splashRendererYOffset = 4.95f;
 
 	}
 
@@ -272,7 +273,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Enter();
 			sci.ThrowPotion((pm.transform.position - sci.transform.position).normalized);
-			sci.SetGuilt(5f, "littering");
+			sci.SetGuilt(sci.guiltDuration, "littering");
 			ChangeNavigationState(new NavigationState_DoNothing(sci, 0));
 		}
 	}

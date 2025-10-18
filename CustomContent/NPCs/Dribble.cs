@@ -56,6 +56,7 @@ namespace BBTimes.CustomContent.NPCs
 			audTakeBack = this.GetSound("DRI_TakeBackChase.wav", "Vfx_Dribble_TakeBackChase", SoundType.Voice, normalDribbleColor);
 
 			renderer = spriteRenderer[0];
+			const float pixelsPerUnit = 48f;
 
 			// Normal
 			var storedSprites = this.GetSpriteSheet(13, 1, pixelsPerUnit, "dribbleSpriteSheet.png");
@@ -112,7 +113,7 @@ namespace BBTimes.CustomContent.NPCs
 			var animComp = comp.renderer.gameObject.AddComponent<AnimationComponent>();
 			animComp.animation = BBTimesManager.man.Get<Sprite[]>("basketBall");
 			animComp.renderers = [comp.renderer];
-			animComp.speed = 8f;
+			animComp.speed = basketballAnimSpeed;
 			animComp.autoStart = true;
 
 			basketPre = comp;
@@ -120,7 +121,7 @@ namespace BBTimes.CustomContent.NPCs
 			gaugeSprite = this.GetSprite(Storage.GaugeSprite_PixelsPerUnit, "gaugeIcon.png");
 		}
 
-		const float pixelsPerUnit = 48f;
+
 		public void SetupPrefabPost()
 		{
 			basketballItem = ItemMetaStorage.Instance.FindByEnumFromMod(EnumExtensions.GetFromExtendedName<Items>("Basketball"), BBTimesManager.plug.Info).value;
@@ -281,7 +282,7 @@ namespace BBTimes.CustomContent.NPCs
 
 				for (int i = 0; i < succeededMinigames; i++)
 				{
-					Vector3 position = transform.position + (Random.insideUnitSphere * Random.Range(1f, 2.75f));
+					Vector3 position = transform.position + (Random.insideUnitSphere * Random.Range(basketballSpawnOffsetMin, basketballSpawnOffsetMax));
 
 					if (ec.CellFromPosition(position).Null) // Failsafe
 						position = transform.position;
@@ -314,7 +315,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			bounceAudMan.PlaySingle(audPunch);
 			audMan.PlayRandomAudio(audPunchResponse);
-			float f = Random.Range(9f, 12f);
+			float f = Random.Range(npcPunchForceMin, npcPunchForceMax);
 			float fFactor = (1 + minigameRecord) * 2.5f;
 			entity.AddForce(new Force((Random.value < 0.5f ? transform.right : -transform.right) * fFactor, f, -(f - fFactor)));
 			entity.StartCoroutine(Punched(entity));
@@ -445,6 +446,8 @@ namespace BBTimes.CustomContent.NPCs
 			yield break;
 		}
 
+		[SerializeField]
+		internal float stepDelay = 5f;
 
 		[SerializeField]
 		internal Sprite[] idleSprs, clapSprs, classSprs, disappointedSprs, crazySprs, chasingSprs;
@@ -488,6 +491,13 @@ namespace BBTimes.CustomContent.NPCs
 		internal RoomCategory expectedCategory;
 		[SerializeField]
 		internal Sprite gaugeSprite;
+		[SerializeField]
+		internal float basketballAnimSpeed = 8f, basketballSpawnOffsetMin = 1f, basketballSpawnOffsetMax = 2.75f, npcPunchForceMin = 9f, npcPunchForceMax = 12f, idleSayCooldownMin = 15f, idleSayCooldownMax = 30f,
+		informWaitMin = 0.25f, informWaitMax = 0.75f, classTimeWaitMin = 1.5f, classTimeWaitMax = 2f, classTimeThrowDelay = 2.5f, classTimePostInstructionsWait = 0.5f,
+		chaseStepDelay = 5.6f, minigameSucceedCooldown = 5f, disappointedCooldown = 2.5f, forceRunEndCooldown = 5f;
+		[SerializeField]
+		internal int informFrameDelay = 3;
+
 		PickableBasketball basketball;
 		HudGauge gauge;
 		bool _step = false;
@@ -549,7 +559,7 @@ namespace BBTimes.CustomContent.NPCs
 				stepDelay -= mag;
 				if (stepDelay <= 0f)
 				{
-					stepDelay += 5f;
+					stepDelay += dr.stepDelay;
 					step = !step;
 					if (step)
 						dr.Bounce(currentSpeed);
@@ -584,7 +594,7 @@ namespace BBTimes.CustomContent.NPCs
 			sayCooldown -= Time.deltaTime * dr.TimeScale;
 			if (sayCooldown <= 0f)
 			{
-				sayCooldown += Random.Range(15f, 30f);
+				sayCooldown += Random.Range(dr.idleSayCooldownMin, dr.idleSayCooldownMax);
 				if (Random.value > 0.7f)
 					dr.IdleNoise();
 			}
@@ -600,7 +610,7 @@ namespace BBTimes.CustomContent.NPCs
 				dr.behaviorStateMachine.ChangeState(new Dribble_NoticeChase(dr, player, false));
 		}
 
-		float sayCooldown = Random.Range(15f, 30f);
+		float sayCooldown = Random.Range(dr.idleSayCooldownMin, dr.idleSayCooldownMax);
 	}
 
 	internal class Dribble_NoticeChase(Dribble dr, PlayerManager player, bool sightedEarlier) : DribbleWanderStateBase(dr, dr.chaseSpeed)
@@ -690,7 +700,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 			player.Am.moveMods.Remove(dr.playerMoveMod);
 			dr.KickEveryoneOutOfRoom();
-			float cool = Random.Range(0.25f, 0.75f);
+			float cool = Random.Range(dr.informWaitMin, dr.informWaitMax);
 			while (cool > 0f)
 			{
 				player.transform.RotateSmoothlyToNextPoint(dr.transform.position, 0.8f);
@@ -701,7 +711,7 @@ namespace BBTimes.CustomContent.NPCs
 			dr.Clap();
 			dr.TeleportToClass(player);
 
-			for (int i = 0; i < 3; i++) // Frame delay
+			for (int i = 0; i < dr.informFrameDelay; i++) // Frame delay
 				yield return null;
 
 			dr.ApplyArray(dr.clapSprs, 0);
@@ -738,7 +748,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		IEnumerator ClassTime()
 		{
-			float cool = Random.Range(1.5f, 2f);
+			float cool = Random.Range(dr.classTimeWaitMin, dr.classTimeWaitMax);
 
 			while (cool > 0f)
 			{
@@ -749,7 +759,7 @@ namespace BBTimes.CustomContent.NPCs
 			dr.audMan.QueueAudio(dr.audInstructions);
 			while (dr.audMan.QueuedAudioIsPlaying)
 				yield return null;
-			cool = 0.5f;
+			cool = dr.classTimePostInstructionsWait;
 			while (cool > 0f)
 			{
 				cool -= dr.TimeScale * Time.deltaTime;
@@ -762,7 +772,7 @@ namespace BBTimes.CustomContent.NPCs
 			while (dr.audMan.QueuedAudioIsPlaying)
 				yield return null;
 
-			cool = Random.Range(1.5f, 2.5f);
+			cool = Random.Range(dr.classTimeWaitMin, dr.classTimeThrowDelay);
 			while (cool > 0f)
 			{
 				cool -= dr.TimeScale * Time.deltaTime;
@@ -784,7 +794,7 @@ namespace BBTimes.CustomContent.NPCs
 		float frame = 0f;
 		bool clapped = false;
 		readonly bool secretHappySprite = Random.value <= dr.secretChance;
-		float cooldown = 5f;
+		float cooldown = dr.minigameSucceedCooldown;
 		public override void Enter()
 		{
 			base.Enter();
@@ -836,7 +846,7 @@ namespace BBTimes.CustomContent.NPCs
 	{
 		readonly PlayerManager pm = pm;
 		float frame = 0f;
-		float cooldown = 2.5f;
+		float cooldown = dr.disappointedCooldown;
 		public override void Enter()
 		{
 			base.Enter();
@@ -1003,7 +1013,7 @@ namespace BBTimes.CustomContent.NPCs
 				stepDelay -= mag;
 				if (stepDelay <= 0f)
 				{
-					stepDelay += 5.6f;
+					stepDelay += dr.chaseStepDelay;
 					dr.Step();
 					idx = 1 - idx;
 					dr.ApplyArray(dr.chasingSprs, idx);
@@ -1023,7 +1033,7 @@ namespace BBTimes.CustomContent.NPCs
 		readonly private PlayerManager pm = pm;
 		private readonly int minigameRecord = dr.Streaks;
 		readonly bool failedPunishment = failPickup;
-		float endCooldown = 5f;
+		float endCooldown = dr.forceRunEndCooldown;
 
 		public override void Enter()
 		{

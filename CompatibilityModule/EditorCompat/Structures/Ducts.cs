@@ -64,7 +64,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat.Structures
             if (_firstDuct != null)
             {
                 _firstDuct = null;
-                UnhighlightDucts();
+                UnhighlightDucts(forReal: true);
                 return false;
             }
             return true;

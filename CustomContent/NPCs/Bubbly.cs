@@ -1,27 +1,27 @@
-﻿using BBTimes.CustomComponents;
+﻿using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
+using BBTimes.CustomComponents;
 using BBTimes.CustomComponents.NpcSpecificComponents;
+using BBTimes.Extensions;
 using BBTimes.Manager;
 using MTM101BaldAPI;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Components;
 using PixelInternalAPI.Extensions;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using System.Linq;
-using BBTimes.Extensions;
 
 
 namespace BBTimes.CustomContent.NPCs
 {
-    public class Bubbly : NPC, INPCPrefab
+	public class Bubbly : NPC, INPCPrefab
 	{
-		public  void SetupPrefab()
+		public void SetupPrefab()
 		{
 			var sprs = this.GetSpriteSheet(3, 3, pixs, "bubblySheet.png");
 			spriteRenderer[0].sprite = sprs[0];
 			audMan = GetComponent<PropagatedAudioManager>();
-			sprWalkingAnim = [..sprs.Take(7)];
+			sprWalkingAnim = [.. sprs.Take(7)];
 			sprPrepareBub = sprs[8];
 			renderer = spriteRenderer[0];
 			audFillUp = this.GetSound("Bubbly_BubbleSpawn.wav", "Vfx_Bubbly_Fillup", SoundType.Effect, new(1f, 0.345f, 0.886f));
@@ -53,8 +53,16 @@ namespace BBTimes.CustomContent.NPCs
 		public void SetupPrefabPost() { }
 
 		const float pixs = 21f;
-		public string Name { get; set; } public string Category => "npcs";
-		
+
+		[SerializeField]
+		internal float speed = 17f;
+
+		[SerializeField]
+		internal float minBubbleCooldown = 0.5f, maxBubbleCooldown = 1.5f;
+
+		public string Name { get; set; }
+		public string Category => "npcs";
+
 		public NPC Npc { get; set; }
 		[SerializeField] Character[] replacementNPCs; public Character[] GetReplacementNPCs() => replacementNPCs; public void SetReplacementNPCs(params Character[] chars) => replacementNPCs = chars;
 		public int ReplacementWeight { get; set; }
@@ -69,7 +77,7 @@ namespace BBTimes.CustomContent.NPCs
 			base.Initialize();
 			navigator.maxSpeed = speed;
 			navigator.SetSpeed(speed);
-			
+
 
 			behaviorStateMachine.ChangeState(new Bubbly_NavigateToASpot(this));
 		}
@@ -100,7 +108,7 @@ namespace BBTimes.CustomContent.NPCs
 			audMan.PlaySingle(audFillUp);
 			float scale = 0f;
 			b.entity.SetFrozen(true);
-			
+
 
 			float speed = Random.Range(2.6f, 3.5f);
 			while (true)
@@ -137,7 +145,7 @@ namespace BBTimes.CustomContent.NPCs
 			lastSpotGone = spotsToGo[Random.Range(0, spotsToGo.Count)];
 			TargetPosition(lastSpotGone.FloorWorldPosition);
 		}
-		
+
 
 
 		[SerializeField]
@@ -159,9 +167,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal PropagatedAudioManager audMan;
 
 		readonly List<Bubble> bubbles = [];
-
 		Cell lastSpotGone = null;
-		const float speed = 17f;
 	}
 
 	internal class Bubbly_StateBase(Bubbly bub) : NpcState(bub)
@@ -201,7 +207,6 @@ namespace BBTimes.CustomContent.NPCs
 	{
 		Vector3 pos;
 		float fillUpCooldown = 0f;
-		const float minCool = 0.5f, maxCool = 1.5f;
 		readonly List<Vector3> dirsToSpit = [];
 		Bubble awaitingBubble = null;
 
@@ -233,7 +238,7 @@ namespace BBTimes.CustomContent.NPCs
 		}
 
 		public override void Update()
-		{ 
+		{
 			base.Update();
 			if (awaitingBubble)
 			{
@@ -250,7 +255,7 @@ namespace BBTimes.CustomContent.NPCs
 			fillUpCooldown -= bub.TimeScale * Time.deltaTime;
 			if (fillUpCooldown < 0f)
 			{
-				fillUpCooldown += Random.Range(minCool, maxCool);
+				fillUpCooldown += Random.Range(bub.minBubbleCooldown, bub.maxBubbleCooldown);
 				int i = Random.Range(0, dirsToSpit.Count);
 				awaitingBubble = bub.SpitBubbleAtDirection(dirsToSpit[i]);
 				dirsToSpit.RemoveAt(i);

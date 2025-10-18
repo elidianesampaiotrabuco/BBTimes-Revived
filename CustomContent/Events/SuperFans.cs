@@ -70,8 +70,6 @@ namespace BBTimes.CustomContent.Events
 		public override void AfterUpdateSetup(System.Random rng)
 		{
 			base.AfterUpdateSetup(rng);
-
-			const int MinHallwayLength = 5;
 			List<Cell> cells = ec.AllCells();
 			List<Direction> candidateDirections = [];
 
@@ -103,7 +101,7 @@ namespace BBTimes.CustomContent.Events
 						// Check hallway length in the open direction
 						int length = 0;
 						Cell hallwayCell = nextCell;
-						while (!hallwayCell.Null && length < MinHallwayLength)
+						while (!hallwayCell.Null && length < minHallwayLength)
 						{
 							IntVector2 nextVector = hallwayCell.position + oppositeDir.ToIntVector2();
 							if (!ec.ContainsCoordinates(nextVector)) // Coordinate check
@@ -114,7 +112,7 @@ namespace BBTimes.CustomContent.Events
 							hallwayCell = ec.CellFromPosition(nextVector);
 
 							// Misc check for stuff like room equivalency
-							if (hallwayCell.TileMatches(expectedRoom))
+							if (!hallwayCell.TileMatches(expectedRoom))
 							{
 								cancelHallLengthCheck = true;
 								break;
@@ -123,7 +121,7 @@ namespace BBTimes.CustomContent.Events
 						}
 						if (cancelHallLengthCheck) continue; // Skips to the next direction in the list
 
-						if (length >= MinHallwayLength)
+						if (length >= minHallwayLength)
 							candidateDirections.Add(wallDir);
 					}
 				}
@@ -160,7 +158,7 @@ namespace BBTimes.CustomContent.Events
 		}
 
 		[SerializeField]
-		internal int minFans = 13, maxFans = 21;
+		internal int minFans = 13, maxFans = 21, minHallwayLength = 7;
 
 		[SerializeField]
 		internal SuperFan superFanPre;

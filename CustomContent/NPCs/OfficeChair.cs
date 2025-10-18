@@ -42,23 +42,19 @@ namespace BBTimes.CustomContent.NPCs
 
 			behaviorStateMachine.ChangeState(new OfficeChair_FindOffice(this, true));
 
-			navigator.maxSpeed = normSpeed;
-			navigator.SetSpeed(normSpeed);
+			navigator.maxSpeed = movementSpeed;
+			navigator.SetSpeed(movementSpeed);
 
 			audMan.maintainLoop = true;
 			audMan.FlushQueue(true);
 		}
 
 		public void CarryEntityAround(Entity en) =>
-			behaviorStateMachine.ChangeState(new OfficeChair_FindOffice(this, false, awaitCooldown, en));
+			behaviorStateMachine.ChangeState(new OfficeChair_FindOffice(this, false, bringEntityCooldown, en));
 
 
 		public void SetEnabled(bool active) =>
 			rotator.targetSprite = active ? sprActive : sprDeactive;
-
-		const float normSpeed = 50f;
-
-		const float awaitCooldown = 40f;
 
 		internal OfficeChair_FindOffice bringingState;
 
@@ -94,7 +90,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal AudioManager audMan;
 
 		[SerializeField]
-		internal float pickupThreshold = 11.5f;
+		internal float pickupThreshold = 11.5f, movementSpeed = 50f, bringEntityCooldown = 40f, heightOffset = 3f;
 
 		[SerializeField]
 		internal int maxAttemptsBeforeGivingUpNavigation = 5;
@@ -155,7 +151,7 @@ namespace BBTimes.CustomContent.NPCs
 				//	entityBaseHeight = target.InternalHeight;
 				SetTarget(false);
 				target.Teleport(chair.transform.position);
-				overrider.SetHeight(target.InternalHeight + heightOffset);
+				overrider.SetHeight(target.InternalHeight + chair.heightOffset);
 			}
 
 			targetCell = cells[Random.Range(0, cells.Count)];
@@ -252,8 +248,6 @@ namespace BBTimes.CustomContent.NPCs
 			overrider.Release();
 			target = null;
 		}
-
-		const float heightOffset = 3f;
 
 		readonly EntityOverrider overrider = new();
 	}

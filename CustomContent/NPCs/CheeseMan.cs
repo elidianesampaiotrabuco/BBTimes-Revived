@@ -96,6 +96,9 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal Sprite gaugeSprite;
 
+		[SerializeField]
+		internal float movementSpeed = 17.5f, sorryInitialDelay = 1f, sorryAngryDelay = 0.35f;
+
 		HudGauge gauge;
 
 		readonly MovementModifier moveMod = new(Vector3.zero, 1f);
@@ -122,8 +125,8 @@ namespace BBTimes.CustomContent.NPCs
 		public void ClickableUnsighted(int player) { }
 		public void Walk(bool humming)
 		{
-			navigator.maxSpeed = 17.5f;
-			navigator.SetSpeed(17.5f);
+			navigator.maxSpeed = movementSpeed;
+			navigator.SetSpeed(movementSpeed);
 
 			animComp.animation = humming ? sprsWalkHumming : sprsWalking;
 
@@ -158,7 +161,7 @@ namespace BBTimes.CustomContent.NPCs
 		}
 		IEnumerator SorrySequence(Entity playerToOffer)
 		{
-			float delay = 1f;
+			float delay = sorryInitialDelay;
 			while (delay > 0f)
 			{
 				delay -= TimeScale * Time.deltaTime;
@@ -198,7 +201,7 @@ namespace BBTimes.CustomContent.NPCs
 
 				animComp.animation = sprBlankFace;
 
-				delay = 0.35f;
+				delay = sorryAngryDelay;
 				while (delay > 0f)
 				{
 					delay -= TimeScale * Time.deltaTime;

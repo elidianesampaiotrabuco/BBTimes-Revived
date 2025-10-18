@@ -15,7 +15,7 @@ namespace BBTimes.CustomContent.Objects
 
 		private void OnTriggerStay(Collider other) // Stay because someone could be standing on it
 		{
-			if (ForceDisableCollision || !open) return;
+			if (ForceDisableCollision || !open || !other.isTrigger) return;
 
 			if (other.CompareTag("NPC") || other.CompareTag("Player"))
 			{

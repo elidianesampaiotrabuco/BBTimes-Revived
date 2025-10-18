@@ -313,7 +313,7 @@ namespace BBTimes.ModPatches.EnvironmentPatches
 			{
 				Debug.LogError("TIMES: Failed to create outside!");
 				Debug.LogException(e);
-				throw e; // Rethrow the exception to not break the game
+				throw; // Rethrow the exception to not break the game
 			}
 		}
 

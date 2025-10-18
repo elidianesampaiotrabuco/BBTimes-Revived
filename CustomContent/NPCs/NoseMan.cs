@@ -52,7 +52,8 @@ namespace BBTimes.CustomContent.NPCs
 		internal SpriteRenderer renderer;
 
 		[SerializeField]
-		internal float seekAttentionDelay = 2f, patienceCooldown = 30f, delayBeforeNextAnnoyance = 60f, sneezeForce = 75f, distanceFromPlayer = 15f, sneezeDistanceFactor = 0.06f;
+		internal float seekAttentionDelay = 2f, patienceCooldown = 30f, delayBeforeNextAnnoyance = 60f, sneezeForce = 75f, distanceFromPlayer = 15f, sneezeDistanceFactor = 0.06f,
+			walkSpeed = 29f, waitFrameDelay = 1f, sneezeMinForce = 5f, sneezeVerySmallDelay = 0.595f, distanceToGiveUpFactor = 4f;
 
 		[SerializeField]
 		internal int minYtpAmount = 5, maxYtpAmount = 20;
@@ -64,7 +65,7 @@ namespace BBTimes.CustomContent.NPCs
 		}
 		public void Walk(bool walk)
 		{
-			float speed = walk ? 29f : 0f;
+			float speed = walk ? walkSpeed : 0f;
 			navigator.maxSpeed = speed;
 			navigator.SetSpeed(speed);
 		}
@@ -107,7 +108,7 @@ namespace BBTimes.CustomContent.NPCs
 					Vector3 offset = ec.Npcs[i].transform.position - transform.position;
 					float force = sneezeForce - offset.magnitude * sneezeDistanceFactor;
 
-					if (force >= 5f)
+					if (force >= sneezeMinForce)
 						ec.Npcs[i].Entity.AddForce(new(offset.normalized, force, -force * 0.21f));
 				}
 			}
@@ -118,7 +119,7 @@ namespace BBTimes.CustomContent.NPCs
 				Vector3 offset = player.transform.position - transform.position;
 				float force = sneezeForce - offset.magnitude * sneezeDistanceFactor;
 
-				if (force >= 5f)
+				if (force >= sneezeMinForce)
 					player.plm.Entity.AddForce(new(offset.normalized, force, -force * 0.21f));
 
 			}
@@ -138,7 +139,7 @@ namespace BBTimes.CustomContent.NPCs
 			renderer.sprite = sprSneeze;
 
 			pm.Am.moveMods.Remove(freezeMod);
-			float verySmallDelay = 0.595f;
+			float verySmallDelay = sneezeVerySmallDelay;
 			while (verySmallDelay > 0f)
 			{
 				verySmallDelay -= TimeScale * Time.deltaTime;
@@ -211,7 +212,7 @@ namespace BBTimes.CustomContent.NPCs
 				frameDelay -= nos.TimeScale * Time.deltaTime;
 				if (frameDelay <= 0)
 				{
-					frameDelay = 1f;
+					frameDelay = nos.waitFrameDelay;
 					nos.Entity.Teleport(target.transform.position);
 				}
 			}
@@ -265,7 +266,7 @@ namespace BBTimes.CustomContent.NPCs
 	internal class NoseMan_AnnoyPlayer(NoseMan nos, PlayerManager target) : NoseMan_FollowPlayerByDistance(nos, target)
 	{
 		float annoyanceCooldown = nos.patienceCooldown, seekAttentionDelay = 0f;
-		readonly float distanceToGiveUp = nos.distanceFromPlayer * 4f;
+		readonly float distanceToGiveUp = nos.distanceFromPlayer * nos.distanceToGiveUpFactor;
 
 		public override void Update()
 		{

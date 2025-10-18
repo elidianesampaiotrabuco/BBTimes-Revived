@@ -1,16 +1,16 @@
-﻿using BBTimes.CustomComponents;
+﻿using System.Collections;
+using BBTimes.CustomComponents;
 using BBTimes.CustomComponents.NpcSpecificComponents;
+using BBTimes.Extensions;
+using MTM101BaldAPI;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
-using System.Collections;
 using UnityEngine;
-using MTM101BaldAPI;
-using BBTimes.Extensions;
 
 
 namespace BBTimes.CustomContent.NPCs
 {
-    public class MagicalStudent : NPC, INPCPrefab
+	public class MagicalStudent : NPC, INPCPrefab
 	{
 
 		public void SetupPrefab()
@@ -37,8 +37,9 @@ namespace BBTimes.CustomContent.NPCs
 			renderer = spriteRenderer[0];
 		}
 		public void SetupPrefabPost() { }
-		public string Name { get; set; } public string Category => "npcs";
-		
+		public string Name { get; set; }
+		public string Category => "npcs";
+
 		public NPC Npc { get; set; }
 		[SerializeField] Character[] replacementNPCs; public Character[] GetReplacementNPCs() => replacementNPCs; public void SetReplacementNPCs(params Character[] chars) => replacementNPCs = chars;
 
@@ -57,7 +58,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		public void ThrowMagic(PlayerManager pm) =>
 			StartCoroutine(Throw(pm.transform));
-		
+
 
 		IEnumerator Throw(Transform target)
 		{
@@ -79,7 +80,7 @@ namespace BBTimes.CustomContent.NPCs
 				yield return null;
 			}
 			renderer.transform.localPosition = pos;
-			cool = 0.3f;
+			cool = postThrowMagicDelay;
 			renderer.sprite = throwSprites[2];
 			audMan.FlushQueue(true);
 			audMan.PlaySingle(audThrow);
@@ -118,7 +119,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal SoundObject audThrow, audPrepare;
 
 		[SerializeField]
-		internal float minThrowCooldown = 15f, maxThrowCooldown = 25f, throwMagicDelay = 1.5f;
+		internal float minThrowCooldown = 15f, maxThrowCooldown = 25f, throwMagicDelay = 1.5f, postThrowMagicDelay = 0.3f, cancelThrowDistanceCheck = 10f;
 
 		const float speed = 15f;
 	}
@@ -157,7 +158,7 @@ namespace BBTimes.CustomContent.NPCs
 			ChangeNavigationState(new NavigationState_WanderRounds(mgs, 0));
 		}
 		public override void PlayerInSight(PlayerManager player)
-		{			
+		{
 			base.PlayerInSight(player);
 			if (cool > 0f) return;
 
@@ -199,7 +200,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
-			if (Vector3.Distance(nextPoint, mgs.transform.position) > 10f)
+			if (Vector3.Distance(nextPoint, mgs.transform.position) > mgs.cancelThrowDistanceCheck)
 				mgs.behaviorStateMachine.ChangeState(new MagicalStudent_Wander(mgs, 0f));
 		}
 	}

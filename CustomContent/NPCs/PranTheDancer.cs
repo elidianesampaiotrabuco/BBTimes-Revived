@@ -54,7 +54,7 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal SoundObject[] audIdle, audMeGrab;
 		[SerializeField]
-		internal float idleChance = 0.6f, throwForce = 125f, throwAcceleration = -67f;
+		internal float idleChance = 0.6f, throwForce = 125f, throwAcceleration = -67f, waitToDanceAgainCooldown = 15f;
 		public void PlayIdleMusic()
 		{
 			musicAudMan.FlushQueue(true);
@@ -153,28 +153,33 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
-			if (!target)
+			if (target)
 			{
 				bool canCollideWithPran = target.CanCollideWith(pran.Entity);
 				if (!pran.audMan.AnyAudioIsPlaying || !canCollideWithPran)
 				{
-					if (target && canCollideWithPran)
+					if (canCollideWithPran)
 					{
 						pran.ThrowEntity(target, throwDir);
 						target.ExternalActivity.moveMods.Remove(stayMod);
 					}
-					pran.behaviorStateMachine.ChangeState(new Pran_Wondering(pran, 15f));
+					pran.behaviorStateMachine.ChangeState(new Pran_Wondering(pran, pran.waitToDanceAgainCooldown));
 					return;
 				}
+				rotatingReference = rotatingReference.RotateAroundAxis(Vector3.up, Time.deltaTime * pran.TimeScale * 254f);
+				var dist = rotatingReference * 5f + pran.transform.position - target.transform.position;
+				stayMod.movementAddend = dist * 215f * Time.deltaTime * pran.TimeScale;
+				if (dist.magnitude > 100)
+				{
+					target.ExternalActivity.moveMods.Remove(stayMod);
+					pran.behaviorStateMachine.ChangeState(new Pran_Wondering(pran));
+				}
 			}
-			rotatingReference = rotatingReference.RotateAroundAxis(Vector3.up, Time.deltaTime * pran.TimeScale * 254f);
-			var dist = rotatingReference * 5f + pran.transform.position - target.transform.position;
-			stayMod.movementAddend = dist * 215f * Time.deltaTime * pran.TimeScale;
-			if (dist.magnitude > 100)
+			else
 			{
-				target?.ExternalActivity.moveMods.Remove(stayMod);
-				pran.behaviorStateMachine.ChangeState(new Pran_Wondering(pran));
+				pran.behaviorStateMachine.ChangeState(new Pran_Wondering(pran, pran.waitToDanceAgainCooldown));
 			}
+
 		}
 	}
 }

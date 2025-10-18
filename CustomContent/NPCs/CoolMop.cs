@@ -45,7 +45,7 @@ namespace BBTimes.CustomContent.NPCs
 		public void SetupPrefabPost() { }
 		public string Name { get; set; }
 		public string Category => "npcs";
-		
+
 		public NPC Npc { get; set; }
 		[SerializeField] Character[] replacementNPCs; public Character[] GetReplacementNPCs() => replacementNPCs; public void SetReplacementNPCs(params Character[] chars) => replacementNPCs = chars;
 		public int ReplacementWeight { get; set; }
@@ -123,13 +123,13 @@ namespace BBTimes.CustomContent.NPCs
 			var slip = Instantiate(slipMatPre);
 			slip.SetAnOwner(gameObject);
 			slip.transform.position = cell.FloorWorldPosition;
-			slip.StartCoroutine(GameExtensions.TimerToDestroy(slip.gameObject, ec, 15f));
+			slip.StartCoroutine(GameExtensions.TimerToDestroy(slip.gameObject, ec, slipperLifeTime));
 
 			if (slips == slipsPerTile || slips == 1)
 			{
 				var sign = Instantiate(wetSign);
 				sign.transform.position = cell.FloorWorldPosition;
-				sign.StartCoroutine(GameExtensions.TimerToDestroy(sign.gameObject, ec, 15f));
+				sign.StartCoroutine(GameExtensions.TimerToDestroy(sign.gameObject, ec, slipperLifeTime));
 			}
 		}
 
@@ -160,7 +160,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal EmptyMonoBehaviour wetSign;
 
 		[SerializeField]
-		internal float minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 45f, slipDropCooldown = 6f;
+		internal float minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 45f, slipDropCooldown = 6f, slipperLifeTime = 15f;
 
 		[SerializeField]
 		internal int slipsPerTile = 5;

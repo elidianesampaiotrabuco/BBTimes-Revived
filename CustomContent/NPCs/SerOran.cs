@@ -87,13 +87,15 @@ namespace BBTimes.CustomContent.NPCs
 		internal float wanderChance = 0.65f;
 
 		[SerializeField]
-		internal float eatTimer = 10f;
+		internal float eatTimer = 10f, wanderCooldownBase = 5f, wonderingSpeed = 13f, chaseSpeed = 18f, angrySpeed = 36f, eatenSpeed = 14f, askItemDistance = 22f, eatenHeightOffset = 3f;
 
 		[SerializeField]
-		int maxAmountOfSlotsToAccept = 9;
+		[Range(1, 20)]
+		internal int maxAmountOfSlotsToAccept = 9;
 
 		[SerializeField]
 		internal Sprite gaugeSprite;
+
 		public HudGauge Gauge { get; private set; }
 		readonly EntityOverrider overrider = new();
 
@@ -292,19 +294,20 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class Oran_Wondering(SerOran or, float cooldown = 0f) : Oran_StateBase(or)
 	{
-		float wanderCooldown = 5f, cooldown = cooldown;
+		float wanderCooldown, cooldown = cooldown;
 		public override void Enter()
 		{
 			base.Enter();
-			or.Navigator.maxSpeed = 13f;
-			or.Navigator.SetSpeed(13f);
+			or.Navigator.maxSpeed = or.wonderingSpeed;
+			or.Navigator.SetSpeed(or.wonderingSpeed);
+			wanderCooldown = or.wanderCooldownBase;
 			ChangeNavigationState(new NavigationState_WanderRandom(or, 0));
 		}
 
 		public override void PlayerInSight(PlayerManager player)
 		{
 			base.PlayerInSight(player);
-			if (cooldown <= 0f && !player.Tagged && or.PlayerHasEatable(player)) // player.itm.HasItem()
+			if (cooldown <= 0f && !player.Tagged && or.PlayerHasEatable(player))
 				or.behaviorStateMachine.ChangeState(new Oran_ChasePlayer(or, player, this));
 		}
 
@@ -317,7 +320,7 @@ namespace BBTimes.CustomContent.NPCs
 			{
 				if (Random.value <= or.wanderChance)
 					or.Wander();
-				wanderCooldown += 5f;
+				wanderCooldown += or.wanderCooldownBase;
 			}
 
 			if (cooldown > 0f)
@@ -334,8 +337,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Enter()
 		{
 			base.Enter();
-			or.Navigator.maxSpeed = 18f;
-			or.Navigator.SetSpeed(18f);
+			or.Navigator.maxSpeed = or.chaseSpeed;
+			or.Navigator.SetSpeed(or.chaseSpeed);
 			or.SpotPlayer();
 			tar = new NavigationState_TargetPlayer(or, 63, pm.transform.position);
 			ChangeNavigationState(tar);
@@ -406,14 +409,14 @@ namespace BBTimes.CustomContent.NPCs
 				return;
 			}
 
-			chosenSlot = slots[Random.Range(0, chosenSlot)];
+			chosenSlot = slots[Random.Range(0, slots.Count)];
 			wantedItem = pm.itm.items[chosenSlot].itemType;
 		}
 
 		public override void Update()
 		{
 			base.Update();
-			if (chosenSlot != -1 && (pm.itm.items[chosenSlot].itemType != wantedItem || Vector3.Distance(or.transform.position, pm.transform.position) >= 22f))
+			if (chosenSlot != -1 && (pm.itm.items[chosenSlot].itemType != wantedItem || Vector3.Distance(or.transform.position, pm.transform.position) >= or.askItemDistance))
 				or.behaviorStateMachine.ChangeState(new Oran_Angry(or, pm));
 		}
 	}
@@ -428,7 +431,7 @@ namespace BBTimes.CustomContent.NPCs
 			base.Enter();
 			or.UpsetMe();
 			or.Navigator.SetSpeed(0f);
-			or.Navigator.maxSpeed = 36f;
+			or.Navigator.maxSpeed = or.angrySpeed;
 			tar = new NavigationState_TargetPlayer(or, 63, pm.transform.position);
 			ChangeNavigationState(tar);
 		}
@@ -481,17 +484,18 @@ namespace BBTimes.CustomContent.NPCs
 	{
 		readonly PlayerManager pm = pm;
 		readonly float baseHeight = pm.plm.Entity.InternalHeight;
-		float eatCooldown = or.eatTimer;
+		float eatCooldown;
 
 		public override void Enter()
 		{
 			base.Enter();
 			ChangeNavigationState(new NavigationState_WanderRandom(or, 0));
-			or.Navigator.maxSpeed = 14;
-			or.Navigator.SetSpeed(14f);
+			or.Navigator.maxSpeed = or.eatenSpeed;
+			or.Navigator.SetSpeed(or.eatenSpeed);
 
+			eatCooldown = or.eatTimer;
 			or.EatPlayer(pm);
-			or.Overrider.SetHeight(baseHeight - 3f);
+			or.Overrider.SetHeight(baseHeight - or.eatenHeightOffset);
 			or.Overrider.SetInteractionState(false);
 			or.Overrider.SetFrozen(true);
 		}

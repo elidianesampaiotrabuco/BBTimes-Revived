@@ -219,7 +219,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal ItemObject paperItem;
 
 		[SerializeField]
-		internal float entityStunTime = 20f, playerStunDelay = 10f;
+		internal float entityStunTime = 20f, playerStunDelay = 10f, respawnCooldown = 3f, respawnPlayerInSightDelay = 5f, activeLifetime = 120f, pictureTakeDelay = 1f;
 
 		Coroutine picTimer;
 		PlayerManager lastPlayer;
@@ -272,7 +272,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		}
 
-		float cooldown = 3f;//30f;
+		float cooldown = cs.respawnCooldown;
 	}
 
 	internal class CameraStand_AboutToRespawn(CameraStand cs) : CameraStand_StateBase(cs)
@@ -300,12 +300,18 @@ namespace BBTimes.CustomContent.NPCs
 			ableOfRespawning = 5f;
 		}
 
-		float ableOfRespawning = 5f;
+		float ableOfRespawning;
+
+		public override void Enter()
+		{
+			base.Enter();
+			ableOfRespawning = cs.respawnPlayerInSightDelay;
+		}
 	}
 
 	internal class CameraStand_Active(CameraStand cs) : CameraStand_StateBase(cs)
 	{
-		float timeActive = 120f, sightDelay = 1f;
+		float timeActive = cs.activeLifetime, sightDelay = cs.pictureTakeDelay;
 		public override void Update()
 		{
 			base.Update();
@@ -317,7 +323,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Unsighted()
 		{
 			base.Unsighted();
-			sightDelay = 1f;
+			sightDelay = cs.pictureTakeDelay;
 		}
 
 		public override void InPlayerSight(PlayerManager player)

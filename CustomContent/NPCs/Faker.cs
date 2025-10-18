@@ -80,14 +80,14 @@ namespace BBTimes.CustomContent.NPCs
 		public void PlayRandomAudio()
 		{
 			audMan.FlushQueue(true);
-			audMan.pitchModifier = Random.Range(0.35f, 1.5f);
+			audMan.pitchModifier = Random.Range(minPitchChange, maxPitchChange);
 			audMan.QueueRandomAudio(soundsToEmit);
 		}
 
 		public void ChangeRandomState()
 		{
-			int rng = Random.Range(0, 3);
-			behaviorStateMachine.ChangeState(new Faker_Spawn(this, rng == 0 ? new Faker_BlueVariant(this) : rng == 1 ? new Faker_RedVariant(this) : new Faker_GreenVariant_Idle(this)));
+			int rng = Random.Range(0, variantTypes.Length);
+			behaviorStateMachine.ChangeState(System.Activator.CreateInstance(variantTypes[rng], [this, rng]) as Faker_ActiveState);
 		}
 
 		public void ApplyScale(bool add)
@@ -113,6 +113,13 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal SpriteRenderer renderer;
 
+		[SerializeField]
+		internal float minPitchChange = 0.35f, maxPitchChange = 1.25f, despawnCooldown = 60f, spawnCooldown = 5f, walkSpeed = 25f, despawnHeight = -15f,
+		blueVariant_FovModifier = -25f, redVariant_rotationSmoothness = 0.45f;
+
+		[SerializeField]
+		internal System.Type[] variantTypes = [typeof(Faker_GreenVariant_Idle), typeof(Faker_RedVariant), typeof(Faker_BlueVariant)];
+
 		readonly TimeScaleModifier mod = new(0.25f, 1f, 1f);
 	}
 
@@ -121,9 +128,10 @@ namespace BBTimes.CustomContent.NPCs
 		protected Faker f = f;
 	}
 
-	internal class Faker_ActiveState(Faker f) : Faker_StateBase(f)
+	internal class Faker_ActiveState(Faker f, int form) : Faker_StateBase(f)
 	{
-		float despawnCooldown = 60f;
+		protected int formIdx = form;
+		float despawnCooldown = f.despawnCooldown;
 
 		protected bool CanDespawn
 		{
@@ -147,6 +155,12 @@ namespace BBTimes.CustomContent.NPCs
 		bool _canDespawn = true;
 		int _despawns = 0;
 
+		public override void Enter()
+		{
+			base.Enter();
+			f.renderer.sprite = f.forms[formIdx];
+		}
+
 		public override void Update()
 		{
 			base.Update();
@@ -161,7 +175,7 @@ namespace BBTimes.CustomContent.NPCs
 	internal class Faker_Spawn(Faker f, Faker_StateBase stateToChange) : Faker_StateBase(f)
 	{
 		float prevHeight;
-		float spawnCooldown = 5f;
+		float spawnCooldown = f.spawnCooldown;
 		public override void Enter()
 		{
 			base.Enter();
@@ -172,7 +186,7 @@ namespace BBTimes.CustomContent.NPCs
 			f.Navigator.SetSpeed(0);
 			ChangeNavigationState(new NavigationState_DoNothing(f, 0));
 			prevHeight = f.Entity.InternalHeight;
-			f.Entity.SetHeight(-15);
+			f.Entity.SetHeight(f.despawnHeight);
 			var cells = f.ec.mainHall.AllTilesNoGarbage(false, false);
 			f.Entity.Teleport(cells[Random.Range(0, cells.Count)].CenterWorldPosition);
 		}
@@ -191,30 +205,29 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Exit();
 			f.Entity.Enable(true);
-			f.Navigator.speed = 25;
-			f.Navigator.SetSpeed(25);
+			f.Navigator.speed = f.walkSpeed;
+			f.Navigator.SetSpeed(f.walkSpeed);
 			f.Entity.SetHeight(prevHeight);
 		}
 
 		public override void InPlayerSight(PlayerManager player)
 		{
 			base.InPlayerSight(player);
-			spawnCooldown = 5f;
+			spawnCooldown = f.spawnCooldown;
 		}
 
 		public override void PlayerInSight(PlayerManager player)
 		{
 			base.PlayerInSight(player);
-			spawnCooldown = 5f;
+			spawnCooldown = f.spawnCooldown;
 		}
 	}
 
-	internal class Faker_BlueVariant(Faker f) : Faker_ActiveState(f)
+	internal class Faker_BlueVariant(Faker f, int form) : Faker_ActiveState(f, form)
 	{
 		public override void Enter()
 		{
 			base.Enter();
-			f.renderer.sprite = f.forms[2];
 			f.Navigator.maxSpeed = 0;
 			f.Navigator.SetSpeed(0);
 			ChangeNavigationState(new NavigationState_DoNothing(f, 0));
@@ -227,7 +240,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (!players.ContainsKey(player))
 			{
 				var val = new ValueModifier();
-				players.Add(player, new(val, player.GetCustomCam().SlideFOVAnimation(val, -25f)));
+				players.Add(player, new(val, player.GetCustomCam().SlideFOVAnimation(val, f.blueVariant_FovModifier)));
 				player.Am.moveMods.Add(moveMod);
 				CanDespawn = false;
 				f.ApplyScale(true);
@@ -275,21 +288,20 @@ namespace BBTimes.CustomContent.NPCs
 		readonly MovementModifier moveMod = new(Vector3.zero, 0.5f);
 	}
 
-	internal class Faker_RedVariant(Faker f) : Faker_ActiveState(f)
+	internal class Faker_RedVariant(Faker f, int form) : Faker_ActiveState(f, form)
 	{
 		public override void Enter()
 		{
 			base.Enter();
 			f.Navigator.maxSpeed = 0;
 			f.Navigator.SetSpeed(0);
-			f.renderer.sprite = f.forms[1];
 			ChangeNavigationState(new NavigationState_DoNothing(f, 0));
 		}
 
 		public override void PlayerInSight(PlayerManager player)
 		{
 			base.PlayerInSight(player);
-			player.transform.RotateSmoothlyToNextPoint(f.transform.position, 0.45f);
+			player.transform.RotateSmoothlyToNextPoint(f.transform.position, f.redVariant_rotationSmoothness);
 			f.ApplyScale(true);
 		}
 		public override void PlayerSighted(PlayerManager player)
@@ -310,24 +322,23 @@ namespace BBTimes.CustomContent.NPCs
 		}
 	}
 
-	internal class Faker_GreenVariant_Idle(Faker f) : Faker_ActiveState(f)
+	internal class Faker_GreenVariant_Idle(Faker f, int form) : Faker_ActiveState(f, form)
 	{
 		public override void Enter()
 		{
 			base.Enter();
 			f.Navigator.maxSpeed = 0;
 			f.Navigator.SetSpeed(0);
-			f.renderer.sprite = f.forms[0];
 			ChangeNavigationState(new NavigationState_DoNothing(f, 0));
 			CanDespawn = true;
 		}
 		public override void PlayerSighted(PlayerManager player)
 		{
 			base.PlayerSighted(player);
-			f.behaviorStateMachine.ChangeState(new Faker_GreenVariant_Follow(f, player, this));
+			f.behaviorStateMachine.ChangeState(new Faker_GreenVariant_Follow(f, player, this, formIdx));
 		}
 	}
-	internal class Faker_GreenVariant_Follow(Faker f, PlayerManager pm, Faker_GreenVariant_Idle prev) : Faker_ActiveState(f)
+	internal class Faker_GreenVariant_Follow(Faker f, PlayerManager pm, Faker_GreenVariant_Idle prev, int form) : Faker_ActiveState(f, form)
 	{
 		int sighted = 0;
 		NavigationState_TargetPlayer target;
@@ -364,8 +375,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Unsighted()
 		{
 			base.Unsighted();
-			f.Navigator.maxSpeed = 25;
-			f.Navigator.SetSpeed(25);
+			f.Navigator.maxSpeed = f.walkSpeed;
+			f.Navigator.SetSpeed(f.walkSpeed);
 			sighted--;
 			if (sighted <= 0)
 				f.ApplyScale(false);

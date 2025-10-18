@@ -190,6 +190,12 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal SpriteVolumeAnimator animator;
 
+		[SerializeField]
+		internal float normalSpeed = 12f, angrySpeed = 19f, normalChaseSpeed = 18f, angryChaseSpeed = 25f, stepMax = 8f, classTimeDistanceThreshold = 25f, calmDownCooldownDefault = 120f,
+		fadeAboveTextScaleVel = 1.2f, fadeAboveTextScaleVelDecrease = 13f, fadeAboveTextScaleIncrease = 0.15f;
+		[SerializeField]
+		internal int pointsPerGuess = 25, minigameGuesses = 5;
+
 		internal readonly MovementModifier moveMod = new(Vector3.zero, 1f);
 
 		public override void Initialize()
@@ -204,13 +210,13 @@ namespace BBTimes.CustomContent.NPCs
 
 		public void NormalSpeed()
 		{
-			navigator.maxSpeed = angry ? 19f : 12f;
+			navigator.maxSpeed = angry ? angrySpeed : normalSpeed;
 			navigator.SetSpeed(navigator.maxSpeed);
 		}
 
 		public void NormalChaseSpeed()
 		{
-			navigator.maxSpeed = angry ? 25f : 18f;
+			navigator.maxSpeed = angry ? angryChaseSpeed : normalChaseSpeed;
 			navigator.SetSpeed(navigator.maxSpeed);
 		}
 
@@ -250,7 +256,7 @@ namespace BBTimes.CustomContent.NPCs
 				{
 					audMan.FlushQueue(true);
 					audMan.PlayRandomAudio(audWinPrize);
-					Singleton<CoreGameManager>.Instance.AddPoints(guesses * 25, chosenPlayer.playerNumber, true);
+					Singleton<CoreGameManager>.Instance.AddPoints(guesses * pointsPerGuess, chosenPlayer.playerNumber, true);
 					SetAngry(false);
 					SetIdleOnMood(0);
 					moveMod.movementMultiplier = 1f;
@@ -341,19 +347,19 @@ namespace BBTimes.CustomContent.NPCs
 
 			EnableLetters(true);
 			ScrambleLetters(chosenWord[wordIndex]);
-			guesses = 5;
+			guesses = minigameGuesses;
 		}
 
 		IEnumerator FadeAboveTextOut()
 		{
 			Vector3 ogScale = aboveText.transform.localScale;
 			float scale = ogScale.magnitude;
-			float scaleVel = 1.2f;
+			float scaleVel = fadeAboveTextScaleVel;
 
 			while (true)
 			{
-				scaleVel -= 13f * ec.EnvironmentTimeScale * Time.deltaTime;
-				scale += 0.15f * scaleVel * Time.timeScale;
+				scaleVel -= fadeAboveTextScaleVelDecrease * ec.EnvironmentTimeScale * Time.deltaTime;
+				scale += fadeAboveTextScaleIncrease * scaleVel * Time.timeScale;
 				if (scale <= 0f)
 				{
 					HideAboveText();
@@ -420,7 +426,6 @@ namespace BBTimes.CustomContent.NPCs
 		public string SelectedWord => chosenWord;
 
 		float stepDelay = 0f;
-		const float stepMax = 8f;
 		readonly char[] allowedCharacters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 	}
 
@@ -533,7 +538,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
-			if (Vector3.Distance(pen.transform.position, pm.transform.position) >= 25f)
+			if (Vector3.Distance(pen.transform.position, pm.transform.position) >= pen.classTimeDistanceThreshold)
 				pen.behaviorStateMachine.ChangeState(new Penny_Scream(pen, pm));
 		}
 
@@ -564,7 +569,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (!pen.audMan.AnyAudioIsPlaying)
 			{
 				pen.SetIdleOnMood(2);
-				pen.behaviorStateMachine.ChangeState(new Penny_NoticeChase(pen, pm, new Penny_Wandering(pen, calmDownCooldown: 120f, target: pm)));
+				pen.behaviorStateMachine.ChangeState(new Penny_NoticeChase(pen, pm, new Penny_Wandering(pen, calmDownCooldown: pen.calmDownCooldownDefault, target: pm)));
 			}
 		}
 	}

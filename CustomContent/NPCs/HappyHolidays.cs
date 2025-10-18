@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using BBTimes.CustomComponents;
 using BBTimes.Extensions;
 using BBTimes.Extensions.ObjectCreationExtensions;
@@ -57,7 +58,13 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			unwraps = unwrapSprites.Length;
 			clickDelay = 0f;
-			Clicked(pm.playerNumber);
+			StartCoroutine(InsertItemDelay(pm));
+		}
+
+		IEnumerator InsertItemDelay(PlayerManager pm)
+		{
+			yield return null;
+			Clicked(pm.playerNumber); // To prevent adding the item too soon and being overriden by the ItemManager
 		}
 
 		public void Clicked(int player)
@@ -113,7 +120,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal Sprite[] unwrapSprites;
 
 		[SerializeField]
-		internal float coalChance = 0.25f, maxClickDelay = 0.75f;
+		internal float coalChance = 0.25f, maxClickDelay = 0.75f, normSpeed = 14.5f, runSpeed = 23.05f, fleeCooldown = 15f, despawnHeight = -15f, respawnCooldown = 50f, aboutToRespawnCooldown = 5f;
 
 		[SerializeField]
 		internal AudioManager audMan;
@@ -141,23 +148,21 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Enter();
 			ChangeNavigationState(new NavigationState_WanderRandom(hh, 0));
-			hh.Navigator.maxSpeed = speed;
-			hh.Navigator.SetSpeed(speed);
+			hh.Navigator.maxSpeed = hh.normSpeed;
+			hh.Navigator.SetSpeed(hh.normSpeed);
 		}
-
-		const float speed = 14.5f;
 	}
 
 	internal class HappyHolidays_FleeFromPlayer(HappyHolidays hh, HappyHolidays_StateBase prevState, params Transform[] runningFrom) : HappyHolidays_StateBase(hh)
 	{
-		float fleeCooldown = 15f;
+		float fleeCooldown = hh.fleeCooldown;
 		readonly HappyHolidays_StateBase prevState = prevState;
 		readonly DijkstraMap map = new(hh.ec, PathType.Nav, int.MaxValue, runningFrom);
 		public override void Enter()
 		{
 			base.Enter();
-			hh.Navigator.maxSpeed = 23.05f;
-			hh.Navigator.SetSpeed(23.05f);
+			hh.Navigator.maxSpeed = hh.runSpeed;
+			hh.Navigator.SetSpeed(hh.runSpeed);
 			map.QueueUpdate();
 			map.Activate();
 			ChangeNavigationState(new NavigationState_WanderFlee(hh, 0, map));
@@ -190,7 +195,7 @@ namespace BBTimes.CustomContent.NPCs
 			hh.Navigator.SetSpeed(0);
 			ChangeNavigationState(new NavigationState_DoNothing(hh, 0));
 			prevHeight = hh.Entity.InternalHeight;
-			hh.Entity.SetHeight(-15);
+			hh.Entity.SetHeight(hh.despawnHeight);
 		}
 
 		public override void Update()
@@ -212,7 +217,7 @@ namespace BBTimes.CustomContent.NPCs
 		}
 
 		float prevHeight;
-		float cooldown = 50f;
+		float cooldown = hh.respawnCooldown;
 	}
 
 	internal class HappyHolidays_AboutToRespawn(HappyHolidays hh, float height) : HappyHolidays_StateBase(hh)
@@ -232,13 +237,13 @@ namespace BBTimes.CustomContent.NPCs
 		public override void InPlayerSight(PlayerManager player)
 		{
 			base.InPlayerSight(player);
-			ableOfRespawning = 5f;
+			ableOfRespawning = hh.aboutToRespawnCooldown;
 		}
 
 		public override void PlayerInSight(PlayerManager player)
 		{
 			base.InPlayerSight(player);
-			ableOfRespawning = 5f;
+			ableOfRespawning = hh.aboutToRespawnCooldown;
 		}
 
 		public override void Exit()
@@ -249,6 +254,6 @@ namespace BBTimes.CustomContent.NPCs
 
 		readonly float prevHeight = height;
 
-		float ableOfRespawning = 5f;
+		float ableOfRespawning = hh.aboutToRespawnCooldown;
 	}
 }

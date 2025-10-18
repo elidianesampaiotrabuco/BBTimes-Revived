@@ -53,9 +53,9 @@ namespace BBTimes.CustomContent.NPCs
 		public override void VirtualUpdate()
 		{
 			base.VirtualUpdate();
-			floatingRenderer.transform.localPosition = rendererPos + (Vector3.up * Mathf.Cos(Time.fixedTime * TimeScale * 0.5f * navigator.speed) * 0.88f);
+			floatingRenderer.transform.localPosition = rendererPos + (Vector3.up * Mathf.Cos(Time.fixedTime * TimeScale * floatingVariationSpeedFactor * navigator.speed) * maxFloatingYOffset);
 			itemRenderHolder.transform.localPosition = floatingRenderer.transform.localPosition;
-			itemRender.transform.localPosition = floatingRenderer.GetRotationalPosFrom(new(3f, -0.8f));
+			itemRender.transform.localPosition = floatingRenderer.GetRotationalPosFrom(itemRendererOffset);
 			floatingRenderer.GetPropertyBlock(block);
 			itemRender.SetSpriteRotation(block.GetFloat("_SpriteRotation"));
 		}
@@ -122,26 +122,32 @@ namespace BBTimes.CustomContent.NPCs
 		internal PropagatedAudioManager audMan;
 
 		[SerializeField]
-		internal float delayBeforeCatchAgain = 15f, delayAfterLosingItem = 3.5f;
+		internal float delayBeforeCatchAgain = 15f, delayAfterLosingItem = 3.5f, normSpeed = 12.5f, fleeSpeed = 26f, minWanderNoiseCooldown = 10f, maxWanderNoiseCooldown = 20f,
+			maxFloatingYOffset = 0.88f, floatingVariationSpeedFactor = 0.5f, escapeCooldown = 5f, disabledCooldown = 15f, wanderScaredCooldown = 15f;
+
+		[SerializeField]
+		internal Vector2 itemRendererOffset = new(3f, -0.8f);
+
+		[SerializeField]
+		[Range(0f, 1f)]
+		internal float wanderNoiseChance = 0.4f;
 
 		ItemObject holdingItem;
-
-		const float normSpeed = 12.5f, fleeSpeed = 26f;
 	}
 
 	internal class Phawillow_StateBase(Phawillow wi) : NpcState(wi)
 	{
 		protected Phawillow wi = wi;
 
-		float wander = Random.Range(10f, 20f);
+		float wander = Random.Range(wi.minWanderNoiseCooldown, wi.maxWanderNoiseCooldown);
 		public override void Update()
 		{
 			base.Update();
 			wander -= wi.TimeScale * Time.deltaTime;
 			if (wander <= 0f)
 			{
-				wander += Random.Range(10f, 20f); ;
-				if (Random.value > 0.6f)
+				wander += Random.Range(wi.minWanderNoiseCooldown, wi.maxWanderNoiseCooldown);
+				if (Random.value <= wi.wanderNoiseChance)
 					wi.PlayWander();
 			}
 		}
@@ -234,7 +240,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class Phawillow_FleeFromPlayer(Phawillow wi, NpcState prevState, PlayerManager pm) : Phawillow_StateBase(wi)
 	{
-		float escapeCooldown = 5f;
+		float escapeCooldown = wi.escapeCooldown;
 		bool samePlayerInSight = false;
 		NavigationState_WanderFlee fleeNav;
 
@@ -259,7 +265,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (player == pm)
 			{
 				samePlayerInSight = true;
-				escapeCooldown = 5f;
+				escapeCooldown = wi.escapeCooldown;
 			}
 		}
 
@@ -283,7 +289,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class Phawillow_Disable(Phawillow wi, NpcState prevState) : Phawillow_SubStateBase(wi)
 	{
-		float deadCooldown = 15f;
+		float deadCooldown = wi.disabledCooldown;
 		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
 		Sprite prevSpr;
 		public override void Enter()
@@ -323,7 +329,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class Phawillow_WanderScared(Phawillow wi, Phawillow_TargetItem tarItemPrev) : Phawillow_StateBase(wi)
 	{
-		float checkForPickupsDelay = 15f;
+		float checkForPickupsDelay = wi.wanderScaredCooldown;
 		public override void Enter()
 		{
 			base.Enter();
@@ -348,7 +354,7 @@ namespace BBTimes.CustomContent.NPCs
 					}
 				}
 
-				checkForPickupsDelay += 15f;
+				checkForPickupsDelay += wi.wanderScaredCooldown;
 			}
 		}
 
@@ -382,7 +388,7 @@ namespace BBTimes.CustomContent.NPCs
 			wi.UpdateRenderer(previousItem);
 			wi.SetSpeed(false);
 
-			List<Pickup> pickups = new(wi.ec.items);
+			List<Pickup> pickups = [.. wi.ec.items];
 
 			for (int i = 0; i < pickups.Count; i++)
 			{

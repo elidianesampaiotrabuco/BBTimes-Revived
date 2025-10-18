@@ -25,6 +25,7 @@ namespace BBTimes.CustomContent.NPCs
 		this.GetSoundNoSub("glueSplash.wav", SoundType.Voice),
 		this.GetSoundNoSub("glueStep.wav", SoundType.Voice)
 		];
+			const float pixelsPerUnit = 55f;
 
 			audMan = GetComponent<PropagatedAudioManager>();
 			stepAudMan = gameObject.CreatePropagatedAudioManager(25f, 90f);
@@ -64,7 +65,6 @@ namespace BBTimes.CustomContent.NPCs
 
 		}
 
-		const float pixelsPerUnit = 55f;
 
 		public void SetupPrefabPost() { }
 		public string Name { get; set; }
@@ -80,6 +80,7 @@ namespace BBTimes.CustomContent.NPCs
 			base.Initialize();
 			navigator.maxSpeed = 0f;
 			navigator.SetSpeed(0f);
+			wanderCooldown = Random.Range(wanderAudioCooldownMin, wanderAudioCooldownMax);
 			behaviorStateMachine.ChangeState(new GlubotronyState(this));
 		}
 		public void Step()
@@ -95,15 +96,15 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			isWalking = true;
 
-			float stepCool = 0.35f;
+			float stepCool = walkStepCooldown;
 			while (stepCool > 0f)
 			{
 				stepCool -= TimeScale * Time.deltaTime;
 				yield return null;
 			}
-			navigator.maxSpeed = speed;
-			navigator.SetSpeed(speed);
-			stepCool = 0.5f;
+			navigator.maxSpeed = walkSpeed;
+			navigator.SetSpeed(walkSpeed);
+			stepCool = walkStepEndCooldown;
 
 			while (stepCool > 0f)
 			{
@@ -122,22 +123,22 @@ namespace BBTimes.CustomContent.NPCs
 		public override void VirtualUpdate()
 		{
 			base.VirtualUpdate();
-			if (cooldown <= 0f)
+			if (wanderCooldown <= 0f)
 			{
-				cooldown += Random.Range(15f, 30f);
+				wanderCooldown += Random.Range(wanderAudioCooldownMin, wanderAudioCooldownMax);
 				audMan.QueueRandomAudio(audWander);
 			}
-			cooldown -= TimeScale * Time.deltaTime;
+			wanderCooldown -= TimeScale * Time.deltaTime;
 		}
 
 		public void SpillGlue()
 		{
 			audMan.FlushQueue(true);
 			audMan.QueueRandomAudio(audPutGlue);
-			Instantiate(gluePre).Initialize(gameObject, transform.position, 0.08f, ec);
+			Instantiate(gluePre).Initialize(gameObject, transform.position, glueInitValue, ec);
 			Directions.ReverseList(navigator.currentDirs);
 			behaviorStateMachine.ChangeNavigationState(new NavigationState_WanderRandom(this, 0));
-			SetGuilt(3f, "littering");
+			SetGuilt(guiltDuration, "littering");
 		}
 
 		[SerializeField]
@@ -161,9 +162,12 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal Glue gluePre;
 
+		[SerializeField]
+		internal float walkSpeed = 12f, walkStepCooldown = 0.35f, walkStepEndCooldown = 0.5f, wanderAudioCooldownMin = 15f, wanderAudioCooldownMax = 30f,
+		realStepCooldown = 1f, glueSpillCooldown = 40f, rotationAngleThreshold = 5f, rotationSpeed = 10f, glueInitValue = 0.08f, guiltDuration = 3f;
+
 		bool step = false, isWalking = false;
-		float cooldown = 15f;
-		const float speed = 12f;
+		float wanderCooldown = 0f;
 
 		public bool IsWalking => isWalking;
 	}
@@ -182,7 +186,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Update();
 			float angle = Vector3.Angle(gb.transform.forward, gb.Navigator.NextPoint - gb.transform.position); // Basically should stop or not to turn
-			if (angle <= 5f)
+			if (angle <= gb.rotationAngleThreshold)
 			{
 				if (isTurning)
 				{
@@ -205,9 +209,9 @@ namespace BBTimes.CustomContent.NPCs
 				stepCooldown -= gb.TimeScale * Time.deltaTime;
 				if (stepCooldown < 0f)
 				{
-					stepCooldown += 1f;
+					stepCooldown += gb.realStepCooldown;
 					gb.Step();
-					gb.transform.RotateSmoothlyToNextPoint(gb.Navigator.NextPoint, 10f);
+					gb.transform.RotateSmoothlyToNextPoint(gb.Navigator.NextPoint, gb.rotationSpeed);
 				}
 			}
 
@@ -220,11 +224,11 @@ namespace BBTimes.CustomContent.NPCs
 			if (spillGlueCooldown <= 0f && !player.Tagged)
 			{
 				gb.SpillGlue();
-				spillGlueCooldown = 40f;
+				spillGlueCooldown = gb.glueSpillCooldown;
 			}
 		}
 
-		float stepCooldown = 1f;
+		float stepCooldown = gb.realStepCooldown;
 
 		float spillGlueCooldown = 0f;
 

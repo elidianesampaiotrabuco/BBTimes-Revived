@@ -11,6 +11,8 @@ namespace BBTimes.CustomContent.NPCs
 {
 	public class Adverto : NPC, INPCPrefab
 	{
+		[SerializeField]
+		internal float movementSpeed = 15f;
 		public void SetupPrefab()
 		{
 			spriteRenderer[0].sprite = this.GetSprite(25f, "Adverto.png");
@@ -50,8 +52,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Initialize()
 		{
 			base.Initialize();
-			navigator.SetSpeed(15);
-			navigator.maxSpeed = 15;
+			navigator.SetSpeed(movementSpeed);
+			navigator.maxSpeed = movementSpeed;
 			behaviorStateMachine.ChangeState(new Adverto_Wander(this));
 		}
 

@@ -137,7 +137,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 			else
 			{
-				player.plm.AddStamina(-player.plm.staminaMax * 0.5f, true); // Workaround so the stamina doesn't go below 0
+				player.plm.AddStamina(-player.plm.staminaMax * playerStaminaMaxReductionFactor, true); // Workaround so the stamina doesn't go below 0
 				StartCoroutine(DisabledPlayerCooldown(false));
 			}
 			audMan.PlaySingle(ITM_Pencil.audStab);
@@ -191,11 +191,11 @@ namespace BBTimes.CustomContent.NPCs
 		internal Sprite gaugeSprite;
 
 		[SerializeField]
-		internal float stabLifeTime = 10f, speed = 15f, foundSpeed = 18f, superAngrySpeed = 38f;
+		internal float stabLifeTime = 10f, speed = 15f, foundSpeed = 18f, superAngrySpeed = 38f, wanderHummingCooldown = 3f, minWanderSatisfiedCooldown = 20f, maxWanderSatisfiedCooldown = 30f;
 
 		[SerializeField]
 		[Range(0f, 1f)]
-		internal float angryHummingChance = 0.3f;
+		internal float angryHummingChance = 0.3f, playerStaminaMaxReductionFactor = 0.5f;
 
 		[SerializeField]
 		internal Sprite findPlayerSprite, angrySprite, superAngrySprite, happySprite;
@@ -223,7 +223,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class PencilBoy_Wander(PencilBoy boy, float distractedCooldown = 0f) : PencilBoy_StateBase(boy) // Copypaste for Playtime lol
 	{
-		float wanderCooldown = 3f;
+		float wanderCooldown = boy.wanderHummingCooldown;
 		float distractedCooldown = distractedCooldown;
 		bool followingPlayer = false;
 
@@ -300,7 +300,7 @@ namespace BBTimes.CustomContent.NPCs
 				while (wanderCooldown <= 0f)
 				{
 					boy.AngryWander(false);
-					wanderCooldown += 3f;
+					wanderCooldown += boy.wanderHummingCooldown;
 				}
 			}
 		}
@@ -369,7 +369,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (!boy.Navigator.HasDestination)
 				ChangeNavigationState(new NavigationState_WanderRandom(boy, 0));
 		}
-		float wanderCooldown = Random.Range(20f, 30f);
+		float wanderCooldown = Random.Range(boy.minWanderSatisfiedCooldown, boy.maxWanderSatisfiedCooldown);
 		public override void Update()
 		{
 			base.Update();

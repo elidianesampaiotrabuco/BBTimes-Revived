@@ -73,7 +73,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		public void MoveOrNot(bool move)
 		{
-			navigator.maxSpeed = move ? 23.5f : 0f;
+			navigator.maxSpeed = move ? walkSpeed : 0f;
 			navigator.SetSpeed(navigator.maxSpeed);
 		}
 		public void Wander() =>
@@ -152,7 +152,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal SpriteRenderer renderer;
 
 		[SerializeField]
-		internal float whistleChance = 0.08f, dragBreakDistance = 20f, dragMultiplier = 0.15f, dragSpeed = 14f;
+		internal float whistleChance = 0.08f, dragBreakDistance = 20f, dragMultiplier = 0.15f, dragSpeed = 14f, walkSpeed = 23.5f, maxWhistleTime = 1f, lectureDelay = 3f;
 
 		readonly MovementModifier moveMod = new(Vector3.zero, 1f);
 
@@ -190,7 +190,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class DetentionBot_Wandering(DetentionBot bot) : DetentionBot_StateBase(bot)
 	{
-		float whistleTime = 1f;
+		float whistleTime = bot.maxWhistleTime;
 		public override void Enter()
 		{
 			base.Enter();
@@ -231,7 +231,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (whistleTime <= 0f)
 			{
 				bot.WhistleChance();
-				whistleTime = 1f;
+				whistleTime = bot.maxWhistleTime;
 			}
 		}
 	}
@@ -404,7 +404,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class DetentionBot_Lecture(DetentionBot bot) : DetentionBot_StateBase(bot)
 	{
-		float delay = 3f;
+		float delay = bot.lectureDelay;
 		public override void Enter()
 		{
 			base.Enter();

@@ -219,7 +219,7 @@ namespace BBTimes.CustomContent.NPCs
 				audMovingMan.maintainLoop = true;
 				audMovingMan.SetLoop(true);
 				audMovingMan.QueueAudio(audWalking);
-				audMovingMan.pitchModifier = angryWalk ? 1.15f : 1f;
+				audMovingMan.pitchModifier = angryWalk ? pitchAngryChange : 1f;
 				return;
 			}
 			audMovingMan.FlushQueue(true);
@@ -236,7 +236,7 @@ namespace BBTimes.CustomContent.NPCs
 				audMovingMan.SetLoop(true);
 				audMovingMan.QueueAudio(audWalking);
 			}
-			audMovingMan.pitchModifier = 1.5f;
+			audMovingMan.pitchModifier = superFastPitchChange;
 
 			navigator.maxSpeed = alertedSpeed;
 			navigator.SetSpeed(alertedSpeed);
@@ -353,7 +353,7 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal float shootDelay = 0.45f, shootForce = 65f, minDistanceToShoot = 30f, prepareDecorDelay = 6f, wannaBuildDecorCooldown = 20f, delayBeforeScanEveryone = 1.5f,
 			angryAnimationSpeed = 16f, spitAnimationSpeed = 25f, normalWalkAnimSpeed = 14f, alertedAnimSpeed = 35f,
-			angrySpeedWalk = 25f, walkSpeed = 18f, alertedSpeed = 75f;
+			angrySpeedWalk = 25f, walkSpeed = 18f, alertedSpeed = 75f, pitchAngryChange = 1.15f, superFastPitchChange = 1.5f, wanderVoiceLineDelay = 1f, angryLookerDistanceFactor = 10f;
 
 		[SerializeField]
 		internal int shootPerTarget = 3;
@@ -390,7 +390,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class EverettTreewood_Wander(EverettTreewood ev) : EverettTreewood_StateBase(ev)
 	{
-		float cooldown = ev.wannaBuildDecorCooldown, wanderDelay = 1f;
+		float cooldown = ev.wannaBuildDecorCooldown, wanderDelay = ev.wanderVoiceLineDelay;
 		public override void Enter()
 		{
 			base.Enter();
@@ -406,7 +406,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (wanderDelay <= 0f)
 			{
 				ev.LoveChristmas();
-				wanderDelay += 1f;
+				wanderDelay += ev.wanderVoiceLineDelay;
 			}
 
 			if (cooldown > 0f)
@@ -635,7 +635,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 
 			Entity faultyEntity = null;
-			float minDistance = ev.looker.distance * 10f;
+			float minDistance = ev.looker.distance * ev.angryLookerDistanceFactor;
 
 			for (int i = 0; i < Singleton<CoreGameManager>.Instance.TotalPlayers; i++)
 			{

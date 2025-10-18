@@ -249,7 +249,6 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class MrKreye_Watch(MrKreye kre) : MrKreye_StateBase(kre)
 	{
-		readonly Vector3 spotToStayOn = kre.transform.position;
 		float watchTime = kre.watchTime;
 		public override void Enter()
 		{
@@ -263,7 +262,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Update();
 			watchTime -= kre.TimeScale * Time.deltaTime;
-			if (watchTime <= 0f || kre.transform.position != spotToStayOn)
+			if (watchTime <= 0f)
 			{
 				kre.behaviorStateMachine.ChangeState(new MrKreye_Wander(kre));
 				return;

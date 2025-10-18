@@ -767,6 +767,14 @@
             <returns></returns>
             <exception cref="T:System.Collections.Generic.KeyNotFoundException"></exception>
         </member>
+        <member name="M:MTM101BaldAPI.EnumExtensions.EnumWithExtendedNameExists``1(System.String)">
+            <summary>
+            Returns true if the specified Enum exists.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="name"></param>
+            <returns></returns>
+        </member>
         <member name="M:MTM101BaldAPI.Extensions.ConvertToPrefab(UnityEngine.GameObject,System.Boolean)">
             <summary>
             Convert the GameObject into a prefab by moving its transform inside an internal GameObject marked as HideAndDontSave. It is automatically done for NPCs made with NPCBuilders and Items made with ItemBuilder.
@@ -1150,10 +1158,14 @@
             This item has a variant in the tutorial that must be accounted for when handling MultipleUse.
             </summary>
         </member>
+        <member name="F:MTM101BaldAPI.Registers.ItemFlags.Unobtainable">
+            <summary>
+            This item is unobtainable and should not be given to the player (or have its .item instantiated) in any circumstance.
+            </summary>
+        </member>
         <member name="F:MTM101BaldAPI.Registers.ItemFlags.RuntimeItem">
             <summary>
             This item is a runtime item, generated during the middle of a run.
-            It means that this item will automatically be cleaned up when the run is exited.
             </summary>
         </member>
         <member name="M:MTM101BaldAPI.Registers.ItemMetaStorage.GetPointsObject(System.Int32,System.Boolean)">
@@ -1526,6 +1538,12 @@
         <member name="M:MTM101BaldAPI.ObjectCreation.NPCBuilder`1.DisableNavigationPrecision">
             <summary>
             Makes the NPC target the tile instead of the exact cordinate.
+            </summary>
+            <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.ObjectCreation.NPCBuilder`1.IgnorePlayerVisibility">
+            <summary>
+            Makes the NPC able to see the player, even when the player is invisible.
             </summary>
             <returns></returns>
         </member>
@@ -1919,6 +1937,49 @@
             <summary>
             A class to be inherited from that has all the options menu building functionality.
             </summary>
+        </member>
+        <member name="M:MTM101BaldAPI.PlusExtensions.BaldiTVExtensionHandler.AddCharacter(System.String,MTM101BaldAPI.PlusExtensions.BaldiTVCharacter)">
+            <summary>
+            Adds a BaldiTVCharacter with the specified id.
+            </summary>
+            <param name="id"></param>
+            <param name="character"></param>
+            <exception cref="T:System.Exception"></exception>
+        </member>
+        <member name="M:MTM101BaldAPI.PlusExtensions.BaldiTVExtensionHandler.QueueCharacterSpeaks(BaldiTV,System.String,SoundObject)">
+            <summary>
+            Makes the specified character speak.
+            </summary>
+            <param name="tv">The BaldiTV</param>
+            <param name="id">The character id. Pass in "baldi" to make Baldi speak, pass in a null or empty string to make it automatically choose the right character.</param>
+            <param name="sound">The SoundObject to play.</param>
+        </member>
+        <member name="M:MTM101BaldAPI.PlusExtensions.BaldiTVExtensionHandler.BaldiSpeaksWrapper(BaldiTV)">
+            <summary>
+            A wrapper for BaldiSpeaks so that the patch doesn't override it. Used for when "baldi" is specified in QueueCharacterSpeaks.
+            </summary>
+            <param name="tv"></param>
+            <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.PlusExtensions.BaldiTVCharacter.SoundBelongsToCharacter(SoundObject)">
+            <summary>
+            Returns true if the specified sound belongs to this BaldiTVCharacter.
+            </summary>
+            <param name="obj"></param>
+            <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.PlusExtensions.BaldiTVCharacter.SpeakEnumerator(UnityEngine.UI.Image,BaldiTV,AudioManager,SoundObject)">
+            <summary>
+            The IEnumerator that is used to handle the character speaking animation.
+            The AudioManager hasn't started playing any audio yet, but it has been flushed.
+            Once the IEnumerator ends the character will stop talking, and the image will be destroyed.
+            There is no need to set busy or call tv.QueueCheck as that is handled automatically.
+            </summary>
+            <param name="image"></param>
+            <param name="tv"></param>
+            <param name="audMan"></param>
+            <param name="sound"></param>
+            <returns></returns>
         </member>
         <member name="T:MTM101BaldAPI.PlusExtensions.ExtendedPosterObject">
             <summary>
