@@ -469,7 +469,7 @@ namespace BBTimes.Manager
 			RollingBot.AddFixableItem(item.itemType);
 			ZapZap.AddDeactivator(item.itemType);
 			DetentionBot.AddDisablingItem(item.itemType);
-			JerryTheAC.AddDisablingItem(item.itemType);
+			PuddingFan.AddDisablingItem(item.itemType);
 			ItemAlarm.disablingItems.Add(item.itemType);
 			MetalWindow.acceptableItems.Add(item.itemType);
 			NotebookMachine.unlockableItems.Add(item.itemType);
@@ -984,7 +984,6 @@ namespace BBTimes.Manager
 			floorDatas[F4].ShopItems.Add(new() { selection = item, weight = 15 });
 			floorDatas[F5].ShopItems.Add(new() { selection = item, weight = 15 });
 			floorDatas[END].ShopItems.Add(new() { selection = item, weight = 20 });
-			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 15 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 35 });
 
 			// Storm in a Bag

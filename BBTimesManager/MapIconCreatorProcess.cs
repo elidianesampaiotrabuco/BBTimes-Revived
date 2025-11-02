@@ -1,7 +1,6 @@
 ﻿using System.IO;
 using BBTimes.CustomContent.Builders;
 using BBTimes.CustomContent.MapIcons;
-using BBTimes.CustomContent.Objects;
 using BBTimes.CustomContent.RoomFunctions;
 using BBTimes.Extensions.ObjectCreationExtensions;
 using BBTimes.ModPatches;
@@ -17,7 +16,7 @@ namespace BBTimes.Manager
 		static void GetIcons()
 		{
 			// map icon for mathmachine notebooks
-			MathMachinePatches.rightSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(IconPath, GetAssetName("hiddenNotebookIcon.png"))), ObjectCreationExtension.defaultMapIconPixelsPerUnit);
+			NotebookIconsPatches.NotebookIcons = TextureExtensions.LoadSpriteSheet(3, 1, ObjectCreationExtension.defaultMapIconPixelsPerUnit, Path.Combine(IconPath, GetAssetName("hiddenNotebookIcon.png")));
 			// map icon for trapdoors
 			Structure_Trapdoor.icon = ObjectCreationExtension.CreateMapIcon<MapIcon>(AssetLoader.TextureFromFile(Path.Combine(IconPath, GetAssetName("trapDoorIcon.png"))), "TrapdoorMapIcon");
 			// map icon for buttons

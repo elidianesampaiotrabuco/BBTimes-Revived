@@ -12,22 +12,17 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
             entity.SetActive(false);
             entity.OnEntityMoveInitialCollision += (hit) =>
             {
-                if (!thrown) return;
-                dir = Vector3.Reflect(dir, hit.normal);
-
-                positionArray[++hits] = transform.position;
-                lineRenderer.SetPositions(positionArray);
-
-                if (hits > hitsBeforeDespawning)
-                    CancelThrow();
+                if (thrown && !hasHitWall)
+                {
+                    hasHitWall = true;
+                    CancelThrow(); // Disappears on hitting a wall
+                }
             };
 
             this.ec = ec;
             this.owner = owner;
 
-            positionArray = new Vector3[hitsBeforeDespawning + 2];
-
-            lineRenderer.positionCount = positionArray.Length;
+            lineRenderer.positionCount = 2; // Simplified to 2 points
 
             initialized = true;
         }
@@ -37,12 +32,10 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
             entity.Teleport(owner.transform.position);
 
             this.speed = speed;
-            dir = dir = (target.transform.position - transform.position).normalized;
+            dir = (target.transform.position - transform.position).normalized;
             thrown = true;
             disabled = false;
             targettedEntity = target;
-
-            hits = 0;
         }
 
         void Despawn()
@@ -51,6 +44,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
             thrown = false;
             returning = false;
             disabled = true;
+            hasHitWall = false;
             entity.UpdateInternalMovement(Vector3.zero);
             targettedEntity?.ExternalActivity.moveMods.Remove(moveMod);
         }
@@ -70,10 +64,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 
         void Update()
         {
-            if (!initialized)
-                return;
-
-            if (disabled)
+            if (!initialized || disabled)
             {
                 entity.UpdateInternalMovement(Vector3.zero);
                 return;
@@ -86,15 +77,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
             }
 
             if (returning)
-            {
-                dir = (positionArray[hits] - transform.position).normalized;
-                if (Vector3.Distance(transform.position, positionArray[hits]) <= backWayDistanceCheck)
-                {
-                    if (hits > 0)
-                        hits--;
-                }
-
-            }
+                dir = (owner.transform.position - transform.position).normalized;
 
             moveMod.movementAddend = dir * speed * ec.EnvironmentTimeScale;
             entity.UpdateInternalMovement(moveMod.movementAddend);
@@ -102,10 +85,14 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 
         void LateUpdate()
         {
-            if (!initialized) return;
+            if (!initialized || disabled)
+            {
+                lineRenderer.enabled = false;
+                return;
+            }
+            lineRenderer.enabled = true;
             positionArray[0] = owner.transform.position;
-            for (int i = hits + 1; i < positionArray.Length; i++)
-                positionArray[i] = transform.position;
+            positionArray[1] = transform.position;
 
 
             lineRenderer.SetPositions(positionArray);
@@ -134,22 +121,28 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
             {
                 audMan.PlaySingle(audGrab);
                 targettedEntity = other.GetComponent<Entity>();
+                targettedEntity.Teleport(transform.position);
+                targetedPlayer = other.GetComponent<PlayerManager>();
                 Return();
             }
         }
 
         public void EntityTriggerExit(Collider other, bool validCollision)
         {
-            if (other.transform == targettedEntity.transform)
+            if (targettedEntity && other.transform == targettedEntity.transform)
                 CancelThrow();
         }
 
-        Vector3[] positionArray = [];
+        readonly Vector3[] positionArray = new Vector3[2];
         Vector3 dir;
         float speed;
-        int hits = 0;
         Entity targettedEntity = null;
+        PlayerManager targetedPlayer;
         MrKreye owner;
+        bool hasHitWall = false;
+
+        [SerializeField]
+        internal float defaultHeight = 5f, backWayDistanceCheck = 5f;
 
         [SerializeField]
         internal Entity entity;
@@ -164,14 +157,10 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
         internal SoundObject audGrab;
 
         [SerializeField]
-        internal float defaultHeight = 5f, backWayDistanceCheck = 5f;
-
-        [SerializeField]
         internal int hitsBeforeDespawning = 3;
-
 
         EnvironmentController ec;
         bool initialized = false, thrown = false, returning = false, disabled = false;
-        readonly MovementModifier moveMod = new(Vector3.zero, 0f);
+        readonly MovementModifier moveMod = new(Vector3.zero, 0.25f);
     }
 }

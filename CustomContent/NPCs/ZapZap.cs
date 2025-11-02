@@ -2,6 +2,7 @@
 using BBTimes.CustomComponents;
 using BBTimes.CustomComponents.NpcSpecificComponents;
 using BBTimes.CustomComponents.NpcSpecificComponents.ZapZap;
+using BBTimes.CustomContent.CustomItems;
 using BBTimes.Extensions;
 using BBTimes.Extensions.ObjectCreationExtensions;
 using BBTimes.Manager;
@@ -118,7 +119,10 @@ namespace BBTimes.CustomContent.NPCs
 			col.type = ParticleSystemCollisionType.World;
 			col.enableDynamicColliders = false;
 		}
-		public void SetupPrefabPost() { }
+		public void SetupPrefabPost()
+		{
+			stormPrefab = (ITM_StormInABag)BBTimesManager.man.Get<ItemObject>("Item_StormInABag").item;
+		}
 		public string Name { get; set; }
 		public string Category => "npcs";
 
@@ -147,7 +151,20 @@ namespace BBTimes.CustomContent.NPCs
 		internal float chanceToKamiCode = 0.1f;
 
 		[SerializeField]
+		[Range(0f, 1f)]
+		internal float chanceToSpawnStorm = 0.05f;
+
+		[SerializeField]
+		internal float stormSpawnCooldown = 5f;
+
+		[SerializeField]
 		internal ZapZapEletricity eletricityPre;
+
+		// ADDED FIELDS
+		[SerializeField]
+		internal ITM_StormInABag stormPrefab;
+
+		internal float currentStormCooldown = 0f;
 
 		readonly List<ZapZapEletricity> eletricityPretricities = [];
 		Cell home;
@@ -189,6 +206,10 @@ namespace BBTimes.CustomContent.NPCs
 		public override void VirtualUpdate()
 		{
 			base.VirtualUpdate();
+
+			if (currentStormCooldown > 0f)
+				currentStormCooldown -= TimeScale * Time.deltaTime;
+
 			if (eletricityPretricities.Count == 0)
 			{
 				eletricityPretrictyDestructionCooldown = eletricityPretricityDestructionDelay;
@@ -295,8 +316,12 @@ namespace BBTimes.CustomContent.NPCs
 			base.Update();
 			cooldown -= zap.TimeScale * Time.deltaTime;
 			if (cooldown < 0f)
-			{
 				zap.behaviorStateMachine.ChangeState(new ZapZap_GoBack(zap));
+
+			if (zap.currentStormCooldown <= 0f && Random.value <= zap.chanceToSpawnStorm)
+			{
+				Object.Instantiate(zap.stormPrefab).PlaceDown(zap.transform.position, zap.ec, displayBag: false);
+				zap.currentStormCooldown = zap.stormSpawnCooldown;
 			}
 		}
 	}

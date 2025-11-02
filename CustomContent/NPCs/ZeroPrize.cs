@@ -1,29 +1,35 @@
-﻿using BBTimes.Extensions;
+﻿using System.Collections.Generic;
 using BBTimes.CustomComponents;
-using System.Collections.Generic;
+using BBTimes.Extensions;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-    public class ZeroPrize : NPC, INPCPrefab
+	public class ZeroPrize : NPC, INPCPrefab
 	{
 
 		public void SetupPrefab()
 		{
 			audStartSweep = this.GetSound("0thprize_timetosweep.wav", "Vfx_0TH_WannaSweep", SoundType.Voice, new(0.99609375f, 0.99609375f, 0.796875f));
 			audSweep = this.GetSound("0thprize_mustsweep.wav", "Vfx_0TH_Sweep", SoundType.Voice, new(0.99609375f, 0.99609375f, 0.796875f));
-			var storedSprites = this.GetSpriteSheet(2, 1, 45f, "0thprize.png");
-			activeSprite = storedSprites[0];
-			deactiveSprite = storedSprites[1];
-			spriteRenderer[0].sprite = activeSprite;
+			blinkingSprites = this.GetSpriteSheet(2, 1, 45f, "0thprize.png");
+			sweepingSprites = this.GetSpriteSheet(2, 1, 45f, "0thprize_brushing.png");
+			spriteRenderer[0].sprite = blinkingSprites[0];
 
 			audMan = GetComponent<PropagatedAudioManager>();
 
-			((CapsuleCollider)baseTrigger[0]).radius = 4f; // default radius of Gotta Sweep
+			((CapsuleCollider)baseTrigger[0]).radius = 4f;
+
+			animComp = gameObject.AddComponent<AnimationComponent>();
+			animComp.renderers = spriteRenderer;
+			animComp.autoStart = false;
+			animComp.speed = 6f;
+			animComp.animation = blinkingSprites;
 		}
 		public void SetupPrefabPost() { }
-		public string Name { get; set; } public string Category => "npcs";
-		
+		public string Name { get; set; }
+		public string Category => "npcs";
+
 		public NPC Npc { get; set; }
 		[SerializeField] Character[] replacementNPCs; public Character[] GetReplacementNPCs() => replacementNPCs; public void SetReplacementNPCs(params Character[] chars) => replacementNPCs = chars;
 		public int ReplacementWeight { get; set; }
@@ -37,18 +43,20 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Initialize()
 		{
 			base.Initialize();
+			animComp.Initialize(ec);
 			behaviorStateMachine.ChangeState(new ZeroPrize_Wait(this, SleepingCooldown, false));
 		}
 
 		internal void StartSweeping()
 		{
-			blinking = false;
 			moveMod.forceTrigger = true;
-			audMan.PlaySingle(audStartSweep);
+			if (!isActiveAndSweeping)
+				audMan.PlaySingle(audStartSweep);
 
 			navigator.maxSpeed = speed;
 			navigator.SetSpeed(speed);
-			
+
+			isActiveAndSweeping = true;
 		}
 
 		internal void StopSweeping()
@@ -56,22 +64,21 @@ namespace BBTimes.CustomContent.NPCs
 			moveMod.forceTrigger = false;
 			navigator.SetSpeed(0f);
 			navigator.maxSpeed = 0f;
-			blinking = false;
 
 			ClearActs();
+			isActiveAndSweeping = false;
 		}
 
 		public override void VirtualOnTriggerEnter(Collider other) // copypaste from gotta sweep's code
 		{
 			if (IsSleeping) return;
 
-
 			if (other.isTrigger && (other.CompareTag("Player") || other.CompareTag("NPC")))
 			{
 				Entity component = other.GetComponent<Entity>();
 				if (component != null)
 				{
-					audMan.PlaySingle(audSweep); 
+					audMan.PlaySingle(audSweep);
 					ActivityModifier externalActivity = component.ExternalActivity;
 					if (!externalActivity.moveMods.Contains(moveMod))
 					{
@@ -95,8 +102,6 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-
-
 		public override void Despawn()
 		{
 			base.Despawn();
@@ -112,20 +117,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-		public override void VirtualUpdate()
-		{
-			base.VirtualUpdate();
-			if (!blinking)
-				spriteRenderer[0].sprite = IsSleeping ? deactiveSprite : activeSprite;
-
-			moveMod.movementAddend = navigator.Velocity.normalized * navigator.speed * moveModMultiplier * navigator.Am.Multiplier;
-		}
-		
-		internal void Blink()
-		{
-			blinking = !blinking;
-			spriteRenderer[0].sprite = activeSprite;
-		}
+		bool isActiveAndSweeping = false;
 
 		internal bool IsHome => home == ec.CellFromPosition(transform.position);
 		internal bool IsSleeping => navigationStateMachine.currentState is NavigationState_DoNothing;
@@ -134,88 +126,126 @@ namespace BBTimes.CustomContent.NPCs
 		internal Cell home;
 
 
-		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
+		readonly internal MovementModifier moveMod = new(Vector3.zero, 0f);
 		readonly List<ActivityModifier> actMods = [];
+		internal List<ActivityModifier> ActMods => actMods;
+		public float SpotSweepCooldown => Random.Range(minSpotSweepTime, maxSpotSweepTime);
+		public float AwakeningDelay => Random.Range(minAwakeningDelay, maxAwakeningDelay);
+
+		[SerializeField]
+		internal AnimationComponent animComp;
+
+		[SerializeField]
+		internal float minSpotSweepTime = 8f, maxSpotSweepTime = 14f;
+		[SerializeField]
+		internal float spotSweepBaseChance = 0.01f;
+		[SerializeField]
+		internal float spotSweepChancePerEntity = 0.05f;
 
 		[SerializeField]
 		internal SoundObject audSweep, audStartSweep;
 
 		[SerializeField]
-		internal Sprite activeSprite, deactiveSprite;
+		internal Sprite[] blinkingSprites, sweepingSprites;
 
 		[SerializeField]
 		internal AudioManager audMan;
 
 		[SerializeField]
-		internal float moveModMultiplier = 0.97f, minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 80f;
-
-		bool blinking = false;
+		internal float moveModMultiplier = 0.97f, minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 80f, minAwakeningDelay = 4f, maxAwakeningDelay = 6f;
 	}
 	internal class ZeroPrize_StateBase(ZeroPrize prize) : NpcState(prize)
 	{
 		protected ZeroPrize prize = prize;
 	}
 
-	internal class ZeroPrize_Wait(ZeroPrize prize, float cooldown, bool isActive) : ZeroPrize_StateBase(prize) // reusable for either make him active or deactive
+	internal class ZeroPrize_Wait(ZeroPrize prize, float cooldown, bool isActive) : ZeroPrize_StateBase(prize)
 	{
 		float waitTime = cooldown;
-
 		readonly bool active = isActive;
+		float spotSweepCheck = 1f;
 
 		public override void Enter()
 		{
 			base.Enter();
+			prize.animComp.animation = prize.blinkingSprites;
 			if (!active) // he is not active
 			{
 				prize.StopSweeping();
 				ChangeNavigationState(new NavigationState_DoNothing(prize, 0));
+				prize.animComp.ResetFrame(true, 1);
+				prize.animComp.Pause(true);
 				return;
 			}
 
 			prize.StartSweeping(); // he is active
 			ChangeNavigationState(new NavigationState_WanderRandom(prize, 0));
+
+			prize.animComp.ResetFrame(true);
+			prize.animComp.Pause(true);
 		}
 
 		public override void Update()
 		{
 			base.Update();
 			waitTime -= Time.deltaTime * prize.TimeScale;
-			if (waitTime <= 0f)
+
+			if (active)
 			{
-				if (!active)
-					prize.behaviorStateMachine.ChangeState(prize.IsSleeping // if he is in party, there's no reason to *wake up*
-						? new ZeroPrize_Awakening(prize) : new ZeroPrize_Wait(prize, prize.ActiveCooldown, true));
-				else 
+				spotSweepCheck -= Time.deltaTime * prize.TimeScale;
+				if (spotSweepCheck <= 0f)
+				{
+					spotSweepCheck = 1f; // Check every second
+					float chance = prize.spotSweepBaseChance + (prize.ActMods.Count * prize.spotSweepChancePerEntity);
+					if (Random.value < chance)
+					{
+						prize.behaviorStateMachine.ChangeState(new ZeroPrize_SweepingSpot(prize, prize.SpotSweepCooldown, waitTime));
+						return;
+					}
+				}
+
+				prize.moveMod.movementAddend = prize.Navigator.Velocity.normalized * prize.Navigator.speed * prize.moveModMultiplier * prize.Navigator.Am.Multiplier;
+
+				if (waitTime <= 0f)
+				{
 					prize.behaviorStateMachine.ChangeState(new ZeroPrize_WaitForSpawnBack(prize));
+				}
 			}
+			else
+			{
+				if (waitTime <= 0f)
+				{
+					prize.behaviorStateMachine.ChangeState(prize.IsSleeping
+						? new ZeroPrize_Awakening(prize) : new ZeroPrize_Wait(prize, prize.ActiveCooldown, true));
+				}
+			}
+		}
+
+		public override void Exit()
+		{
+			base.Exit();
+			if (active)
+				prize.moveMod.movementAddend = Vector3.zero;
 		}
 	}
 
 	internal class ZeroPrize_Awakening(ZeroPrize prize) : ZeroPrize_StateBase(prize)
 	{
+		public override void Enter()
+		{
+			base.Enter();
+			prize.animComp.animation = prize.blinkingSprites;
+			prize.animComp.ResetFrame(true);
+		}
 		public override void Update()
 		{
 			base.Update();
 			blinkTime -= prize.TimeScale * Time.deltaTime;
 			if (blinkTime <= 0f)
-			{
-				prize.Blink();
-
-				if (++blinks >= 6)
-				{
-					maxBlinkTime /= 2f;
-					if (++blinkCycles >= 3)
-						prize.behaviorStateMachine.ChangeState(new ZeroPrize_Wait(prize, prize.ActiveCooldown, true));
-					blinks -= 6;
-				}
-
-				blinkTime += maxBlinkTime;
-			}
-			
+				prize.behaviorStateMachine.ChangeState(new ZeroPrize_Wait(prize, prize.ActiveCooldown, true));
 		}
 
-		float blinkTime = 1f, maxBlinkTime = 1f;
-		int blinks = 0, blinkCycles = 0;
+		float blinkTime = prize.AwakeningDelay;
 
 	}
 
@@ -226,6 +256,19 @@ namespace BBTimes.CustomContent.NPCs
 			base.Enter();
 			ChangeNavigationState(new NavigationState_TargetPosition(prize, 63, prize.home.FloorWorldPosition));
 		}
+
+		public override void Update()
+		{
+			base.Update();
+			prize.moveMod.movementAddend = prize.Navigator.Velocity.normalized * prize.Navigator.speed * prize.moveModMultiplier * prize.Navigator.Am.Multiplier;
+		}
+
+		public override void Exit()
+		{
+			base.Exit();
+			prize.moveMod.movementAddend = Vector3.zero;
+		}
+
 		public override void DestinationEmpty()
 		{
 			base.DestinationEmpty();
@@ -235,6 +278,36 @@ namespace BBTimes.CustomContent.NPCs
 				return;
 			}
 			prize.behaviorStateMachine.ChangeState(new ZeroPrize_Wait(prize, prize.SleepingCooldown, false));
+		}
+	}
+
+	internal class ZeroPrize_SweepingSpot(ZeroPrize prize, float cooldown, float lastingActiveCooldown) : ZeroPrize_StateBase(prize)
+	{
+		float sweepTime = cooldown;
+		readonly float activeCooldownLeft = lastingActiveCooldown;
+
+		public override void Enter()
+		{
+			base.Enter();
+			prize.navigator.SetSpeed(0f);
+			prize.moveMod.movementAddend = Vector3.zero;
+			prize.moveMod.movementMultiplier = 1f;
+			prize.animComp.animation = prize.sweepingSprites;
+			prize.animComp.ResetFrame(true); // Resets frame and unpauses
+		}
+		public override void Update()
+		{
+			base.Update();
+			sweepTime -= Time.deltaTime * prize.TimeScale;
+			if (sweepTime <= 0f)
+			{
+				prize.behaviorStateMachine.ChangeState(new ZeroPrize_Wait(prize, activeCooldownLeft, true));
+			}
+		}
+		public override void Exit()
+		{
+			base.Exit();
+			prize.moveMod.movementMultiplier = 0f;
 		}
 	}
 }

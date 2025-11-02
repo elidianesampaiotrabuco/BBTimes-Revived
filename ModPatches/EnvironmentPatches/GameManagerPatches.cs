@@ -6,7 +6,6 @@ using BBTimes.CustomContent.Misc;
 using BBTimes.Extensions;
 using BBTimes.Manager;
 using HarmonyLib;
-using MTM101BaldAPI;
 using MTM101BaldAPI.Components;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
@@ -14,20 +13,30 @@ using UnityEngine;
 namespace BBTimes.ModPatches.EnvironmentPatches
 {
 
-	[ConditionalPatchNoMod("rad.rulerp.baldiplus.arcaderenovations")]
+	// This mod is not my business here anymore
+	// [ConditionalPatchNoMod("rad.rulerp.baldiplus.arcaderenovations")]
 	[HarmonyPatch(typeof(MainGameManager))]
-	internal class MainGameManagerPatches
+	internal static class MainGameManagerPatches
 	{
+
+		[HarmonyPatch(typeof(CoreGameManager), nameof(CoreGameManager.Quit))]
+		[HarmonyPostfix]
+		static void ResetSecretEnding() => allowEndingToBePlayed = false;
 
 		// SECRET ENDING PATCH
 
 		[HarmonyPatch("LoadSceneObject")]
 		[HarmonyPrefix]
-		private static void RedirectEndingIfPossible(MainGameManager __instance, ref SceneObject sceneObject, bool restarting)
+		private static void RedirectEndingIfPossible(ref SceneObject sceneObject, bool restarting)
 		{
-			if (restarting || !allowEndingToBePlayed || !__instance.levelObject.finalLevel) return;
-
+			if (!allowEndingToBePlayed) return;
+			if (restarting)
+			{
+				allowEndingToBePlayed = false;
+				return;
+			}
 			sceneObject = secretEndingObj;
+			allowEndingToBePlayed = false;
 		}
 
 

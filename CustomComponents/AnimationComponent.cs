@@ -69,11 +69,13 @@ namespace BBTimes.CustomComponents
 		public void StopLastFrameMode() =>
 			lastFrameMode = true;
 		public void ResetFrame() =>
-			ResetFrame(false);
-		public void ResetFrame(bool resetPause)
+			ResetFrame(false, 0);
+		public void ResetFrame(bool resetPause) =>
+			ResetFrame(resetPause, 0);
+		public void ResetFrame(bool resetPause, int frame)
 		{
-			frame = 0f;
-			ChangeRendererSpritesTo(animation[Mathf.FloorToInt(frame)]);
+			this.frame = frame;
+			ChangeRendererSpritesTo(animation[Mathf.FloorToInt(this.frame)]);
 			if (resetPause)
 			{
 				lastFrameMode = false;
@@ -106,9 +108,7 @@ namespace BBTimes.CustomComponents
 		internal bool autoStart = false; // This means: when enabled, it'll get EC immediately
 
 		int pause = 0;
-
 		bool lastFrameMode = false;
-
 		float frame = 0f;
 	}
 }

@@ -13,8 +13,7 @@ namespace BBTimes.CustomContent.CustomItems
 	{
 		public void SetupPrefab()
 		{
-
-			var bagRenderer = ObjectCreationExtensions.CreateSpriteBillboard(ItmObj.itemSpriteLarge);
+			bagRenderer = ObjectCreationExtensions.CreateSpriteBillboard(ItmObj.itemSpriteLarge);
 			bagRenderer.transform.SetParent(transform);
 			bagRenderer.transform.localPosition = Vector3.down * 4.37f;
 			bagRenderer.name = "Bag";
@@ -59,7 +58,7 @@ namespace BBTimes.CustomContent.CustomItems
 			return true;
 		}
 
-		public void PlaceDown(Vector3 pos, EnvironmentController ec, float delayBeforeActive = 1.5f)
+		public void PlaceDown(Vector3 pos, EnvironmentController ec, float delayBeforeActive = 1.5f, bool displayBag = true)
 		{
 			if (initialized)
 				return;
@@ -72,6 +71,7 @@ namespace BBTimes.CustomContent.CustomItems
 			looker = new(transform);
 			initialized = true;
 			lifeTimeCooldown = lifeTime;
+			bagRenderer.enabled = displayBag;
 		}
 
 		void Update()
@@ -193,6 +193,9 @@ namespace BBTimes.CustomContent.CustomItems
 		EnvironmentController ec;
 		BasicLookerInstance looker;
 		readonly HashSet<Entity> targets = [];
+
+		[SerializeField]
+		internal SpriteRenderer bagRenderer;
 
 		[SerializeField]
 		internal Entity entity;

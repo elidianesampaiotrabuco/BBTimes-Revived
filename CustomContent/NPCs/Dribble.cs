@@ -44,7 +44,9 @@ namespace BBTimes.CustomContent.NPCs
 			audCatch = this.GetSound("DRI_Catch.wav", "Vfx_Dribble_Catch", SoundType.Voice, normalDribbleColor);
 			audPraise = [(this.GetSound("DRI_Praise1.wav", "Vfx_Dribble_Praise1", SoundType.Voice, normalDribbleColor)), (this.GetSound("DRI_Praise2.wav", "Vfx_Dribble_Praise2", SoundType.Voice, normalDribbleColor))];
 			audDismissed = this.GetSound("DRI_Dismissed.wav", "Vfx_Dribble_Dismissed", SoundType.Voice, normalDribbleColor);
-			audDisappointed = [(this.GetSound("DRI_Disappointed1.wav", "Vfx_Dribble_Disappointed1", SoundType.Voice, normalDribbleColor)), (this.GetSound("DRI_Disappointed2.wav", "Vfx_Dribble_Disappointed2", SoundType.Voice, normalDribbleColor))];
+			audDisappointed = [(this.GetSound("DRI_Disappointed1.wav", "Vfx_Dribble_Disappointed_Intro1", SoundType.Voice, normalDribbleColor)), (this.GetSound("DRI_Disappointed2.wav", "Vfx_Dribble_Disappointed_Intro2", SoundType.Voice, normalDribbleColor))];
+			audDisappointed[0].additionalKeys = [new() { time = 1.767f, key = "Vfx_Dribble_Disappointed_Reassurance" }];
+			audDisappointed[1].additionalKeys = [new() { time = 1.656f, key = "Vfx_Dribble_Disappointed_Reassurance" }];
 			audAngry = [(this.GetSound("DRI_Angry1.wav", "Vfx_Dribble_Angry1", SoundType.Voice, angryDribbleColor)), (this.GetSound("DRI_Angry2.wav", "Vfx_Dribble_Angry2", SoundType.Voice, angryDribbleColor))];
 			audStep = [(this.GetSound("DRI_Step1.wav", "Vfx_Spj_Step", SoundType.Voice, normalDribbleColor)), (this.GetSound("DRI_Step2.wav", "Vfx_Spj_Step", SoundType.Voice, normalDribbleColor))];
 			audChaseAngry = [(this.GetSound("DRI_AngryChase1.wav", "Vfx_Dribble_ChaseAngry1", SoundType.Voice, angryDribbleColor)), (this.GetSound("DRI_AngryChase2.wav", "Vfx_Dribble_ChaseAngry2", SoundType.Voice, angryDribbleColor))];
@@ -64,18 +66,18 @@ namespace BBTimes.CustomContent.NPCs
 			idleSprs = [storedSprites[0], storedSprites[1]];
 			clapSprs = [storedSprites[5], storedSprites[6]];
 			classSprs = [storedSprites[2], storedSprites[3], storedSprites[4]];
-			disappointedSprs = [storedSprites[7], storedSprites[8]];
-			crazySprs = [storedSprites[9], storedSprites[10]];
-			chasingSprs = [storedSprites[11], storedSprites[12]];
+			disappointedSprs = [storedSprites[7]];
+			crazySprs = [storedSprites[8], storedSprites[9]];
+			chasingSprs = [storedSprites[10], storedSprites[11]];
 
 			// Talking
 			storedSprites = this.GetSpriteSheet(13, 1, pixelsPerUnit, "dribbleSpriteSheet_2.png");
 			idleSprsTalking = [storedSprites[0], storedSprites[1]];
 			clapSprsTalking = [storedSprites[5], storedSprites[6]];
 			classSprsTalking = [storedSprites[2], storedSprites[3], storedSprites[4]];
-			disappointedSprsTalking = [storedSprites[7], storedSprites[8]];
-			crazySprsTalking = [storedSprites[9], storedSprites[10]];
-			chasingSprsTalking = [storedSprites[11], storedSprites[12]];
+			disappointedSprsTalking = [storedSprites[7]];
+			crazySprsTalking = [storedSprites[8], storedSprites[9]];
+			chasingSprsTalking = [storedSprites[10], storedSprites[11]];
 
 			// Secret
 			storedSprites = this.GetSpriteSheet(3, 1, pixelsPerUnit, "DribbleSecret.png");
@@ -1040,7 +1042,8 @@ namespace BBTimes.CustomContent.NPCs
 			base.Enter();
 
 			// Setup player
-			pm.Teleport(dr.Home.RandomEntitySafeCellNoGarbage().CenterWorldPosition);
+			if (!failedPunishment)
+				pm.Teleport(dr.Home.RandomEntitySafeCellNoGarbage().CenterWorldPosition);
 
 			if (pm.plm.stamina < pm.plm.staminaMax)
 				pm.plm.AddStamina(pm.plm.staminaMax - pm.plm.stamina, true); // Fills up stamina to the current max it has

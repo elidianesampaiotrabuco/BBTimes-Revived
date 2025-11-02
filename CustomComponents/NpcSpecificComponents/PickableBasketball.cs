@@ -43,7 +43,19 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 			fakeRendererBase.transform.position = renderer.transform.position;
 
 			Singleton<CoreGameManager>.Instance.audMan.PlaySingle(audThrow);
-			fakeRendererBase.StartCoroutine(ThrowItselfOnHoop(availableHoops[Random.Range(0, availableHoops.Length)]));
+			float farthestDistance = -1f;
+			int farthestIndex = -1;
+			for (int i = 0; i < availableHoops.Length; i++)
+			{
+				float distance = Vector3.Distance(availableHoops[i].transform.position, transform.position);
+				if (farthestDistance < distance)
+				{
+					farthestDistance = distance;
+					farthestIndex = i;
+				}
+			}
+			if (farthestIndex == -1) farthestIndex = Random.Range(0, availableHoops.Length);
+			fakeRendererBase.StartCoroutine(ThrowItselfOnHoop(availableHoops[farthestIndex]));
 		}
 		public void Throw(Vector3 direction, Vector3 position, PlayerManager targetPlayer, float mult = 0.7f, float speed = 35f)
 		{

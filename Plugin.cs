@@ -53,13 +53,19 @@ namespace BBTimes
 	{
 		IEnumerator SetupFinal()
 		{
-			yield return 2;
+			yield return 2
+			+ (Storage.IsBaldiFirstReleaseDate ? 1 : 0);
 			yield return "Calling custom data setup prefab post...";
 			_cstData.ForEach(x => x.SetupPrefabPost());
 			// Other stuff to setup
 			yield return "Setup the rest of the assets...";
 			SnowPile.SetupItemRandomization();
 			Tresent.GatherShopItems();
+			if (Storage.IsBaldiFirstReleaseDate)
+			{
+				yield return "Time for classic...";
+				BBTimesManager.SetupMarch31Holiday();
+			}
 		}
 		IEnumerator SetupPost()
 		{
@@ -126,7 +132,7 @@ namespace BBTimes
 
 		internal ConfigEntry<bool>
 		disableOutside, disableHighCeilings, disableRedEndingCutscene,
-		enableBigRooms, enableReplacementNPCsAsNormalOnes, enableYoutuberMode, forceChristmasMode, disableArcadeRennovationsSupport, disableSchoolhouseEscape, enableUnbalancedLegacyMode;
+		enableBigRooms, enableReplacementNPCsAsNormalOnes, enableYoutuberMode, forceChristmasMode, forceBaldiMarch31Day, disableArcadeRennovationsSupport, disableSchoolhouseEscape, enableUnbalancedLegacyMode;
 		internal List<string> disabledCharacters = [], disabledItems = [], disabledEvents = [], disabledBuilders = [], disableNaturalObject = [];
 		// internal bool HasInfiniteFloors => Chainloader.PluginInfos.ContainsKey("mtm101.rulerp.baldiplus.endlessfloors") ||
 		//	Chainloader.PluginInfos.ContainsKey("Rad.cmr.baldiplus.arcaderenovations");
@@ -146,6 +152,7 @@ namespace BBTimes
 			disableSchoolhouseEscape = Config.Bind(ENV_SETTINGS, "Disable schoolhouse escape", false, "Setting this to \"true\" will disable entirely the schoolhouse escape sequence (the only exception is for the red sequence).");
 
 			forceChristmasMode = Config.Bind(SPECIAL_SETTINGS, "Force enable christmas special", false, "Setting this to \"true\" will force the christmas special to be enabled.");
+			forceBaldiMarch31Day = Config.Bind(SPECIAL_SETTINGS, "Force enable March 31 special", false, "Setting this to \"true\" will force the March 31 special to be enabled.");
 
 			enableYoutuberMode = Config.Bind(MISC_SETTINGS, "Enable youtuber mode", false, "Wanna get some exclusive content easily? Set this to \"true\" on and *everything* will have the weight of 9999.");
 			enableReplacementNPCsAsNormalOnes = Config.Bind(MISC_SETTINGS, "Disable replacement feature", false, "Setting this \"true\" will allow replacement npcs to spawn as normal npcs instead, making the game considerably harder in some ways.");
@@ -189,7 +196,8 @@ namespace BBTimes
 
 			PixelInternalAPI.ResourceManager.AddReloadLevelCallback((_, isNextlevel) => // Note: since it's always in the last level, there's no point to make a saving handler for this, since people cannot save in the middle of a level
 			{
-				MainGameManagerPatches.allowEndingToBePlayed = false;
+				if (!isNextlevel)
+					MainGameManagerPatches.allowEndingToBePlayed = false;
 			});
 
 			// Literally just for this
@@ -739,7 +747,7 @@ namespace BBTimes
 							ld.potentialPrePlotSpecialHalls = ld.potentialPrePlotSpecialHalls.AddToArray(fl.Key);
 
 					}
-					var transparentReference = GenericExtensions.FindResourceObjectByName<Texture2D>("Transparent");
+
 					// ----- *MODDED* School Textures -----
 					foreach (var holder in floordata.SchoolTextures)
 					{
@@ -749,17 +757,17 @@ namespace BBTimes
 							switch (holder.TextureType)
 							{
 								case Misc.SchoolTexture.Ceiling:
-									if (ld.hallCeilingTexs.Length == 1 && ld.hallCeilingTexs.Any(tex => tex.selection == transparentReference)) break; // Don't add Times' textures if there's a single transparent texture
+									if (ld.hallCeilingTexs.Length == 1 && ld.hallCeilingTexs[0].selection.name == "Transparent") break; // Don't add Times' textures if there's a single transparent texture
 									markModifiedByMod = true;
 									ld.hallCeilingTexs = ld.hallCeilingTexs.AddToArray(holder.Selection.ToWeightedTexture());
 									break;
 								case Misc.SchoolTexture.Floor:
-								if (ld.hallFloorTexs.Length == 1 && ld.hallFloorTexs.Any(tex => tex.selection == transparentReference)) break; // Don't add Times' textures if there's a single transparent texture
+									if (ld.hallFloorTexs.Length == 1 && ld.hallFloorTexs[0].selection.name == "Transparent") break; // Don't add Times' textures if there's a single transparent texture
 									markModifiedByMod = true;
 									ld.hallFloorTexs = ld.hallFloorTexs.AddToArray(holder.Selection.ToWeightedTexture());
 									break;
 								case Misc.SchoolTexture.Wall:
-								if (ld.hallWallTexs.Length == 1 && ld.hallWallTexs.Any(tex => tex.selection == transparentReference)) break; // Don't add Times' textures if there's a single transparent texture
+									if (ld.hallWallTexs.Length == 1 && ld.hallWallTexs[0].selection.name == "Transparent") break; // Don't add Times' textures if there's a single transparent texture
 									markModifiedByMod = true;
 									ld.hallWallTexs = ld.hallWallTexs.AddToArray(holder.Selection.ToWeightedTexture());
 									break;
@@ -804,7 +812,7 @@ namespace BBTimes
 			});
 		}
 
-		readonly static Type[] _disabledByDefault_NPCs = [typeof(Glubotrony)]; // As requested by MSF
+		readonly static Type[] _disabledByDefault_NPCs = []; // To add disablded characters
 
 		static string _modPath = string.Empty;
 

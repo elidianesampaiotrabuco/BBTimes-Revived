@@ -5,17 +5,17 @@ using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
 
-namespace BBTimes.CustomComponents.NpcSpecificComponents.Mopliss;
+namespace BBTimes.CustomComponents;
 
-public class SlipperController : MonoBehaviour // Copy paste from BloxyCola from LotsOfItems; will be changed later on to support interfaces (if needed)
+public class SlipperController : MonoBehaviour // Copy paste from BloxyCola from LotsOfItems
 {
-	public static SlipperController CreateSlipperController(CustomContent.NPCs.Mopliss owner)
+	public static SlipperController CreateSlipperController(ISlipperOwner owner)
 	{
 		var stainController = new GameObject("StainController").AddComponent<SlipperController>();
 		stainController.Initialize(owner);
 		return stainController;
 	}
-	public static void CreateSlipperPackPrefab(CustomContent.NPCs.Mopliss owner, Sprite slipperSprite, SoundObject hitWallSound, SoundObject startSlipSound, SoundObject slippingLoopSound)
+	public static void CreateSlipperPackPrefab(ISlipperOwner owner, Sprite slipperSprite, SoundObject hitWallSound, SoundObject startSlipSound, SoundObject slippingLoopSound)
 	{
 		var puddleObject = ObjectCreationExtensions.CreateSpriteBillboard(
 				slipperSprite,
@@ -30,8 +30,8 @@ public class SlipperController : MonoBehaviour // Copy paste from BloxyCola from
 
 		var collider = owner.slipperPre.gameObject.AddComponent<BoxCollider>();
 		collider.isTrigger = true;
-		collider.size = new Vector3(4.96f, 1f, 4.96f);
-		collider.center = Vector3.up * 2f;
+		collider.size = new Vector3(4.98f, 5f, 4.98f);
+		collider.center = Vector3.up * 5f;
 
 		owner.slipperEffectorPre = new GameObject("SlipperEffector").AddComponent<SlipperEffector>();
 		owner.slipperEffectorPre.gameObject.ConvertToPrefab(true);
@@ -44,17 +44,17 @@ public class SlipperController : MonoBehaviour // Copy paste from BloxyCola from
 		owner.slipperEffectorPre.audHitWall = hitWallSound;
 		owner.slipperEffectorPre.audStartSlip = startSlipSound;
 	}
-	public static void CreateSlipperPackPrefab(CustomContent.NPCs.Mopliss owner, Sprite slipperSprite) =>
+	public static void CreateSlipperPackPrefab(ISlipperOwner owner, Sprite slipperSprite) =>
 		CreateSlipperPackPrefab(owner, slipperSprite,
 			GenericExtensions.FindResourceObjectByName<SoundObject>("Nana_Sput"),
 			GenericExtensions.FindResourceObjectByName<SoundObject>("Nana_Slip"),
 			GenericExtensions.FindResourceObjectByName<SoundObject>("Nana_Loop"));
 
-	internal CustomContent.NPCs.Mopliss owner;
+	internal ISlipperOwner owner;
 	readonly internal HashSet<Cell> stainedCells = [];
 	readonly internal HashSet<Entity> affectedEntities = [];
 
-	public void Initialize(CustomContent.NPCs.Mopliss soda) =>
+	public void Initialize(ISlipperOwner soda) =>
 		owner = soda;
 
 
@@ -185,4 +185,19 @@ public class SlipperEffector : MonoBehaviour, IEntityTrigger
 			DestroyEffector();
 		}
 	}
+}
+
+// Interface for slipper usage
+public interface ISlipperOwner
+{
+	/// <summary>
+	/// Used by the SlipperController to instantiate prefabs of the <see cref="Slipper"/> by using <see cref="SlipperController.CreateSlipperController(ISlipperOwner)"/>.
+	/// </summary>
+	Slipper slipperPre { get; set; }
+	/// <summary>
+	/// Used by the SlipperController to instantiate prefabs of the <see cref="SlipperEffector"/> by using <see cref="SlipperController.CreateEffector(Entity)"/>.
+	/// </summary>
+	SlipperEffector slipperEffectorPre { get; set; }
+	EnvironmentController ec { get; }
+	GameObject gameObject { get; }
 }

@@ -38,7 +38,7 @@ namespace BBTimes.ModPatches
 				return true;
 			}
 
-			var lg = LevelGeneratorInstanceGrabber.i;
+			var lg = LevelBuilderInstanceGrabber.i;
 			var wComp = __instance.GetComponent<CustomWindowComponent>();
 			if (lg == null || wComp != null)
 				return true;

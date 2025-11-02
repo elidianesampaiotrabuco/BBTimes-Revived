@@ -140,11 +140,15 @@ public class SquisherWithButtonTool : EditorTool
             direction = dir
         };
         if (!button.ValidatePosition(EditorController.Instance.levelData, false))
-        {
             return;
-        }
+
         squisher.button = button;
-        button.deleteAction = (d, l) => { squisher.button = null; EditorController.Instance.RemoveVisual(l); return true; };
+        button.deleteAction = (d, l) =>
+        {
+            EditorController.Instance.RemoveVisual(l);
+            squisher.button = null;
+            return true;
+        };
 
         var structure = (SquisherStructureLocation)EditorController.Instance.AddOrGetStructureToData(EditorIntegration.TimesPrefix + "Squisher", true);
         structure.squishers.Add(squisher);

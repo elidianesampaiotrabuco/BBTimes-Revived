@@ -1,5 +1,4 @@
 ﻿using System.IO;
-using BBTimes.CustomComponents;
 using MTM101BaldAPI.AssetTools;
 using PixelInternalAPI.Extensions;
 using PlusStudioLevelLoader;
@@ -19,8 +18,6 @@ namespace BBTimes.Manager
 			// Add lightings outside for GameManagers
 			foreach (var man in GenericExtensions.FindResourceObjects<SceneObject>())
 			{
-				var comp = man.manager.GetComponent<MainGameManagerExtraComponent>();
-				if (comp == null) continue;
 				//if (man.levelTitle == "F1") By default, it's the *default* cube map
 				//{
 				//	comp.mapForToday = ObjectCreationExtension.defaultCubemap;
@@ -28,14 +25,12 @@ namespace BBTimes.Manager
 				//}
 				if (man.levelTitle == F2 || man.levelTitle == F5)
 				{
-					comp.outsideLighting = new Color32(255, 204, 131, 255);
 					man.skybox = twilight;
 					continue;
 				}
 				if (man.levelTitle == F3 || man.levelTitle == F4)
 				{
 					man.skybox = F3Map;
-					comp.outsideLighting = new Color32(160, 153, 255, 255);
 					continue;
 				}
 			}

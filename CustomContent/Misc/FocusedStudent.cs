@@ -67,7 +67,7 @@ namespace BBTimes.CustomContent.Misc
 			// Screaming (Principal call)
 			if (disturbedCount >= 3)
 			{
-				StartCoroutine(ScreamPhase());
+				StartCoroutine(ScreamPhase(player));
 				return true;
 			}
 
@@ -102,7 +102,7 @@ namespace BBTimes.CustomContent.Misc
 		}
 
 		// SCREAM PHASE
-		private IEnumerator ScreamPhase()
+		private IEnumerator ScreamPhase(PlayerManager player)
 		{
 			SwitchState(false, false);
 			shaking = true;
@@ -110,7 +110,7 @@ namespace BBTimes.CustomContent.Misc
 			FullyRelax();
 
 			audMan.QueueAudio(activeAppearance.audDisturbed);
-			ec.CallOutPrincipals(transform.position);
+			ec.CallOutPrincipals(player.transform.position);
 
 			yield return new WaitUntil(() => !audMan.QueuedAudioIsPlaying);
 

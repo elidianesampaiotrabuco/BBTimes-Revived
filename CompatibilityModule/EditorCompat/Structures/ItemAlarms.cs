@@ -36,17 +36,14 @@ public class ItemAlarmTool : EditorTool
 
     public override bool Cancelled()
     {
-        bool didCancel = false;
         if (currentAlarm != null)
-        {
             EditorController.Instance.RemoveVisual(currentAlarm);
-            didCancel = true;
-        }
+
         lastItemSelected?.Highlight("none");
         currentAlarm = null;
         currentStructure = null;
         EditorController.Instance.CancelHeldUndo();
-        return !didCancel;
+        return true;
     }
 
     public override bool MousePressed()

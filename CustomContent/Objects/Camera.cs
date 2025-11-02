@@ -149,7 +149,7 @@ namespace BBTimes.CustomContent.Objects
 
 		void OnTriggerStay(Collider other)
 		{
-			if (wasAlarming || !SawRuleBreaker)
+			if (!isCameraOn || wasAlarming)
 				return;
 
 			if (other.isTrigger)
@@ -160,6 +160,7 @@ namespace BBTimes.CustomContent.Objects
 					if (pm)
 					{
 						bool isHiddenFromCamera = pm.Tagged || pm.Invisible || !pm.Disobeying;
+						Debug.Log($"Is hidden from camera: {isHiddenFromCamera}");
 						if (!caughtRuleBreakers.Contains(pm.plm.Entity))
 						{
 							if (!isHiddenFromCamera)

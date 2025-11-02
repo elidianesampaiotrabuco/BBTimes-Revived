@@ -55,7 +55,7 @@ namespace BBTimes.Manager
 			int christmasIncreaseFactor = Storage.IsChristmas ? 100 : 0;
 
 			// --- Common references and textures ---
-			var lightPre = new WeightedTransform() { selection = Resources.FindObjectsOfTypeAll<RoomAsset>().First(x => x.GetInstanceID() > 0 && x.category == RoomCategory.Class).lightPre, weight = 100 };
+			var lightPre = man.Get<WeightedTransform>("WeightedLightTransform");
 			var carpet = new WeightedTexture2D() { selection = GenericExtensions.FindResourceObjectByName<Texture2D>("Carpet"), weight = 100 };
 			var ceiling = new WeightedTexture2D() { selection = GenericExtensions.FindResourceObjectByName<Texture2D>("CeilingNoLight"), weight = 100 };
 			var saloonWall = new WeightedTexture2D() { selection = GenericExtensions.FindResourceObjectByName<Texture2D>("SaloonWall"), weight = 100 };
@@ -719,7 +719,7 @@ namespace BBTimes.Manager
 
 			var focusedStudent = student.gameObject.AddComponent<FocusedStudent>();
 
-			focusedStudent.audMan = student.gameObject.CreatePropagatedAudioManager(20f, 60f);
+			focusedStudent.audMan = student.gameObject.CreatePropagatedAudioManager(35f, 100f);
 			focusedStudent.audMan.overrideSubtitleColor = true;
 			focusedStudent.renderer = student;
 			focusedStudent.audBookNoise = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(GetRoomAsset("FocusRoom", "FocusedStudent_PageTurn.wav")), "Vfx_PageTurn", SoundType.Voice, Color.white);
@@ -1409,6 +1409,7 @@ namespace BBTimes.Manager
 					x.selection.lightPre = classWeightPre.selection.lightPre;
 					x.selection.keepTextures = false;
 					x.selection.basicSwaps = classWeightPre.selection.basicSwaps;
+					x.selection.roomFunctionContainer = classWeightPre.selection.roomFunctionContainer;
 				}
 			));
 
@@ -1455,7 +1456,7 @@ namespace BBTimes.Manager
 
 
 			// ****** Focus Room (A classroom variant, but with a new npc) ******
-			PosterObject[] wallClock = [man.Get<PosterObject>("WallClock")];
+			PosterObject[] wallClock = [man.Get<PosterObject>("WallClock")]; // Class variants don't actually 
 
 			classWeightPre = FindRoomGroupOfNameWithNoActivity("Class"); // Notebooks-only
 

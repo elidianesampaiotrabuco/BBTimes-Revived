@@ -77,15 +77,17 @@ namespace BBTimes.CustomContent.Events
 		public override void AfterUpdateSetup(System.Random rng)
 		{
 			base.AfterUpdateSetup(rng);
-			List<Cell> cells = ec.AllCells();
+			List<Cell> cells = ec.mainHall.AllTilesNoGarbage(false, true);
 			List<Direction> candidateDirections = [];
 
 			// Filter cells: must have a hard free wall, not open, not main hall, and not more than 2 wall directions
 			for (int i = 0; i < cells.Count; i++)
 			{
-				if (!cells[i].TileMatches(ec.mainHall) || !cells[i].HasHardFreeWall || cells[i].open || cells[i].AllWallDirections.Count > 2)
+				if (!cells[i].HasHardFreeWall || cells[i].open || cells[i].AllWallDirections.Count > 2)
 					cells.RemoveAt(i--);
 			}
+
+			if (cells.Count == 0) return; // To prevent rng.Next call
 
 			int fans = rng.Next(minFans, maxFans + 1);
 			for (int i = 0; i < fans; i++)
@@ -100,6 +102,8 @@ namespace BBTimes.CustomContent.Events
 				// Find a wall direction whose opposite side faces an open direction and a long hallway
 				foreach (var wallDir in cell.AllWallDirections)
 				{
+					if (cell.WallHardCovered(wallDir)) continue; // If the wall is hard covered, skip to another direction already
+
 					Direction oppositeDir = wallDir.GetOpposite();
 					Cell nextCell = ec.CellFromPosition(cell.position + oppositeDir.ToIntVector2());
 					bool cancelHallLengthCheck = false;
@@ -144,7 +148,7 @@ namespace BBTimes.CustomContent.Events
 				var superFan = Instantiate(superFanPre, cell.TileTransform);
 				superFan.Initialize(ec, cell.position, chosenWallDir.GetOpposite(), out var l);
 
-				cell.HardCover(chosenWallDir.ToCoverage());
+				cell.HardCoverWall(chosenWallDir, true);
 				superFans.Add(superFan);
 				cells.RemoveAt(idx);
 				for (int z = 0; z < l.Count; z++)

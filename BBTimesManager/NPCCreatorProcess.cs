@@ -58,10 +58,10 @@ namespace BBTimes.Manager
 			floorDatas[F1].NPCs.Add(new(npc, 10));
 
 			// Classic Gotta Sweep
-			npc = CreatorExtensions.CreateCustomNPCFromExistent<GottaSweep, ClassicGottaSweep>(Character.Sweep, "oldsweep", "ClassicGottaSweep").MarkAsReplacement(45, Character.Sweep);
+			npc = CreatorExtensions.CreateCustomNPCFromExistent<GottaSweep, ClassicGottaSweep>(Character.Sweep, "oldsweep", "ClassicGottaSweep").MarkAsReplacement(Storage.IsBaldiFirstReleaseDate ? 999999 : 25, Character.Sweep);
 			npc.AddMetaPrefab();
-			floorDatas[F1].NPCs.Add(new(npc, 100));
-			floorDatas[END].NPCs.Add(new(npc, 90));
+			floorDatas[F1].NPCs.Add(new(npc, Storage.IsBaldiFirstReleaseDate ? 99999 : 100));
+			floorDatas[END].NPCs.Add(new(npc, Storage.IsBaldiFirstReleaseDate ? 99999 : 90));
 
 
 			// Superintendent
@@ -439,16 +439,16 @@ namespace BBTimes.Manager
 
 			floorDatas[F4].NPCs.Add(new(npc, 20, LevelType.Maintenance));
 
-			// Jerry The Air Conditioner
-			npc = new NPCBuilder<JerryTheAC>(plug.Info)
+			// PuddingFan
+			npc = new NPCBuilder<PuddingFan>(plug.Info)
 				.SetMinMaxAudioDistance(35f, 120f)
-				.SetEnum("JerryTheAC")
-				.SetMetaName("PST_JerryAc_Name")
-				.SetName("JerryTheAirConditioner")
+				.SetEnum("PuddingFan")
+				.SetMetaName("PST_PuddingFan_Name")
+				.SetName("PuddingFan")
 				.SetMetaTags([FACULTY_TAG])
 				.AddTrigger()
 				.Build()
-				.SetupNPCData("JerryTheAirConditioner", "PST_JerryAc_Name", "PST_JerryAc_Desc", 0)
+				.SetupNPCData("PuddingFan", "PST_PuddingFan_Name", "PST_PuddingFan_Desc", 0)
 				.MarkAsReplacement(35, Character.Cumulo);
 
 			floorDatas[F1].NPCs.Add(new(npc, 25));
@@ -686,6 +686,7 @@ namespace BBTimes.Manager
 				.AddTrigger()
 				.SetForcedSubtitleColor(new(0.44140625f, 0.078125f, 0.0234375f))
 				.AddLooker()
+				.AddHeatmap()
 				.Build()
 				.SetupNPCData("MrKreye", "PST_Kreye_Name", "PST_Kreye_Desc", -0.8f)
 				.MarkAsReplacement(25, Character.Principal);

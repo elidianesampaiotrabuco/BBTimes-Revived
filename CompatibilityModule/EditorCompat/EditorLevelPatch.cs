@@ -33,7 +33,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			"ZeroPrize", "Adverto", "Bubbly", "Camerastand",
 				"CheeseMan", "CoolMop", "DetentionBot", "Dribble",
 				"EverettTreewood", "Faker", "Glubotrony",
-				"HappyHolidays", "InkArtist", "JerryTheAC",
+				"HappyHolidays", "InkArtist", "PuddingFan",
 				"Leapy", "Magicalstudent", "Mopliss", "Mimicry",
 				"MrKreye", "Mugh", "NoseMan", "OfficeChair",
 				"PencilBoy", "Phawillow", "Penny", "Pran",
@@ -314,7 +314,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			ReplaceEditorBasicObject(TimesPrefix + "SuperFan", EditorInterface.AddObjectVisualWithCustomSphereCollider(TimesPrefix + "SuperFan", superFanDisplay.gameObject, 3f, Vector3.zero));
 
 			// ** Global Structures **
-			LevelStudioPlugin.Instance.structureTypes.Add(TimesPrefix + "OutsideBox", typeof(FactoryBoxStructureLocation)); // It does nothing, so it's a good stub
+			LevelStudioPlugin.Instance.structureTypes.Add(TimesPrefix + "OutsideBox", typeof(OutsideBoxLocation)); // It does nothing, so it's a good stub
 		}
 
 		/// <summary>
@@ -414,11 +414,13 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			EditorInterfaceModes.AddToolToCategory(mode, "doors", new DoorTool(TimesPrefix + "SmallDoor", GetSprite("UI/Door_SmallDoor", "UI/door_SmallDoor")));
 
 			// Outside Tool
-			mode.globalStructures.Add(new()
+			mode.globalRandomStructures.Add(new()
 			{
 				nameKey = $"Ed_GlobalStructure_{TimesPrefix}OutsideBox_Title",
 				descKey = $"Ed_GlobalStructure_{TimesPrefix}OutsideBox_Desc",
 				structureToSpawn = TimesPrefix + "OutsideBox",
+				settingsPageType = typeof(OutsideBoxUIHandler),
+				settingsPagePath = Structure_OutsideBox.GetJSONUIPath()
 			});
 		}
 		/// <summary>
@@ -455,7 +457,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// objectTools.Add(new("Times_GeneratorLever", true, 5f));
 			// for (int i = 1; i <= 4; i++)
 			// 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
-			EditorInterfaceModes.AddToolToCategory(mode, "structures", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
+			EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
 
 			foreach (var pair in objectTools)
 			{

@@ -7,9 +7,9 @@ namespace BBTimes.CustomContent.RoomFunctions
 	public class FocusRoomFunction : RoomFunction
 	{
 		public float readingDuration = 10f;
-		public float notReadingDuration = 6f;
+		public float notReadingDuration = 2.5f;
 		public float maxRelaxCooldown = 30f;
-		public float minTimeToBeDisturbed = 0.85f;
+		public float minTimeToBeDisturbed = 0.25f;
 
 		private float stateTimer;
 		private bool isReading = true; // true = Reading (Red Light), false = Not Reading (Green Light)
@@ -74,6 +74,7 @@ namespace BBTimes.CustomContent.RoomFunctions
 							player.ClearGuilt();
 							playersPatience[i] = 0f;
 							isReading = false;
+							stateTimer = notReadingDuration;
 
 							if (student.Disturbed(player))
 							{

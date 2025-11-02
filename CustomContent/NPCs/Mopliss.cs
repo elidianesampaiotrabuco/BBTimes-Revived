@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using BBTimes.CustomComponents;
-using BBTimes.CustomComponents.NpcSpecificComponents.Mopliss;
 using BBTimes.Extensions;
 using BBTimes.Manager;
 using MTM101BaldAPI;
@@ -9,7 +8,7 @@ using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-	public class Mopliss : NPC, INPCPrefab
+	public class Mopliss : NPC, INPCPrefab, ISlipperOwner
 	{
 		public void SetupPrefab()
 		{
@@ -151,6 +150,12 @@ namespace BBTimes.CustomContent.NPCs
 		internal Slipper slipperPre;
 		[SerializeField]
 		internal SlipperEffector slipperEffectorPre;
+
+		// ISlipperOwner
+		Slipper ISlipperOwner.slipperPre { get => slipperPre; set => slipperPre = value; }
+		SlipperEffector ISlipperOwner.slipperEffectorPre { get => slipperEffectorPre; set => slipperEffectorPre = value; }
+		EnvironmentController ISlipperOwner.ec => ec;
+		GameObject ISlipperOwner.gameObject => gameObject;
 
 		[SerializeField]
 		internal RendererContainer bucketPre;

@@ -17,13 +17,52 @@ namespace BBTimes.Plugin
 			{
 				if (BBTimesManager.plug.forceChristmasMode.Value)
 					return true;
+
+				if (isChristmas.DecisionMade)
+					return isChristmas.Value;
+
 				var now = DateTime.Now;
 
 				var minDate = new DateTime(now.Year, 12, 1);
 				var maxDate = new DateTime(now.Year, 12, 31);
 
-				return now >= minDate && now <= maxDate;
+				isChristmas.Value = now >= minDate && now <= maxDate;
+
+				return isChristmas.Value;
 			}
+		}
+
+		public static bool IsBaldiFirstReleaseDate
+		{
+			get
+			{
+				if (BBTimesManager.plug.forceBaldiMarch31Day.Value)
+					return true;
+				if (isMarch31.DecisionMade)
+					return isMarch31.Value;
+
+				var now = DateTime.Now;
+				isMarch31.Value = now.Day == 31 && now.Month == 3;
+				return isMarch31.Value; // March 31
+			}
+		}
+
+		// Holiday booleans to be stored once
+		static HolidayPinner isChristmas = new(), isMarch31 = new();
+		private struct HolidayPinner()
+		{
+			public readonly bool DecisionMade => _decisionMade;
+			public bool Value
+			{
+				readonly get => _value;
+				set
+				{
+					if (_decisionMade) return;
+					_decisionMade = true;
+					_value = value;
+				}
+			}
+			private bool _value = false, _decisionMade;
 		}
 
 		// ------------------- Constant Strings ---------------------
@@ -33,6 +72,7 @@ namespace BBTimes.Plugin
 		HARDHAT_ATTR_TAG = "protectedhead",
 		ATTR_FREEZE_STAMINA_UPDATE_TAG = "disableStaminaUpdate",
 		ATTR_FREEZE_PLAYER_MOVEMENT_TAG = "disablePlayerMovement",
+		ATTR_STOP_PLAYER_MOVEMENT_RUN_TAG = "disablePlayerRunning",
 		FOOD_TAG = "food",
 		DRINK_TAG = "drink";
 		public const string ChristmasSpecial_TimesTag = "Times_SpecialTags_ChristmasSpecial";

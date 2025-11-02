@@ -9,14 +9,8 @@ using UnityEngine;
 namespace BBTimes.ModPatches.EnvironmentPatches
 {
 	[HarmonyPatch(typeof(MathMachine))]
-	internal class MathMachinePatches
+	internal static class MathMachinePatches
 	{
-		[HarmonyPrefix]
-		[HarmonyPatch("Start")]
-		private static void RightIcon(Notebook ___notebook) =>
-			___notebook.icon.spriteRenderer.sprite = rightSprite;
-
-
 		[HarmonyPostfix]
 		[HarmonyPatch("Completed", [typeof(int)])]
 		private static void WOOOW(MathMachine __instance)
@@ -67,7 +61,5 @@ namespace BBTimes.ModPatches.EnvironmentPatches
 			.RemoveInstructions(2) // Removes the subtraction
 
 			.InstructionEnumeration();
-
-		internal static Sprite rightSprite;
 	}
 }

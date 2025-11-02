@@ -6,14 +6,12 @@ using BBTimes.Extensions;
 using BBTimes.Plugin;
 using MTM101BaldAPI;
 using MTM101BaldAPI.Components;
-using MTM101BaldAPI.Registers;
 using PixelInternalAPI.Components;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-	// TODO: Remake his mechanic
 	public class Watcher : NPC, INPCPrefab
 	{
 		public void SetupPrefab()
@@ -24,34 +22,42 @@ namespace BBTimes.CustomContent.NPCs
 
 			SoundObject[] soundObjects = [this.GetSound("WCH_ambience.wav", "Vfx_Wch_Idle", SoundType.Effect, normalColor),
 		this.GetSoundNoSub("WCH_see.wav", SoundType.Effect),
-		this.GetSound("WCH_angered.wav", "Vfx_Wch_Angry", SoundType.Effect, normalColor),
 		this.GetSound("WCH_teleport.wav", "Vfx_Wch_Teleport", SoundType.Effect, normalColor),
 		this.GetSound("SHDWCH_spawn.wav", "Vfx_Wch_Spawn", SoundType.Effect, shadowColor),
 		this.GetSound("SHDWCH_ambience.wav", "Vfx_Wch_Idle", SoundType.Effect, shadowColor)
 			];
-			var storedSprites = this.GetSpriteSheet(2, 1, 35f, "watcher.png");
+			var storedSprites = this.GetSpriteSheet(3, 1, 35f, "watcher.png");
 			spriteRenderer[0].sprite = storedSprites[0];
+			normalSprite = storedSprites[0];
+			angrySprite = storedSprites[1];
 
 			audMan = GetComponent<PropagatedAudioManager>();
 
 			audAmbience = soundObjects[0];
 			audSpot = soundObjects[1];
-			audAngry = soundObjects[2];
-			audTeleport = soundObjects[3];
+			audTeleport = soundObjects[2];
 
 			spriteToHide = spriteRenderer[0];
 			screenAudMan = gameObject.CreateAudioManager(45f, 75f).MakeAudioManagerNonPositional();
 
-			var hallRender = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[1]);
+			// Hallucination Setup
+			var hallRender = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[2]);
 			hallRender.gameObject.layer = LayerMask.NameToLayer("Overlay");
 			hallRender.name = "WatcherHallucination";
 			hallRender.gameObject.ConvertToPrefab(true);
 
+			var col = hallRender.gameObject.AddComponent<CapsuleCollider>();
+			col.isTrigger = true;
+			col.radius = 2f;
+			col.height = 10f;
+			col.center = new Vector3(0f, 5f, 0f);
+
 			var hall = hallRender.gameObject.AddComponent<Hallucinations>();
 			hall.audMan = hall.gameObject.CreateAudioManager(15f, 25f);
-			hall.audSpawn = soundObjects[4];
-			hall.audLoop = soundObjects[5];
+			hall.audSpawn = soundObjects[3];
+			hall.audLoop = soundObjects[4];
 			hall.renderer = hallRender;
+			hall.nav = hallRender.gameObject.AddComponent<MomentumNavigator>();
 
 			hallPre = hall;
 
@@ -101,17 +107,20 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Despawn();
 			DespawnHallucinations(true);
+			ClearDebuffs();
 		}
 
-		public void GetAngry()
+		public void AngryHide()
 		{
-			navigator.maxSpeed = 500f;
-			navigator.SetSpeed(0f);
-			navigator.accel = 95f;
+			spriteToHide.sprite = angrySprite;
+			StartCoroutine(GradualHide());
 		}
 
 		public void Hide(bool hide)
 		{
+			if (!hide)
+				spriteToHide.sprite = normalSprite;
+
 			spriteToHide.enabled = !hide;
 			for (int i = 0; i < baseTrigger.Length; i++)
 				baseTrigger[i].enabled = !hide;
@@ -153,44 +162,89 @@ namespace BBTimes.CustomContent.NPCs
 			StartCoroutine(SpawnDelay());
 		}
 
-		public void TeleportPlayer(PlayerManager pm)
+
+		// Add these methods to the Watcher class
+		public void ApplyPlayerDebuff(PlayerManager player)
 		{
-			pm.GetCustomCam().ReverseSlideFOVAnimation(new ValueModifier(), 115f, 4f);
-			_npcs.Clear();
-			_npcs.AddRange(ec.Npcs);
-			_npcs.RemoveAll(x => x == this || (!x.GetMeta()?.flags.HasFlag(NPCFlags.Standard) ?? false) || !x.Entity || ec.CellFromPosition(x.transform.position).Null);
-
-			if (_npcs.Count != 0)
-				StartCoroutine(TeleportDelay(pm, _npcs[Random.Range(0, _npcs.Count)]));
-
-			var waitBelowState = new Watcher_WaitBelow(this, true);
-			behaviorStateMachine.ChangeState(waitBelowState);
-			Gauge = Singleton<CoreGameManager>.Instance.GetHud(pm.playerNumber).gaugeManager.ActivateNewGauge(gaugeSprite, waitBelowState.OriginalCooldown);
+			int debuffType = Random.Range(0, 3);
+			switch (debuffType)
+			{
+				case 0: // Slow
+					player.Am.moveMods.Add(slowMod);
+					slowDebuffs.Add(slowMod);
+					break;
+				case 1: // Fog
+					if (obscurityDebuff == null)
+					{
+						obscurityDebuff = new Fog
+						{
+							color = Color.black,
+							startDist = 0f,
+							maxDist = 20f,
+							strength = 0f,
+							priority = 70 // High priority
+						};
+						ec.AddFog(obscurityDebuff);
+					}
+					obscurityDebuff.strength = Mathf.Min(obscurityDebuff.strength + 0.15f, 0.8f);
+					ec.UpdateFog();
+					break;
+				case 2: // Displacement
+					float distance = Random.Range(10f, 20f) * (Random.value > 0.5f ? 1f : -1f);
+					Vector3 newPos = player.transform.position + player.transform.forward * distance;
+					// Basic check to avoid teleporting into walls
+					if (ec.CellFromPosition(newPos).ConstBin == 0)
+						player.Teleport(newPos);
+					break;
+			}
 		}
 
-		IEnumerator TeleportDelay(PlayerManager pm, NPC npc)
+		public void StartDebuffTimer(PlayerManager pm)
 		{
-			pm.plm.Entity.IgnoreEntity(npc.Entity, true);
+			if (debuffRoutine != null)
+				StopCoroutine(debuffRoutine);
+			debuffRoutine = StartCoroutine(DebuffCleanupCoroutine(pm));
+		}
 
-			Vector3 pos = npc.transform.position;
-			npc.Entity.Teleport(pm.transform.position);
-			pm.plm.Entity.Teleport(pos);
+		IEnumerator DebuffCleanupCoroutine(PlayerManager pm)
+		{
+			yield return new WaitForSecondsNPCTimescale(this, 45f);
 
+			ClearDebuffs(pm);
+			debuffRoutine = null;
+		}
+		public void ClearDebuffs() => ClearDebuffs(null);
+		public void ClearDebuffs(PlayerManager targetedPlayer)
+		{
+			if (targetedPlayer)
+			{
+				while (slowDebuffs.Count != 0)
+				{
+					targetedPlayer.Am.moveMods.Remove(slowDebuffs[0]);
+					slowDebuffs.RemoveAt(0);
+				}
+			}
+			if (obscurityDebuff != null)
+			{
+				ec.RemoveFog(obscurityDebuff);
+				obscurityDebuff = null;
+				ec.UpdateFog();
+			}
+		}
+
+		public void SpawnHallucinations(PlayerManager pm) =>
+			StartCoroutine(HallucinationSpawner(pm));
+
+		IEnumerator HallucinationSpawner(PlayerManager pm)
+		{
 			int halls = Random.Range(minHallucinations, maxHallucinations);
 			for (int i = 0; i < halls; i++)
 			{
 				var hal = Instantiate(hallPre);
-				hal.AttachToPlayer(pm);
-
+				hal.AttachToPlayer(pm, this);
 				hallucinations.Add(hal);
-				yield return null;
+				yield return new WaitForSeconds(Random.Range(0.2f, 0.8f));
 			}
-
-			yield return null;
-
-			pm.plm.Entity.IgnoreEntity(npc.Entity, false);
-
-			yield break;
 		}
 
 		IEnumerator SpawnDelay()
@@ -217,6 +271,22 @@ namespace BBTimes.CustomContent.NPCs
 			yield break;
 		}
 
+		IEnumerator GradualHide()
+		{
+			Color alpha = spriteToHide.color;
+			while (alpha.a > 0f)
+			{
+				alpha.a -= ec.EnvironmentTimeScale * Time.deltaTime * 3f;
+				spriteToHide.color = alpha;
+				yield return null;
+			}
+			Hide(true);
+			spriteToHide.color = Color.white;
+		}
+		readonly List<MovementModifier> slowDebuffs = [];
+		Fog obscurityDebuff;
+		Coroutine debuffRoutine;
+
 		[SerializeField]
 		internal SpriteRenderer spriteToHide;
 
@@ -227,13 +297,13 @@ namespace BBTimes.CustomContent.NPCs
 		internal AudioManager screenAudMan;
 
 		[SerializeField]
-		internal SoundObject audAmbience, audAngry, audSpot, audTeleport;
+		internal SoundObject audAmbience, audSpot, audTeleport;
 
 		[SerializeField]
 		internal Hallucinations hallPre;
 
 		[SerializeField]
-		internal Sprite gaugeSprite;
+		internal Sprite gaugeSprite, angrySprite, normalSprite;
 
 		[SerializeField]
 		internal int minHallucinations = 7, maxHallucinations = 9;
@@ -248,8 +318,7 @@ namespace BBTimes.CustomContent.NPCs
 		readonly List<Hallucinations> hallucinations = [];
 
 		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
-
-		readonly List<NPC> _npcs = [];
+		readonly MovementModifier slowMod = new(Vector3.zero, 0.65f);
 		readonly List<Cell> _randomSpots = [];
 	}
 
@@ -279,7 +348,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (hasActiveHallucinations)
 			{
 				w.Gauge?.SetValue(OriginalCooldown, Cooldown);
-				if (w.HasActiveHallucinations)
+				if (!w.HasActiveHallucinations)
 				{
 					hasActiveHallucinations = false;
 					w.Gauge?.Deactivate();
@@ -411,49 +480,29 @@ namespace BBTimes.CustomContent.NPCs
 	{
 		readonly PlayerManager target = pm;
 		CustomPlayerCameraComponent comp;
-		NavigationState_TargetPlayer tar;
 
 		public override void Initialize()
 		{
 			base.Initialize();
 			comp = target.GetCustomCam();
-			comp.AddModifier(mod);
-
-			w.SetFrozen(false);
-			w.GetAngry();
-			w.screenAudMan.Pause(false);
+			comp.RemoveModifier(mod);
 			w.screenAudMan.FlushQueue(true);
-			w.screenAudMan.SetLoop(true);
-			w.screenAudMan.QueueAudio(w.audAngry);
-			tar = new NavigationState_TargetPlayer(w, 127, target.transform.position, true);
-			ChangeNavigationState(tar);
-		}
+			w.screenAudMan.PlaySingle(w.audTeleport);
+			w.Hide(true); // Watcher disappears
 
-		public override void Update()
-		{
-			base.Update();
-			ChangeNavigationState(tar);
-			tar.UpdatePosition(target.transform.position);
-			if (Time.timeScale > 0)
-				mod.addend = 25f * (-1f + Random.value * 2f);
-		}
+			w.StartDebuffTimer(target);
+			w.SpawnHallucinations(target); // Starts spawning hallucinations
 
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
-		{
-			base.OnStateTriggerEnter(other, validCollision);
-			if (other.gameObject == target.gameObject)
-			{
-				w.screenAudMan.FlushQueue(true);
-				w.screenAudMan.PlaySingle(w.audTeleport);
-				if (validCollision)
-					w.TeleportPlayer(target);
-			}
+			// After starting the attack, go back to waiting state
+			var waitState = new Watcher_WaitBelow(w, true);
+			w.behaviorStateMachine.ChangeState(waitState);
+			w.Gauge.Activate(w.gaugeSprite, waitState.OriginalCooldown);
 		}
 
 		public override void Exit()
 		{
 			base.Exit();
-			comp.RemoveModifier(mod);
+			comp?.RemoveModifier(mod);
 		}
 
 		readonly ValueModifier mod = new();

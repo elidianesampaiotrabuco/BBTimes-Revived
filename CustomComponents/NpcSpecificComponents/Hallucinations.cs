@@ -1,85 +1,87 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
+using BBTimes.CustomContent.NPCs;
 using UnityEngine;
 
 namespace BBTimes.CustomComponents.NpcSpecificComponents
 {
 	public class Hallucinations : MonoBehaviour
 	{
-		public void AttachToPlayer(PlayerManager pm)
+		public MomentumNavigator nav; // Add navigator field
+		Watcher watcher;
+		DijkstraMap map;
+		public int minDistanceFromPlayer = 4, maxDistanceFromPlayer = 7;
+		public void AttachToPlayer(PlayerManager pm, Watcher watcher)
 		{
 			if (initialized) return;
+			this.watcher = watcher;
 			timeAlive = lifeTime;
 			target = pm;
 			ec = pm.ec;
 			initialized = true;
+			map = pm.DijkstraMap;
+
+			// Initialize the navigator
+			nav.Initialize(ec);
+			nav.maxSpeed = Random.Range(5f, 10f);
+			nav.useAcceleration = true;
+			nav.accel = 5f;
+
 			activeHallucinations.Add(new(this, pm));
 			StartCoroutine(Hallucinating());
 		}
 
 		IEnumerator Hallucinating()
 		{
-			Color alpha = renderer.color;
-			alpha.a = 0;
-			renderer.color = alpha;
+			int distance = Random.Range(minDistanceFromPlayer, maxDistanceFromPlayer + 1);
+			List<Cell> candidateCells = map.FoundCells();
+			for (int i = 0; i < candidateCells.Count; i++)
+				if (map.Value(candidateCells[i].position) > distance)
+					candidateCells.RemoveAt(i--);
+
+			// Spawn at a random position around the player
+			transform.position = candidateCells.Count != 0 ? candidateCells[Random.Range(0, candidateCells.Count)].CenterWorldPosition :
+				target.transform.position;
+
 			audMan.QueueAudio(audLoop);
 			audMan.SetLoop(true);
 			audMan.maintainLoop = true;
-			yield return null;
+			audMan.PlaySingle(audSpawn);
 
-			while (true)
+			// Fade in
+			Color alpha = renderer.color;
+			alpha.a = 0f;
+			renderer.color = alpha;
+			while (alpha.a < 1f)
 			{
-				if (!target)
-					Despawn();
-
-				transform.position = target.transform.position + new Vector3(Random.Range(-16f, 16f), 0f, Random.Range(-16f, 16f));
-				audMan.PlaySingle(audSpawn);
-				while (true)
-				{
-					alpha.a += ec.EnvironmentTimeScale * Time.deltaTime;
-					if (alpha.a >= 1f)
-					{
-						alpha.a = 1f;
-						break;
-					}
-					renderer.color = alpha;
-					yield return null;
-				}
-
+				alpha.a += ec.EnvironmentTimeScale * Time.deltaTime * 2f; // Faster fade in
 				renderer.color = alpha;
-				delayAround = delayAroundThePlayer;
-
-				while (delayAround > 0f)
-				{
-					delayAround -= ec.EnvironmentTimeScale * Time.deltaTime;
-					yield return null;
-				}
-
-				while (true)
-				{
-					alpha.a -= ec.EnvironmentTimeScale * Time.deltaTime;
-					if (alpha.a <= 0f)
-					{
-						alpha.a = 0f;
-						break;
-					}
-					renderer.color = alpha;
-					yield return null;
-				}
-				renderer.color = alpha;
-
-				if (timeAlive < 0f)
-					Despawn();
-
-				float del = 1f;
-				while (del > 0f)
-				{
-					del -= ec.EnvironmentTimeScale * Time.deltaTime;
-					yield return null;
-				}
-
 				yield return null;
 			}
+			alpha.a = 1f;
+			renderer.color = alpha;
+
+			// Chase the player until lifetime expires
+			while (timeAlive > 0f)
+			{
+				if (!target)
+				{
+					Despawn();
+					yield break;
+				}
+				nav.FindPath(target.transform.position);
+				yield return null;
+			}
+
+			// Fade out
+			while (alpha.a > 0f)
+			{
+				alpha.a -= ec.EnvironmentTimeScale * Time.deltaTime * 2f; // Faster fade out
+				renderer.color = alpha;
+				yield return null;
+			}
+
+			Despawn(true);
 		}
 
 		void Update()
@@ -89,21 +91,52 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 			timeAlive -= ec.EnvironmentTimeScale * Time.deltaTime;
 		}
 
+		void OnTriggerEnter(Collider other)
+		{
+			if (!initialized) return;
+
+			if (other.isTrigger && other.CompareTag("Player") && other.gameObject == target.gameObject)
+			{
+				watcher.ApplyPlayerDebuff(target);
+				Despawn();
+			}
+		}
+
 		public void SetToDespawn() =>
 			timeAlive = 0f;
-		
 
-		public void Despawn()
+
+		public void Despawn() => Despawn(true); // Public overload for simplicity
+		public void Despawn(bool destroy)
+		{
+			if (isDespawning) return;
+			isDespawning = true;
+			StopAllCoroutines();
+			StartCoroutine(FadeOutAndDestroy(destroy));
+		}
+		IEnumerator FadeOutAndDestroy(bool destroy)
 		{
 			activeHallucinations.RemoveAll(x => x.Key == this);
-			Destroy(gameObject);
+			if (nav) nav.ClearDestination();
+			GetComponent<Collider>().enabled = false;
+
+			Color alpha = renderer.color;
+			while (alpha.a > 0f)
+			{
+				alpha.a -= ec.EnvironmentTimeScale * Time.deltaTime * 3f;
+				renderer.color = alpha;
+				yield return null;
+			}
+
+			if (destroy)
+				Destroy(gameObject);
 		}
-		
+
 
 		EnvironmentController ec;
 		PlayerManager target;
-		bool initialized = false;
-		float timeAlive, delayAround;
+		bool initialized = false, isDespawning = false;
+		float timeAlive;
 
 		[SerializeField]
 		internal SpriteRenderer renderer;

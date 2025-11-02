@@ -13,9 +13,10 @@ namespace BBTimes.CustomContent.NPCs
 		public void SetupPrefab()
 		{
 			audMan = GetComponent<PropagatedAudioManager>();
-			audWander = this.GetSound("breathing.wav", "Vfx_Phawillow_Wandering", SoundType.Voice, new(0.84705f, 0.84705f, 0.84705f));
-			audLaugh = this.GetSound("Phawillow_Laughing.wav", "Vfx_Phawillow_Laught", SoundType.Voice, new(0.84705f, 0.84705f, 0.84705f));
-			audRestart = this.GetSound("Phawillow_Restarting.wav", "Vfx_Phawillow_Restart", SoundType.Voice, new(0.84705f, 0.84705f, 0.84705f));
+			Color subColor = new(0.84705f, 0.84705f, 0.84705f);
+			audWander = this.GetSound("breathing.wav", "Vfx_Phawillow_Wandering", SoundType.Voice, subColor);
+			audLaugh = this.GetSound("Phawillow_Laughing.wav", "Vfx_Phawillow_Laught", SoundType.Voice, subColor);
+			audSpot = this.GetSound("Phawillow_Spot.wav", "Vfx_Phawillow_Spot", SoundType.Voice, subColor);
 			floatingRenderer = spriteRenderer[0];
 
 			var itemHolder = ObjectCreationExtensions.CreateSpriteBillboard(null).AddSpriteHolder(out var itmRenderer, new Vector3(3f, -0.8f, 0f), 0);
@@ -28,8 +29,7 @@ namespace BBTimes.CustomContent.NPCs
 			var storedSprites = this.GetSpriteSheet(3, 1, 22f, "phawillowSpritesheet.png");
 			spriteRenderer[0].sprite = storedSprites[0];
 			sprNormal = storedSprites[0];
-			sprSplashed = storedSprites[1];
-			sprActive = storedSprites[2];
+			sprActive = storedSprites[1];
 
 			this.CreateClickableLink()
 				.CopyColliderAttributes((CapsuleCollider)baseTrigger[0]);
@@ -82,25 +82,12 @@ namespace BBTimes.CustomContent.NPCs
 			Singleton<CoreGameManager>.Instance.GetPlayer(player).itm.AddItem(holdingItem);
 			holdingItem = null;
 			itemRender.sprite = null;
-			if (behaviorStateMachine.CurrentState is not Phawillow_Disable)
-				behaviorStateMachine.ChangeState(new Phawillow_Wandering(this, delayAfterLosingItem));
+			behaviorStateMachine.ChangeState(new Phawillow_Wandering(this, delayAfterLosingItem));
 		}
 		public void ClickableUnsighted(int player) { }
 		public void ClickableSighted(int player) { }
 		public bool ClickableRequiresNormalHeight() => true;
 		public bool ClickableHidden() => holdingItem == null;
-
-		public override void VirtualOnTriggerEnter(Collider other)
-		{
-			base.VirtualOnTriggerEnter(other);
-			if (other.isTrigger && !other.CompareTag("Player") && !other.CompareTag("NPC"))
-			{
-				if (other.GetComponent<Entity>())
-				{
-					behaviorStateMachine.ChangeState(new Phawillow_Disable(this, behaviorStateMachine.CurrentState));
-				}
-			}
-		}
 
 
 		Vector3 rendererPos;
@@ -113,10 +100,10 @@ namespace BBTimes.CustomContent.NPCs
 		internal SpriteRenderer floatingRenderer, itemRender;
 
 		[SerializeField]
-		internal Sprite sprNormal, sprActive, sprSplashed;
+		internal Sprite sprNormal, sprActive;
 
 		[SerializeField]
-		internal SoundObject audWander, audRestart, audLaugh;
+		internal SoundObject audWander, audLaugh, audSpot;
 
 		[SerializeField]
 		internal PropagatedAudioManager audMan;
@@ -196,6 +183,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Enter();
 			pTar = new(wi, 63, pm.transform.position);
+			wi.audMan.PlaySingle(wi.audSpot);
 			ChangeNavigationState(pTar);
 		}
 
@@ -284,46 +272,6 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Exit();
 			fleeNav.priority = 0;
-		}
-	}
-
-	internal class Phawillow_Disable(Phawillow wi, NpcState prevState) : Phawillow_SubStateBase(wi)
-	{
-		float deadCooldown = wi.disabledCooldown;
-		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
-		Sprite prevSpr;
-		public override void Enter()
-		{
-			base.Enter();
-			prevSpr = wi.floatingRenderer.sprite;
-			wi.floatingRenderer.sprite = wi.sprSplashed;
-			wi.Navigator.Am.moveMods.Add(moveMod);
-			ChangeNavigationState(new NavigationState_DoNothing(wi, 0));
-		}
-
-		public override void Update()
-		{
-			base.Update();
-			if (deadCooldown <= 0f)
-			{
-				if (!wi.audMan.QueuedAudioIsPlaying)
-					wi.behaviorStateMachine.ChangeState(prevState);
-
-				return;
-			}
-
-			deadCooldown -= wi.TimeScale * Time.deltaTime;
-			if (deadCooldown <= 0f)
-			{
-				wi.audMan.FlushQueue(true);
-				wi.audMan.QueueAudio(wi.audRestart);
-			}
-		}
-		public override void Exit()
-		{
-			base.Exit();
-			wi.Navigator.Am.moveMods.Remove(moveMod);
-			wi.floatingRenderer.sprite = prevSpr;
 		}
 	}
 

@@ -27,29 +27,34 @@ namespace BBTimes.CustomContent.CustomItems
 			if (Physics.Raycast(pm.transform.position, Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber).transform.forward, out var hit, pm.pc.reach, pm.pc.ClickLayers))
 			{
 				var door = hit.transform.GetComponent<StandardDoor>();
-				if (!door || door.locked)
+				if (door && !door.locked)
 				{
-					Destroy(gameObject);
-					return false;
+					transform.position = door.doors[0].transform.position;
+					transform.position = new(transform.position.x, 0.3f, transform.position.z);
+
+					StartCoroutine(Timer(door));
+					return true;
 				}
 
-				transform.position = door.doors[0].transform.position;
-				transform.position = new(transform.position.x, 0.3f, transform.position.z);
+				var swingDoor = hit.transform.GetComponent<SwingDoor>();
+				if (swingDoor && !swingDoor.locked)
+				{
+					transform.position = door.doors[0].transform.position;
+					transform.position = new(transform.position.x, 0.3f, transform.position.z);
 
-				StartCoroutine(Timer(door));
-				return true;
+					StartCoroutine(Timer(door));
+				}
 			}
 			Destroy(gameObject);
 			return false;
 		}
 
-		IEnumerator Timer(StandardDoor door)
+		IEnumerator Timer(Door door)
 		{
 			door.OpenTimed(doorStopMinimumCooldown + door.shutTime * doorStopEfficiency, false);
 
 			while (door.IsOpen)
 				yield return null;
-
 
 			Destroy(gameObject);
 		}

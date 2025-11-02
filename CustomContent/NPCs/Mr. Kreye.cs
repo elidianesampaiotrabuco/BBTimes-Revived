@@ -68,10 +68,6 @@ namespace BBTimes.CustomContent.NPCs
 			hook = Instantiate(hookPre);
 			hook.Initialize(ec, this);
 			animComp.Initialize(ec);
-
-			reverseSpeedDelay = 1 + noMoveDelaySpeed;
-
-			ResetWatch();
 			WanderAgain();
 		}
 
@@ -107,7 +103,6 @@ namespace BBTimes.CustomContent.NPCs
 			animComp.StopLastFrameMode();
 
 			throwHookState = true;
-			ResetWatch();
 		}
 
 		public void SendToDetention(Entity entity)
@@ -144,26 +139,6 @@ namespace BBTimes.CustomContent.NPCs
 			Destroy(hook.gameObject);
 		}
 
-		public void WatchEntity(Entity e)
-		{
-			watchingEntities.Add(e);
-
-			hooKDelay -= TimeScale * Time.deltaTime * reverseSpeedDelay;
-			if (hooKDelay <= 0f)
-				behaviorStateMachine.ChangeState(new MrKreye_ThrowHook(this, e));
-		}
-
-		public override void VirtualUpdate()
-		{
-			base.VirtualUpdate();
-			hooKDelay += TimeScale * Time.deltaTime * noMoveDelaySpeed;
-			if (hooKDelay > maxDelayBeforeHookThrow)
-				hooKDelay = maxDelayBeforeHookThrow;
-		}
-
-		public void ResetWatch() =>
-			hooKDelay = maxDelayBeforeHookThrow;
-
 
 		KreyeHook hook;
 		internal HashSet<Entity> watchingEntities = [];
@@ -184,9 +159,8 @@ namespace BBTimes.CustomContent.NPCs
 		internal Sprite[] sprWalk, sprOpenEye, sprChestOpen;
 
 		[SerializeField]
-		internal float speed = 20f, hookSpeed = 46f, watchTime = 4.5f, detentionTime = 15f, maxDelayBeforeHookThrow = 1.15f, noMoveDelaySpeed = 1.15f;
+		internal float speed = 20f, hookSpeed = 50f, watchTime = 7f, detentionTime = 15f, noticeDelay = 0.75f;
 
-		float hooKDelay, reverseSpeedDelay;
 		bool throwHookState = false;
 	}
 
@@ -216,7 +190,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Enter();
 			kre.Walk(true);
-			ChangeNavigationState(new NavigationState_WanderRandom(kre, 0));
+			ChangeNavigationState(new NavigationState_WanderRounds(kre, 0));
 		}
 
 		public override void Update()
@@ -249,36 +223,40 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class MrKreye_Watch(MrKreye kre) : MrKreye_StateBase(kre)
 	{
-		float watchTime = kre.watchTime;
+		float watchTimer = kre.watchTime, catchAfterStartWatchDelay = kre.noticeDelay;
 		public override void Enter()
 		{
 			base.Enter();
-			kre.Walk(false);
-			kre.ResetWatch();
+			kre.Walk(false); // Enters the "eye open" state
 			ChangeNavigationState(new NavigationState_DoNothing(kre, 0));
 		}
 
 		public override void Update()
 		{
 			base.Update();
-			watchTime -= kre.TimeScale * Time.deltaTime;
-			if (watchTime <= 0f)
+			if (catchAfterStartWatchDelay > 0f)
+				catchAfterStartWatchDelay -= kre.TimeScale * Time.deltaTime;
+			watchTimer -= kre.TimeScale * Time.deltaTime;
+			if (watchTimer <= 0f)
 			{
-				kre.behaviorStateMachine.ChangeState(new MrKreye_Wander(kre));
+				kre.behaviorStateMachine.ChangeState(new MrKreye_Wander(kre)); // Revert to wandering after 7 seconds
 				return;
 			}
 
-			if (kre.Blinded) return;
+			if (kre.Blinded || catchAfterStartWatchDelay > 0f) return;
 
+			// Check for any moving NPC in sight
 			for (int i = 0; i < kre.ec.Npcs.Count; i++)
 			{
-				if (kre != kre.ec.Npcs[i] && kre.ec.Npcs[i].Entity.Velocity.magnitude > 0f && kre.ec.Npcs[i].Navigator.isActiveAndEnabled)
+				NPC potentialTarget = kre.ec.Npcs[i];
+				if (kre != potentialTarget && potentialTarget.Navigator.isActiveAndEnabled && potentialTarget.Navigator.Velocity.magnitude > 0.1f)
 				{
-					if (kre.looker.RaycastNPC(kre.ec.Npcs[i]))
-						kre.WatchEntity(kre.ec.Npcs[i].Entity);
-
-					else if (kre.watchingEntities.Contains(kre.ec.Npcs[i].Entity))
-						TryCancelWatch(kre.ec.Npcs[i].Entity);
+					kre.looker.Raycast(potentialTarget.transform, float.PositiveInfinity, out bool sighted);
+					if (sighted)
+					{
+						kre.behaviorStateMachine.ChangeState(new MrKreye_ThrowHook(kre, potentialTarget.Entity));
+						return;
+					}
 				}
 			}
 		}
@@ -286,22 +264,10 @@ namespace BBTimes.CustomContent.NPCs
 		public override void PlayerInSight(PlayerManager player)
 		{
 			base.PlayerInSight(player);
-			if (!player.Tagged && !float.IsNaN(player.plm.RealVelocity) && player.plm.RealVelocity > 0f)
-				kre.WatchEntity(player.plm.Entity);
-		}
-
-		public override void PlayerLost(PlayerManager player)
-		{
-			base.PlayerLost(player);
-			TryCancelWatch(player.plm.Entity);
-		}
-
-		void TryCancelWatch(Entity cancelledEntity)
-		{
-			kre.watchingEntities.Remove(cancelledEntity);
-
-			if (kre.watchingEntities.Count == 0)
-				kre.ResetWatch();
+			if (catchAfterStartWatchDelay <= 0f && !player.Tagged && player.plm.RealVelocity > 0.1f) // Check if Player is moving
+			{
+				kre.behaviorStateMachine.ChangeState(new MrKreye_ThrowHook(kre, player.plm.Entity));
+			}
 		}
 
 		public override void Exit()

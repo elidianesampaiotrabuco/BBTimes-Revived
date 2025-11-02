@@ -22,7 +22,11 @@ static class PlayerMovementPatch
     [HarmonyPatch("PlayerMove"), HarmonyPrefix]
     static bool PreventPlayerMoving(PlayerMovement __instance)
     {
-        if (__instance.pm.GetAttribute().HasAttribute(Storage.ATTR_FREEZE_PLAYER_MOVEMENT_TAG))
+        var attr = __instance.pm.GetAttribute();
+        if (attr.HasAttribute(Storage.ATTR_STOP_PLAYER_MOVEMENT_RUN_TAG))
+            __instance.running = false;
+
+        if (attr.HasAttribute(Storage.ATTR_FREEZE_PLAYER_MOVEMENT_TAG))
         {
             __instance.StaminaUpdate(0f);
             return false;

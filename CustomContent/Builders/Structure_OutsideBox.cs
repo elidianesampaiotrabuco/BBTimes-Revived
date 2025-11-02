@@ -18,8 +18,9 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		// Makes the LoaderStructureData for the spawn
 		LevelLoaderPlugin.Instance.structureAliases.Add(EditorIntegration.TimesPrefix + "OutsideBox", new LoaderStructureData(this));
 
-		return new() { prefab = this, parameters = new() { chance = [1f, 0.25f] } };
+		return new() { prefab = this, parameters = new() { chance = [1f, 255f, 255f, 255f, 0f, 15] } }; // float-bool to check if there should be ground; 3 float values for Color32(RGB); 1 float-bool value to tell if it is the last floor or not.
 	}
+	public static string GetJSONUIPath() => System.IO.Path.Combine(BasePlugin.ModPath, "objects", "OutsideBox", "OutsideUI.json");
 	public void SetupPrefab() { }
 	public void SetupPrefabPost() { }
 
@@ -46,11 +47,6 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		}
 	}
 
-	// Level loader patch call as workaround
-	public void OnLoadingFinished(LevelLoader loader) =>
-		GenerateInPremadeMap(loader.controlledRNG);
-
-
 	public override void GenerateInPremadeMap(System.Random rng)
 	{
 		base.GenerateInPremadeMap(rng);
@@ -66,7 +62,8 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			if (BBTimesManager.plug.disableOutside.Value)
 				return;
 
-			outsideLighting = Singleton<BaseGameManager>.Instance.GetComponent<MainGameManagerExtraComponent>()?.outsideLighting ?? Color.white;
+			// RGB
+			outsideLighting = new Color32((byte)parameters.chance[1], (byte)parameters.chance[2], (byte)parameters.chance[3], 255);
 			Debug.Log("TIMES: Creating windows for outside...");
 			var spawnedWindows = CreateWindows();
 			if (spawnedWindows.Count == 0)
@@ -84,6 +81,9 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			var visibleObjects = CalculateVisibleObjects(spawnedWindows, generatedOutsideObjects);
 			ApplyVisibilityAndCull(visibleObjects, generatedOutsideObjects);
 
+			Debug.Log($"TIMES: Creating outside lighting {outsideLighting}...");
+			GenerateLightOnWindows(spawnedWindows);
+
 			Debug.Log("TIMES: Outside created successfully!");
 		}
 		catch (Exception e)
@@ -94,12 +94,25 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		}
 	}
 
+	private void GenerateLightOnWindows(List<Window> windows)
+	{
+		int power = Mathf.FloorToInt(parameters.chance[5]);
+		if (power <= 0) return; // No way to generate lighting without light power
+
+		foreach (var window in windows)
+		{
+			var cell = window.aTile.Null ? window.bTile : window.aTile;
+
+			cell.permanentLight = true; // Yup, not affected by power!
+			ec.GenerateLight(cell, outsideLighting, power);
+		}
+	}
 
 	private List<Window> CreateWindows()
 	{
 		var spawnedWindows = new List<Window>();
 		var tiles = GetValidWindowTiles();
-		float minimumFactor = parameters?.chance?[1] ?? 0.25f;
+		float minimumFactor = 0.25f;
 		int amountOfWindows = Mathf.FloorToInt(tiles.Count * Mathf.Clamp((float)activeRng.NextDouble(), minimumFactor, 0.5f));
 
 		for (int i = 0; i < amountOfWindows; i++)
@@ -156,33 +169,35 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		return planeCover;
 	}
 
-	private Dictionary<IntVector2, GameObject> CreateCombinedOutsideMeshes(GameObject parent)
+	private List<VisibleTileData> CreateCombinedOutsideMeshes(GameObject parent)
 	{
 		InitializeMaterials();
-		var generatedObjects = new Dictionary<IntVector2, GameObject>();
+		var generatedObjects = new List<VisibleTileData>();
 
 		// Create the wall material once here instead of for every cell
 		var wallMat = new Material(ec.mainHall.wallMat.shader) { mainTexture = ec.mainHall.wallTex };
 
-		bool isFirstFloor = parameters?.chance?[0] == 1f;
-		bool lastFloor = Singleton<BaseGameManager>.Instance.levelObject.finalLevel;
+		bool isFirstFloor = parameters.chance[0] == 1;
+		bool lastFloor = parameters.chance[4] == 1;
 		System.Random decorationRng = new(activeRng.Next());
 
 		var outsideCells = ec.AllExistentCells().Where(c => c.Null && !c.Hidden && !c.offLimits).ToList();
 
 		foreach (var cell in outsideCells)
 		{
-			var cellGO = BuildCombinedMeshForCell(cell, parent, wallMat, isFirstFloor, lastFloor);
-			if (cellGO)
+			var tileData = BuildCombinedMeshForCell(cell, parent, wallMat, isFirstFloor, lastFloor);
+			if (tileData != null)
 			{
-				generatedObjects.Add(cell.position, cellGO);
+				generatedObjects.Add(tileData);
 				if (isFirstFloor && decorations.Length != 0 && decorationRng.NextDouble() > 0.75d)
 				{
 					int amount = decorationRng.Next(1, 4);
 					for (int i = 0; i < amount; i++)
 					{
-						var d = Instantiate(decorations[decorationRng.Next(decorations.Length)], cellGO.transform);
-						d.transform.localPosition = new Vector3(((float)decorationRng.NextDouble() * 8f) - 4, -5f, ((float)decorationRng.NextDouble() * 8f) - 4);
+						tileData.decorations.Add(new(
+							cell.FloorWorldPosition + new Vector3(((float)decorationRng.NextDouble() * 8f) - 4, 0f, ((float)decorationRng.NextDouble() * 8f) - 4),
+							decorationRng.Next(decorations.Length)
+							));
 					}
 				}
 			}
@@ -190,16 +205,9 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		return generatedObjects;
 	}
 
-	private GameObject BuildCombinedMeshForCell(Cell cell, GameObject parent, Material wallMaterial, bool isFirstFloor, bool lastFloor)
+	private VisibleTileData BuildCombinedMeshForCell(Cell cell, GameObject parent, Material wallMaterial, bool isFirstFloor, bool lastFloor)
 	{
-		var vertices = new List<Vector3>();
-		var uvs = new List<Vector2>();
-
-		var wallTriangles = new List<int>();
-		var grassTriangles = new List<int>();
-		var fenceTriangles = new List<int>();
-		System.Text.StringBuilder stringBuilder = new($"Cell_{cell.position.x}_{cell.position.z}_");
-		bool hasQualityDefined = false; // Check vertical walls, ground and fence
+		var tileData = new VisibleTileData(cell, parent.transform, wallMaterial);
 
 		// VERTICAL WALLS
 		foreach (var dir in allDirections)
@@ -207,44 +215,37 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			var neighbor = ec.CellFromPosition(cell.position + dir.ToIntVector2());
 			if (!neighbor.Null)
 			{
-				hasQualityDefined = true;
 				int max = lastFloor ? 6 : 25;
 				int start = isFirstFloor ? 0 : -25;
 				for (int i = start; i <= max; i++)
 				{
-					Vector3 quadPosition = (dir.ToVector3() * WallOffsetDistance) + (Vector3.up * LayerStorage.TileBaseOffset * i);
-					AddQuad(vertices, wallTriangles, uvs, dir.ToRotation(), quadPosition);
+					tileData.verticalWalls.Add(new(i, dir));
 				}
 			}
 		}
 
-		if (hasQualityDefined)
-			stringBuilder.Append("VerticalWall_");
-		hasQualityDefined = false;
-
 		if (isFirstFloor)
 		{
 			// GROUND
-			AddQuad(vertices, grassTriangles, uvs, Quaternion.Euler(90f, 0f, 0f), Vector3.down * (LayerStorage.TileBaseOffset / 2f));
-			stringBuilder.Append("Outside_");
+			tileData.hasGround = true;
 
 			// FENCE
 			foreach (var dir in allDirections)
 			{
 				if (ec.ContainsCoordinates(cell.position + dir.ToIntVector2())) continue;
-				hasQualityDefined = true;
-				Vector3 quadPosition = dir.ToVector3() * FenceOffsetDistance;
-				AddQuad(vertices, fenceTriangles, uvs, dir.ToRotation(), quadPosition);
+				tileData.fence.Add(new(0, dir));
 			}
-
-			if (hasQualityDefined)
-				stringBuilder.Append("Fenced");
 		}
 
-		if (vertices.Count == 0) return null;
+		if (tileData.IsEmpty) return null;
 
-		var go = new GameObject(stringBuilder.ToString());
-		go.transform.SetParent(parent.transform, false);
+		return tileData;
+	}
+
+	private GameObject CreateQuadHolder(Cell cell, Transform parent, List<Vector3> vertices, List<Vector2> uvs, List<int> wallTriangles, List<int> grassTriangles, List<int> fenceTriangles, Material wallMaterial)
+	{
+		var go = new GameObject($"Cell_{cell.position.x}_{cell.position.z}");
+		go.transform.SetParent(parent, false);
 		go.transform.position = cell.CenterWorldPosition;
 
 		var mf = go.AddComponent<MeshFilter>();
@@ -330,9 +331,9 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		mats = [grassMat, fenceMat];
 	}
 
-	private Dictionary<GameObject, List<Cell>> CalculateVisibleObjects(List<Window> spawnedWindows, Dictionary<IntVector2, GameObject> allGeneratedObjects)
+	private Dictionary<VisibleTileData, List<Cell>> CalculateVisibleObjects(List<Window> spawnedWindows, List<VisibleTileData> allGeneratedObjects)
 	{
-		var visibleObjectsMap = new Dictionary<GameObject, List<Cell>>();
+		var visibleObjectsMap = new Dictionary<VisibleTileData, List<Cell>>();
 
 		Debug.Log($"TIMES: Starting calculation for {spawnedWindows.Count} windows and {allGeneratedObjects.Count} outside objects.");
 
@@ -349,21 +350,26 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		}
 
 		// 2. Iterate through every single generated outside object
-		foreach (var kvp in allGeneratedObjects)
+		for (int z = 0; z < allGeneratedObjects.Count; z++)
 		{
-			IntVector2 objectPosition = kvp.Key;
-			GameObject targetObject = kvp.Value;
-			Vector3 targetCenter = ec.CellFromPosition(objectPosition).CenterWorldPosition;
+			var targetObject = allGeneratedObjects[z];
+			Cell targetCell = targetObject.Cell;
+			Vector3 targetCenter = targetCell.CenterWorldPosition;
+			HashSet<Direction> allVisibleDirections = [];
+			float highestDistance = -1;
 
 			// 3. For each object, check if ANY window can see it
 			bool objectIsVisible = false;
 			foreach (var windowData in windowFovPoints)
 			{
+				Vector3 halfForwardOffset = windowData.forwardOffset * (LayerStorage.TileBaseOffset * 0.5f);
 				// Debug.Log($"[Visibility] Checking if object at ({objectPosition.ToString()}) can be seen from window at ({windowData.CullingCell.position.ToString()})");
-				// Perform the 3-ray FOV check from this window to the target object's center
 				bool canSee = Raycast(windowData.Center, targetCenter) ||
-							  Raycast(windowData.Corner1, targetCenter - windowData.cornerOffset) ||
-							  Raycast(windowData.Corner2, targetCenter + windowData.cornerOffset);
+							  Raycast(windowData.Corner1, targetCenter) ||
+							  Raycast(windowData.Corner2, targetCenter) ||
+							  Raycast(windowData.Center + halfForwardOffset, targetCenter) ||
+							  Raycast(windowData.Corner1 + halfForwardOffset, targetCenter) ||
+							  Raycast(windowData.Corner2 + halfForwardOffset, targetCenter);
 
 				if (canSee)
 				{
@@ -374,37 +380,74 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 					else
 						visibleObjectsMap[targetObject] = [windowData.CullingCell]; // make sure the list is initialized
 
+					allVisibleDirections.Add(windowData.windowDir);
+
+					float currentDistance = (windowData.CullingCell.position - targetCell.position).Magnitude();
+					if (currentDistance > highestDistance)
+						highestDistance = currentDistance;
+
 					objectIsVisible = true;
 				}
 			}
-			if (!objectIsVisible)
+
+			// 4. Exclude non-seen directions
+			if (objectIsVisible)
 			{
-				// Debug.Log($"[Visibility] FAILURE: Object at ({objectPosition.ToString()}) was not visible from any window.");
+				// Wall Visibility by height check
+				int distanceToHeightLimit = Math.Max(2, Mathf.FloorToInt(0.85f * highestDistance));
+				for (int i = 0; i < targetObject.verticalWalls.Count; i++)
+				{
+					var wall = targetObject.verticalWalls[i];
+					if (Mathf.Abs(wall.height) > distanceToHeightLimit)
+						targetObject.verticalWalls.RemoveAt(i--);
+				}
+
+				// Direction Check
+				if (allVisibleDirections.Count == 1) // It should be just ONE direction!! More, makes it harder to calculate
+				{
+					for (int i = 0; i < targetObject.verticalWalls.Count; i++)
+					{
+						var wall = targetObject.verticalWalls[i];
+						if (allVisibleDirections.Contains(wall.direction.GetOpposite())) // If the direction is at the same orientation as the wall, then it is never visible and shall be deleted
+							targetObject.verticalWalls.RemoveAt(i--);
+					}
+
+					for (int i = 0; i < targetObject.fence.Count; i++)
+					{
+						var fence = targetObject.fence[i];
+						if (allVisibleDirections.Contains(fence.direction.GetOpposite())) // If the direction is at the same orientation as the wall, then it is never visible and shall be deleted
+							targetObject.fence.RemoveAt(i--);
+					}
+				}
+
+				// If empty, remove it
+				if (targetObject.IsEmpty)
+				{
+					visibleObjectsMap.Remove(targetObject);
+					allGeneratedObjects.RemoveAt(z--);
+				}
 			}
 		}
+
 		// Debug.Log($"[Visibility] Calculation complete. Found {visibleObjectsMap.Count} visible objects.");
 
 		return visibleObjectsMap;
 	}
 
-	private void ApplyVisibilityAndCull(Dictionary<GameObject, List<Cell>> visibleObjectsMap, Dictionary<IntVector2, GameObject> allGeneratedObjects)
+	private void ApplyVisibilityAndCull(Dictionary<VisibleTileData, List<Cell>> visibleObjectsMap, List<VisibleTileData> allGeneratedObjects)
 	{
 		var nullCull = ec.CullingManager.GetComponent<NullCullingManager>();
 
-		foreach (var kvp in allGeneratedObjects)
+		foreach (var data in allGeneratedObjects)
 		{
-			GameObject go = kvp.Value;
-			if (visibleObjectsMap.TryGetValue(go, out var cullingCells))
+			if (visibleObjectsMap.TryGetValue(data, out var cullingCells))
 			{
+				var go = GenerateVisibleTileData(data);
+
 				// This object is visible. Add all its renderers to the culling cell
 				var renderers = go.GetComponentsInChildren<Renderer>();
 				foreach (var r in renderers)
 					cullingCells.ForEach(cell => nullCull.AddRendererToCell(cell, r));
-			}
-			else
-			{
-				// This object is not visible from any window, destroy it.
-				Destroy(go);
 			}
 		}
 	}
@@ -416,8 +459,6 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 
 		if (startCell == endCell)
 			return true;
-
-
 
 		Vector3 direction = (end - start).normalized;
 
@@ -476,15 +517,51 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			if (!ec.ContainsCoordinates(currentMapPos)) return false; // This should be the safety limit
 
 			Cell currentCell = ec.CellFromPosition(currentMapPos);
-
-			if (currentCell == endCell)
-				return true;
-
-
 			if (!currentCell.Null)
 				return false;
 
+			if (currentCell == endCell)
+				return true;
 		}
+	}
+
+	private GameObject GenerateVisibleTileData(VisibleTileData tileData)
+	{
+		var vertices = new List<Vector3>();
+		var uvs = new List<Vector2>();
+
+		var wallTriangles = new List<int>();
+		var grassTriangles = new List<int>();
+		var fenceTriangles = new List<int>();
+
+		// VERTICAL WALLS
+		foreach (var wall in tileData.verticalWalls)
+		{
+			Vector3 quadPosition = (wall.direction.ToVector3() * WallOffsetDistance) + (Vector3.up * LayerStorage.TileBaseOffset * wall.height);
+			AddQuad(vertices, wallTriangles, uvs, wall.direction.ToRotation(), quadPosition);
+		}
+
+		// Ground
+		if (tileData.hasGround)
+			AddQuad(vertices, grassTriangles, uvs, Quaternion.Euler(90f, 0f, 0f), Vector3.down * LayerStorage.TileBaseOffset * 0.5f);
+
+		// Fence
+		foreach (var fence in tileData.fence)
+		{
+			Vector3 quadPosition = fence.direction.ToVector3() * FenceOffsetDistance;
+			AddQuad(vertices, fenceTriangles, uvs, fence.direction.ToRotation(), quadPosition);
+		}
+
+		// Cell Holder
+		var go = CreateQuadHolder(tileData.Cell, tileData.Parent, vertices, uvs, wallTriangles, grassTriangles, fenceTriangles, tileData.material); ;
+
+		foreach (var decoration in tileData.decorations)
+		{
+			var decor = Instantiate(decorations[decoration.index], go.transform);
+			decor.transform.position = decoration.position;
+		}
+
+		return go;
 	}
 
 	private readonly struct WindowFovData
@@ -494,15 +571,42 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		public readonly Vector3 Corner1;
 		public readonly Vector3 Corner2;
 		public readonly Vector3 cornerOffset;
+		public readonly Vector3 forwardOffset;
+		public readonly Direction windowDir;
 
 		public WindowFovData(Window window)
 		{
 			CullingCell = window.aTile.Null ? window.bTile : window.aTile;
 			Center = (window.aTile.CenterWorldPosition + window.bTile.CenterWorldPosition) * 0.5f;
-			var perpendicularDir = Quaternion.Euler(0, 90, 0) * window.direction.ToVector3();
+			forwardOffset = window.direction.ToVector3();
+			windowDir = window.direction;
+			var perpendicularDir = Quaternion.Euler(0, 90, 0) * forwardOffset;
 			cornerOffset = perpendicularDir * LayerStorage.TileBaseOffset * 0.5f; // Full tile half opening
 			Corner1 = Center - cornerOffset;
 			Corner2 = Center + cornerOffset;
+		}
+	}
+
+	private class VisibleTileData(Cell cell, Transform parent, Material wallMaterial)
+	{
+		public readonly List<Wall> verticalWalls = [], fence = [];
+		public readonly List<DecorationSpot> decorations = [];
+		public bool IsEmpty => !hasGround && verticalWalls.Count == 0 && fence.Count == 0 && decorations.Count == 0;
+		public readonly Cell Cell = cell;
+		public readonly Transform Parent = parent;
+		public readonly Material material = wallMaterial;
+		public bool hasGround = false;
+
+		public readonly struct Wall(int height, Direction dir)
+		{
+			public readonly Direction direction = dir;
+			public readonly int height = height;
+		}
+
+		public readonly struct DecorationSpot(Vector3 position, int decorIndex)
+		{
+			public readonly Vector3 position = position;
+			public readonly int index = decorIndex;
 		}
 	}
 

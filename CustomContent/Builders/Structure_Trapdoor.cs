@@ -233,6 +233,7 @@ namespace BBTimes.CustomContent.Builders
 			var trapdoor = Instantiate(trapDoorpre);
 			trapdoor.transform.SetParent(pos.ObjectBase);
 			trapdoor.transform.position = pos.FloorWorldPosition;
+			trapdoor.transform.rotation = Direction.North.ToRotation();
 			trapdoor.gameObject.SetActive(true);
 			trapdoor.SetEC(ec);
 			if (cooldown != -1) trapdoor.SetOpenCooldown(cooldown); // If new cooldown exists, set the trapdoor to it

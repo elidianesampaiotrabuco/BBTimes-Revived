@@ -132,7 +132,6 @@ namespace BBTimes.Manager
 
 		static void AddExtraComponentsForSomeObjects()
 		{
-			GenericExtensions.FindResourceObjects<MainGameManager>().Do(x => x.gameObject.AddComponent<MainGameManagerExtraComponent>()); // Adds extra component for every MainGameManager
 			GenericExtensions.FindResourceObjects<EnvironmentController>().Do(x => x.gameObject.AddComponent<EnvironmentControllerData>());
 			GenericExtensions.FindResourceObjects<PlayerManager>().Do(x => x.gameObject.AddComponent<PlayerAttributesComponent>()); // Basic setup
 			GenericExtensions.FindResourceObjects<CullingManager>().Do(x => x.gameObject.AddComponent<NullCullingManager>().cullMan = x);
@@ -183,6 +182,7 @@ namespace BBTimes.Manager
 			ObjectCreationExtension.mapMaterial = GenericExtensions.FindResourceObjectByName<MapIcon>("Icon_Prefab").spriteRenderer.material;
 			man.Add("TransparentTileMaterial", GenericExtensions.FindResourceObjectByName<Material>("TileBase_Alpha"));
 			man.Add("buttonPre", GenericExtensions.FindResourceObject<RotoHallBuilder>().buttonPre);
+			man.Add("WeightedLightTransform", new WeightedTransform() { selection = Resources.FindObjectsOfTypeAll<RoomAsset>().First(x => x.GetInstanceID() > 0 && x.category == RoomCategory.Class).lightPre, weight = 100 });
 			man.AddFromResources<StandardDoorMats>();
 
 

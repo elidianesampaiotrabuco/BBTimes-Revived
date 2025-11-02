@@ -2,12 +2,12 @@
 
 namespace BBTimes.ModPatches.GeneratorPatches
 {
-	[HarmonyPatch(typeof(LevelGenerator), "StartGenerate")]
-	public class LevelGeneratorInstanceGrabber
+	[HarmonyPatch(typeof(LevelBuilder), nameof(LevelBuilder.Start))]
+	public static class LevelBuilderInstanceGrabber
 	{
-		private static void Prefix(LevelGenerator __instance) =>
+		private static void Prefix(LevelBuilder __instance) =>
 			i = __instance;
 
-		internal static LevelGenerator i;
+		internal static LevelBuilder i;
 	}
 }

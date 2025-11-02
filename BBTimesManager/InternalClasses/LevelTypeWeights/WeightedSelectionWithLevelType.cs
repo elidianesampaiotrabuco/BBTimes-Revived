@@ -7,6 +7,10 @@ namespace BBTimes.Manager.InternalClasses.LevelTypeWeights;
 // ******************************************************
 internal abstract class WeightedSelectionWithLevelType<T, C> where T : class where C : class // should limit the scope of the generics in a way
 {
+    internal WeightedSelectionWithLevelType(C selection, int weight, bool reverseWhiteList, params LevelType[] levelTypes) : this(selection, weight, levelTypes)
+    {
+        this.reverseWhiteList = reverseWhiteList;
+    }
     internal WeightedSelectionWithLevelType(C selection, int weight, params LevelType[] levelTypes)
     {
         if (levelTypes.Length != 0)
@@ -19,10 +23,12 @@ internal abstract class WeightedSelectionWithLevelType<T, C> where T : class whe
     }
     public abstract T GetWeightedSelection();
     public bool AcceptsLevelType(LevelType type) =>
-        usesAllLevelType ? WeightedSelectionWithLevelType_AllStorage.All.Contains(type) : acceptedLevelTypes.Contains(type);
+        usesAllLevelType ? WeightedSelectionWithLevelType_AllStorage.All.Contains(type) : (acceptedLevelTypes.Contains(type) == !reverseWhiteList);
 
     public C selection;
     public int weight = 100;
+    public bool ReverseWhiteList => reverseWhiteList;
+    protected bool reverseWhiteList = false;
 
     protected bool usesAllLevelType = true;
 
@@ -95,8 +101,10 @@ internal class WeightedGameObjectWithLevelType(UnityEngine.GameObject selection,
 // ************* Forced LevelType Types ******************
 // ******************************************************
 
-internal class StructureWithParametersWithLevelType(StructureWithParameters selection, params LevelType[] levelTypes) : WeightedSelectionWithLevelType<StructureWithParameters, StructureWithParameters>(selection, 100, levelTypes)
+internal class StructureWithParametersWithLevelType : WeightedSelectionWithLevelType<StructureWithParameters, StructureWithParameters>
 {
+    internal StructureWithParametersWithLevelType(StructureWithParameters selection, params LevelType[] levelTypes) : base(selection, 100, levelTypes) { }
+    internal StructureWithParametersWithLevelType(StructureWithParameters selection, bool reverseWhiteList, params LevelType[] levelTypes) : base(selection, 100, reverseWhiteList, levelTypes) { }
     public override StructureWithParameters GetWeightedSelection() => selection;
 }
 

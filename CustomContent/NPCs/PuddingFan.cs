@@ -10,27 +10,24 @@ using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-	public class JerryTheAC : NPC, INPCPrefab, IItemAcceptor
+	public class PuddingFan : NPC, INPCPrefab, IItemAcceptor, ISlipperOwner
 	{
 		public void SetupPrefab()
 		{
 			audMan = GetComponent<AudioManager>();
-			audRolling = this.GetSound("acRolling.wav", "Vfx_JerryAc_Rolling", SoundType.Effect, Color.white);
-			audActive = this.GetSound("acRunning.wav", "Vfx_JerryAc_Cool", SoundType.Effect, Color.white);
+			audActive = this.GetSound("acRunning.wav", "Vfx_PuddingFan_Blow", SoundType.Effect, Color.white);
 
-			var sprs = this.GetSpriteSheet(4, 2, 25f, "jerry.png");
+			var sprs = this.GetSpriteSheet(4, 2, 25f, "puddingFan.png");
 			spriteRenderer[0].CreateAnimatedSpriteRotator(
 				[new() { angleCount = 8, spriteSheet = sprs }]
 				);
 			spriteRenderer[0].sprite = sprs[0];
 
-
-
 			var system = GameExtensions.GetNewParticleSystem();
-			system.name = "JerryParticles";
+			system.name = "FanParticles";
 			system.transform.SetParent(transform);
 			system.transform.localPosition = Vector3.forward * 1.25f;
-			system.GetComponent<ParticleSystemRenderer>().material = new Material(ObjectCreationExtension.defaultDustMaterial) { mainTexture = this.GetTexture("freezingParticles.png") };
+			system.GetComponent<ParticleSystemRenderer>().material = new Material(ObjectCreationExtension.defaultDustMaterial) { mainTexture = this.GetTexture("puddingParticles.png") };
 
 			var main = system.main;
 			main.gravityModifierMultiplier = 0.05f;
@@ -67,10 +64,7 @@ namespace BBTimes.CustomContent.NPCs
 
 			parts = system;
 
-			slipMatPre = BBTimesManager.man.Get<SlippingMaterial>("SlipperyMatPrefab").SafeDuplicatePrefab(true);
-			((SpriteRenderer)slipMatPre.GetComponent<RendererContainer>().renderers[0]).sprite = this.GetSprite(16.5f, "wat.png");
-			slipMatPre.antiForceReduceFactor = 0.735f;
-			slipMatPre.name = "JerryIcePatch";
+			SlipperController.CreateSlipperPackPrefab(this, this.GetSprite(16.5f, "Pudding.png"));
 		}
 		public void SetupPrefabPost() { }
 		public string Name { get; set; }
@@ -85,16 +79,23 @@ namespace BBTimes.CustomContent.NPCs
 		internal AudioManager audMan;
 
 		[SerializeField]
-		internal SoundObject audRolling, audActive;
+		internal SoundObject audActive;
 
 		[SerializeField]
 		internal ParticleSystem parts;
 
 		[SerializeField]
-		internal float minActive = 30f, maxActive = 60f;
-
+		internal float minActive = 30f, maxActive = 30f; // Set to 30 seconds
 		[SerializeField]
-		internal SlippingMaterial slipMatPre;
+		internal Slipper slipperPre;
+		[SerializeField]
+		internal SlipperEffector slipperEffectorPre;
+
+		// ISlipperOwner
+		Slipper ISlipperOwner.slipperPre { get => slipperPre; set => slipperPre = value; }
+		SlipperEffector ISlipperOwner.slipperEffectorPre { get => slipperEffectorPre; set => slipperEffectorPre = value; }
+		EnvironmentController ISlipperOwner.ec => ec;
+		GameObject ISlipperOwner.gameObject => gameObject;
 
 		public override void Initialize()
 		{
@@ -107,13 +108,13 @@ namespace BBTimes.CustomContent.NPCs
 
 			if (cells.Count == 0)
 			{
-				Debug.LogWarning("JERRY HAS FAILED TO FIND ANY GOOD SPOT, NOOOOOOOO!!!");
+				Debug.LogWarning("Pudding Fan has failed to find any good spot!");
 				behaviorStateMachine.ChangeNavigationState(new NavigationState_DoNothing(this, 0));
 				behaviorStateMachine.ChangeState(new NpcState(this));
 				return;
 			}
 
-			behaviorStateMachine.ChangeState(new JerryTheAC_GoToRoom(this));
+			behaviorStateMachine.ChangeState(new PuddingFan_GoToRoom(this));
 		}
 
 		public override void Despawn()
@@ -125,9 +126,6 @@ namespace BBTimes.CustomContent.NPCs
 		public void RollingOn()
 		{
 			audMan.FlushQueue(true);
-			audMan.maintainLoop = true;
-			audMan.SetLoop(true);
-			audMan.QueueAudio(audRolling);
 
 			navigator.maxSpeed = 24.5f;
 			navigator.SetSpeed(24.5f);
@@ -155,8 +153,7 @@ namespace BBTimes.CustomContent.NPCs
 
 			RemoveFuncIfExists();
 			lastCreatedFunction = room.functionObject.AddComponent<FreezingRoomFunction>();
-			lastCreatedFunction.AssignImmunityToEntity(navigator.Entity);
-			lastCreatedFunction.slipMatPre = slipMatPre;
+			lastCreatedFunction.owner = this;
 			room.functions.AddFunction(lastCreatedFunction);
 			lastCreatedFunction.Initialize(room);
 
@@ -173,8 +170,14 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			if (lastCreatedFunction)
 			{
+				var room = lastCreatedFunction.Room;
+				var driedPudding = room.functionObject.AddComponent<DriedPuddingRoomFunction>();
+				room.functions.AddFunction(driedPudding);
+				driedPudding.Initialize(room);
+
 				lastCreatedFunction.Room.functions.RemoveFunction(lastCreatedFunction);
 				Destroy(lastCreatedFunction);
+				lastCreatedFunction = null;
 			}
 		}
 
@@ -187,10 +190,10 @@ namespace BBTimes.CustomContent.NPCs
 		}
 
 		public bool ItemFits(Items itm) =>
-			behaviorStateMachine.CurrentState is JerryTheAC_Activate && disablingItems.Contains(itm);
+			behaviorStateMachine.CurrentState is PuddingFan_Activate && disablingItems.Contains(itm);
 
 		public void InsertItem(PlayerManager pm, EnvironmentController ec) =>
-			behaviorStateMachine.ChangeState(new JerryTheAC_GoToRoom(this));
+			behaviorStateMachine.ChangeState(new PuddingFan_GoToRoom(this));
 
 		Vector3 nextPos;
 		readonly Vector3 zero = Vector3.zero;
@@ -200,68 +203,73 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			get
 			{
-				tempCells.Clear();
-				tempCells.AddRange(cells);
+				var player = Singleton<CoreGameManager>.Instance.GetPlayer(0);
+				if (player == null)
+					return cells[Random.Range(0, cells.Count)];
 
-				return SafeGetRandomSpotToGo(tempCells, ec.CellFromPosition(transform.position));
+				var myRoom = ec.CellFromPosition(transform.position).room;
+				var playerRoom = player.plm.Entity.CurrentRoom;
 
-				Cell SafeGetRandomSpotToGo(List<Cell> availableCells, Cell myCell)
+				List<RoomController> potentialRooms = [..
+				cells.Select(x => x.room).Distinct()
+					.Where(r => r != myRoom && r != playerRoom)
+					.OrderBy(r => Vector3.Distance(ec.RealRoomMid(r), player.transform.position))];
+
+				if (potentialRooms.Count == 0) // Fallback if no other rooms available
 				{
-					availableCells.RemoveAll(x => x.TileMatches(myCell.room));
-
-					if (availableCells.Count == 0)
-						return cells[Random.Range(0, cells.Count)];
-
-
-					var gotCell = availableCells[Random.Range(0, availableCells.Count)];
-
-					if (!ec.CheckPath(myCell, gotCell, PathType.Nav))
-					{
-						availableCells.RemoveAll(x => x.TileMatches(gotCell.room));
-						return SafeGetRandomSpotToGo(availableCells, myCell); // Recursive call until an actual cell is found
-					}
-
-					return gotCell;
+					potentialRooms = [.. cells.Select(x => x.room).Distinct()
+						.Where(r => r != myRoom)
+						.OrderBy(r => Vector3.Distance(ec.RealRoomMid(r), player.transform.position))];
 				}
+
+				if (potentialRooms.Count == 0) // Ultimate fallback
+				{
+					Debug.LogWarning("Pudding Fan couldn't find ANY valid room to go to!");
+					return cells[Random.Range(0, cells.Count)];
+				}
+
+				var targetRoom = potentialRooms.First();
+				List<Cell> spotsInRoom = [.. cells.Where(c => c.room == targetRoom)];
+				return spotsInRoom[Random.Range(0, spotsInRoom.Count)];
 			}
 		}
 
 		public float ActiveCooldown => Random.Range(minActive, maxActive);
-		readonly List<Cell> cells = [], tempCells = [];
+		readonly List<Cell> cells = [];
 
 		readonly static HashSet<Items> disablingItems = [Items.Scissors];
 		public static void AddDisablingItem(Items item) => disablingItems.Add(item);
 
 	}
 
-	internal class JerryTheAC_StateBase(JerryTheAC jr) : NpcState(jr)
+	internal class PuddingFan_StateBase(PuddingFan pud) : NpcState(pud)
 	{
-		protected JerryTheAC jr = jr;
+		protected PuddingFan pud = pud;
 	}
 
-	internal class JerryTheAC_GoToRoom(JerryTheAC jr) : JerryTheAC_StateBase(jr)
+	internal class PuddingFan_GoToRoom(PuddingFan pud) : PuddingFan_StateBase(pud)
 	{
 		NavigationState_TargetPosition spotGo;
-		Cell spot = jr.GetRandomSpotToGo;
+		Cell spot = pud.GetRandomSpotToGo;
 		public override void Enter()
 		{
 			base.Enter();
-			jr.RollingOn();
-			spotGo = new(jr, 64, spot.FloorWorldPosition);
+			pud.RollingOn();
+			spotGo = new(pud, 64, spot.FloorWorldPosition);
 			ChangeNavigationState(spotGo);
 		}
 
 		public override void DestinationEmpty()
 		{
 			base.DestinationEmpty();
-			if (jr.ec.CellFromPosition(jr.transform.position) != spot) // Could only happen if Jerry was interrupted or if the target cell isn't available anymore
+			if (pud.ec.CellFromPosition(pud.transform.position) != spot) // Could only happen if Jerry was interrupted or if the target cell isn't available anymore
 			{
-				spot = jr.GetRandomSpotToGo; // Change spots
+				spot = pud.GetRandomSpotToGo; // Change spots
 				spotGo.UpdatePosition(spot.FloorWorldPosition);
 				ChangeNavigationState(spotGo); // Get to a new path again
 			}
 			else
-				jr.behaviorStateMachine.ChangeState(new JerryTheAC_Activate(jr, spot.room));
+				pud.behaviorStateMachine.ChangeState(new PuddingFan_Activate(pud, spot.room));
 		}
 		public override void Exit()
 		{
@@ -270,22 +278,22 @@ namespace BBTimes.CustomContent.NPCs
 		}
 	}
 
-	internal class JerryTheAC_Activate(JerryTheAC jr, RoomController room) : JerryTheAC_StateBase(jr)
+	internal class PuddingFan_Activate(PuddingFan pud, RoomController room) : PuddingFan_StateBase(pud)
 	{
-		float activeCooldown = jr.ActiveCooldown;
+		float activeCooldown = pud.ActiveCooldown;
 		Vector3 pos;
 		public override void Enter()
 		{
 			base.Enter();
-			jr.ActivateAirConditioner(room);
-			pos = jr.transform.position;
+			pud.ActivateAirConditioner(room);
+			pos = pud.transform.position;
 		}
 		public override void Update()
 		{
 			base.Update();
-			activeCooldown -= jr.TimeScale * Time.deltaTime;
-			if (activeCooldown <= 0f || jr.transform.position != pos)
-				jr.behaviorStateMachine.ChangeState(new JerryTheAC_GoToRoom(jr));
+			activeCooldown -= pud.TimeScale * Time.deltaTime;
+			if (activeCooldown <= 0f || pud.transform.position != pos)
+				pud.behaviorStateMachine.ChangeState(new PuddingFan_GoToRoom(pud));
 		}
 	}
 }

@@ -176,7 +176,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 
 			// Weighted random selection
-			var selectedRoom = WeightedRoomController.RandomSelection(weights);
+			preferredRoomToGo = WeightedRoomController.RandomSelection(weights);
 
 			// Workaround to work with objects to actually give the exact position that Mimicry should go
 			if (!childReference)
@@ -184,23 +184,23 @@ namespace BBTimes.CustomContent.NPCs
 
 			_spotsToDisguise.Clear();
 			// Get respawn points
-			for (int i = 0; i < selectedRoom.pickups.Count; i++)
+			for (int i = 0; i < preferredRoomToGo.pickups.Count; i++)
 			{
-				if (!selectedRoom.pickups[i].gameObject.activeSelf)
+				if (!preferredRoomToGo.pickups[i].gameObject.activeSelf)
 				{
-					_spotsToDisguise.Add(new(selectedRoom.pickups[i], selectedRoom.pickups[i].transform.position.ZeroOutY()));
+					_spotsToDisguise.Add(new(preferredRoomToGo.pickups[i], preferredRoomToGo.pickups[i].transform.position.ZeroOutY()));
 				}
 			}
 
 			// Get item spawn points
-			for (int i = 0; i < selectedRoom.itemSpawnPoints.Count; i++)
+			for (int i = 0; i < preferredRoomToGo.itemSpawnPoints.Count; i++)
 			{
-				Vector2 pos = selectedRoom.itemSpawnPoints[i].position;
-				Vector3 worldPos = selectedRoom.objectObject.transform.TransformVector(pos.x, 0, pos.y); // Get local position v
+				Vector2 pos = preferredRoomToGo.itemSpawnPoints[i].position;
+				Vector3 worldPos = preferredRoomToGo.objectObject.transform.TransformVector(pos.x, 0, pos.y); // Get local position v
 				_spotsToDisguise.Add(new(null, worldPos));
 			}
 
-			childReference.SetParent(selectedRoom.objectObject.transform);
+			childReference.SetParent(preferredRoomToGo.objectObject.transform);
 			var spot = _spotsToDisguise[Random.Range(0, _spotsToDisguise.Count)];
 			childReference.position = spot.Value; // It should go to the exact position, since it'll be relative to how the objectObject is placed in world
 			preventivePickup = spot.Key; // In case the position Mimicry goes has a Pickup active, it'll automatically disable it until Mimicry is done
@@ -223,7 +223,7 @@ namespace BBTimes.CustomContent.NPCs
 			disguised = true;
 		}
 
-		public void Undisguise(bool laugh)
+		public void Undisguise(bool laugh, bool attemptAnotherSpot = false)
 		{
 			renderer.enabled = true;
 			itemRenderer.enabled = false;
@@ -239,7 +239,7 @@ namespace BBTimes.CustomContent.NPCs
 			}
 			autoDisabledPickup = false;
 
-			behaviorStateMachine.ChangeState(new Mimicry_Wander(this));
+			behaviorStateMachine.ChangeState(attemptAnotherSpot ? new Mimicry_TargetItemSpawnPoint(this) : new Mimicry_Wander(this));
 			if (laugh)
 			{
 				SetGuilt(guiltCooldown, "Bullying");
@@ -338,7 +338,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal Image jumpscareImg;
 
 		[SerializeField]
-		internal float wanderingCooldown = 30f, waitingDisguisedCooldown = 60f, entitySlownessCooldown = 15f, speedToReachRoom = 35f, normalSpeed = 15f, guiltCooldown = 5f;
+		internal float wanderingCooldown = 30f, waitingDisguisedCooldown = 60f, entitySlownessCooldown = 15f, speedToReachRoom = 55f, normalSpeed = 15f, guiltCooldown = 5f;
 
 		[SerializeField]
 		[Range(0f, 1f)]
@@ -353,9 +353,11 @@ namespace BBTimes.CustomContent.NPCs
 		readonly List<RoomController> _rooms = [];
 		readonly List<KeyValuePair<Pickup, Vector3>> _spotsToDisguise = [];
 		MovementModifier moveMod;
+		RoomController preferredRoomToGo;
 		Transform childReference;
 		HudGauge gauge;
 		Pickup preventivePickup;
+		public RoomController CurrentRoomToGo => preferredRoomToGo;
 
 		bool disguised = false, autoDisabledPickup = false;
 
@@ -365,6 +367,7 @@ namespace BBTimes.CustomContent.NPCs
 	internal class Mimicry_StateBase(Mimicry mimi) : NpcState(mimi) // A default npc state
 	{
 		protected Mimicry mimi = mimi;
+		protected RoomController PlayerCurrentRoom => mimi.ec.CellFromPosition(Singleton<CoreGameManager>.Instance.GetPlayer(0).transform.position).room;
 	}
 
 	internal class Mimicry_Wander(Mimicry mimi) : Mimicry_StateBase(mimi)
@@ -388,7 +391,7 @@ namespace BBTimes.CustomContent.NPCs
 	internal class Mimicry_TargetItemSpawnPoint(Mimicry mimi) : Mimicry_StateBase(mimi)
 	{
 		readonly Vector3 spotToGo = mimi.GetItemSpawnPoint();
-
+		RoomController lastRoomPlayerHasGoneTo;
 		NavigationState_TargetPosition tarPos;
 		public override void Enter()
 		{
@@ -396,6 +399,7 @@ namespace BBTimes.CustomContent.NPCs
 			mimi.RushToRoom();
 			tarPos = new(mimi, 64, spotToGo);
 			ChangeNavigationState(tarPos);
+			lastRoomPlayerHasGoneTo = PlayerCurrentRoom;
 		}
 
 		public override void DestinationEmpty()
@@ -405,6 +409,17 @@ namespace BBTimes.CustomContent.NPCs
 				mimi.behaviorStateMachine.ChangeState(new Mimicry_Disguise(mimi));
 			else
 				ChangeNavigationState(tarPos);
+		}
+
+		public override void Update()
+		{
+			base.Update();
+			var playerCurrentRoom = PlayerCurrentRoom;
+			if (playerCurrentRoom.type != RoomType.Hall && playerCurrentRoom != mimi.CurrentRoomToGo && lastRoomPlayerHasGoneTo != playerCurrentRoom) // if the player has gone to another room (which is not from Mimicry), 
+																																					  // then make Mimicry go to another spot
+			{
+				mimi.behaviorStateMachine.ChangeState(new Mimicry_TargetItemSpawnPoint(mimi));
+			}
 		}
 
 		public override void Exit()
@@ -417,6 +432,8 @@ namespace BBTimes.CustomContent.NPCs
 	internal class Mimicry_Disguise(Mimicry mimi) : Mimicry_StateBase(mimi)
 	{
 		float activeCooldown = mimi.waitingDisguisedCooldown;
+		readonly RoomController targettedRoom = mimi.CurrentRoomToGo;
+		bool hasReachedRoom = false;
 		public override void Enter()
 		{
 			base.Enter();
@@ -428,6 +445,13 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
+			if (!hasReachedRoom && PlayerCurrentRoom == targettedRoom)
+				hasReachedRoom = true;
+			else if (hasReachedRoom && PlayerCurrentRoom != targettedRoom)
+			{
+				mimi.Undisguise(false, true);
+				return;
+			}
 			activeCooldown -= mimi.TimeScale * Time.deltaTime;
 			if (activeCooldown < 0f)
 			{

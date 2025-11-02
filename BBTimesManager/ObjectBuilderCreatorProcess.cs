@@ -88,20 +88,37 @@ namespace BBTimes.Manager
 			// Outside Box
 			// *for F1
 			vent = CreatorExtensions.CreateObjectBuilder<Structure_OutsideBox>("Structure_OutsideBox", out _, "OutsideBox");
+
+			// Decoration setup
 			Structure_OutsideBox.decorations = new GameObject[8];
 			for (int i = 0; i < Structure_OutsideBox.decorations.Length; i++)
 				Structure_OutsideBox.decorations[i] = man.Get<GameObject>($"editorPrefab_TimesGenericOutsideFlower_{i + 1}");
 
-			floorDatas[F1].ForcedObjectBuilders.Add(new(vent));
-			floorDatas[END].ForcedObjectBuilders.Add(new(vent));
+			floorDatas[F1].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
+			floorDatas[END].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
+			vent.parameters.chance[5] = 5;
 
-			// *for the rest of the levels
+			// *For F2 - Twilight again
 			vent = CloneParameter(vent);
 			vent.parameters.chance[0] = 0f;
+			vent.parameters.chance.SetColorValuesIntoChanceAr(1, 255, 204, 131);
+			vent.parameters.chance[5] = 8;
+			floorDatas[F2].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
 
-			foreach (var floor in floorDatas)
-				if (floor.Key != F1 && floor.Key != END) // Except F1, that one is special
-					floor.Value.ForcedObjectBuilders.Add(new(vent)); // Every floor must have this for rooms
+			// *For F3 & F4 - Night
+			vent = CloneParameter(vent);
+			vent.parameters.chance.SetColorValuesIntoChanceAr(1, 160, 153, 255);
+			vent.parameters.chance[5] = 10;
+			floorDatas[F3].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
+			floorDatas[F4].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
+
+			// *For F5 - Twilight
+			vent = CloneParameter(vent);
+			vent.parameters.chance.SetColorValuesIntoChanceAr(1, 255, 204, 131);
+			vent.parameters.chance[5] = 10;
+			vent.parameters.chance[4] = 1f; // Last floor
+			floorDatas[F5].ForcedObjectBuilders.Add(new(vent, true, LevelType.Factory));
+
 
 			static StructureWithParameters CloneParameter(StructureWithParameters bld) =>
 				new() { prefab = bld.prefab, parameters = new() { chance = bld.parameters.chance.CopyArray(), minMax = bld.parameters.minMax.CopyArray(), prefab = bld.parameters.prefab.CopyObjArray() } };
@@ -130,5 +147,11 @@ namespace BBTimes.Manager
 			return newAr;
 		}
 
+		static void SetColorValuesIntoChanceAr(this float[] chanceArray, int startIndex, float r, float g, float b)
+		{
+			chanceArray[startIndex] = r;
+			chanceArray[startIndex + 1] = g;
+			chanceArray[startIndex + 2] = b;
+		}
 	}
 }

@@ -1,17 +1,16 @@
-﻿using BBTimes.CustomContent.NPCs;
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 
-namespace BBTimes.CustomComponents.NpcSpecificComponents
+namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
 {
 	public class FloatingLetter : MonoBehaviour, IClickable<int>
 	{
-		public void Initialize(Penny pen, EnvironmentController ec)
+		public void Initialize(CustomContent.NPCs.Penny pen, EnvironmentController ec)
 		{
 			this.pen = pen;
 			this.ec = ec;
 		}
-		public void PickLetter(char letter) 
+		public void PickLetter(char letter)
 		{
 			assignedChar = letter;
 			renderer.text = $"{letter}";
@@ -21,10 +20,6 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 		{
 			if (ec && Time.timeScale != 0)
 			{
-				Vector3 pos = renderer.transform.localPosition;
-				pos.y = Mathf.Sin(Time.fixedTime * ec.EnvironmentTimeScale * 4f) * 1.5f;
-				renderer.transform.localPosition = pos;
-
 				if (selected > 0)
 				{
 					renderer.transform.localScale += (selectedSize - renderer.transform.localScale) * 12f * ec.EnvironmentTimeScale * Time.deltaTime;
@@ -45,7 +40,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 			selected--;
 		public bool ClickableHidden() => false;
 		public bool ClickableRequiresNormalHeight() => false;
-		
+
 		public string Text { get => renderer.text; set => renderer.text = value; }
 
 		[SerializeField]
@@ -55,7 +50,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 		internal Vector3 selectedSize = Vector3.one * 1.5f;
 
 		EnvironmentController ec;
-		Penny pen;
+		CustomContent.NPCs.Penny pen;
 		char assignedChar = ' ';
 
 		int selected = 0;

@@ -34,6 +34,14 @@ namespace BBTimes.CustomContent.NPCs
 			stunCanvas.gameObject.SetActive(false);
 
 			gaugeSprite = this.GetSprite(Storage.GaugeSprite_PixelsPerUnit, "gaugeIcon.png");
+			Color32 subColor = new(94, 135, 166, 255);
+			audIdle = this.GetSound("CS_Idle.wav", "Vfx_CamSt_Idle", SoundType.Voice, subColor);
+			audAnnounceFlash = new SoundObject[3];
+			for (int i = 0; i < audAnnounceFlash.Length; i++)
+			{
+				int fileIdx = i + 1;
+				audAnnounceFlash[i] = this.GetSound($"CS_Announce{fileIdx}.wav", $"Vfx_CamSt_Announce{fileIdx}", SoundType.Voice, subColor);
+			}
 		}
 
 		public void SetupPrefabPost() { }
@@ -50,6 +58,7 @@ namespace BBTimes.CustomContent.NPCs
 			base.Initialize();
 			navigator.SetSpeed(0);
 			navigator.maxSpeed = 0;
+			saySomethingCooldown = Random.Range(minSaySomethingCool, maxSaySomethingCool);
 			Disappear(false);
 			behaviorStateMachine.ChangeState(new CameraStand_WaitToRespawn(this));
 		}
@@ -200,6 +209,14 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
+		public void SaySomething() => audMan.QueueAudio(audIdle);
+		public void AnnounceFlash()
+		{
+			audMan.FlushQueue(true);
+			audMan.PlayRandomAudio(audAnnounceFlash);
+		}
+		public void StopSayingAnything() => audMan.FlushQueue(true);
+
 		[SerializeField]
 		internal AudioManager audMan;
 
@@ -217,13 +234,18 @@ namespace BBTimes.CustomContent.NPCs
 
 		[SerializeField]
 		internal ItemObject paperItem;
+		[SerializeField]
+		internal SoundObject audIdle;
+		[SerializeField]
+		internal SoundObject[] audAnnounceFlash;
 
 		[SerializeField]
-		internal float entityStunTime = 20f, playerStunDelay = 10f, respawnCooldown = 3f, respawnPlayerInSightDelay = 5f, activeLifetime = 120f, pictureTakeDelay = 1f;
+		internal float entityStunTime = 20f, playerStunDelay = 10f, respawnCooldown = 3f, respawnPlayerInSightDelay = 5f, activeLifetime = 120f, pictureTakeDelay = 1f, minSaySomethingCool = 10f, maxSaySomethingCool = 30f;
 
 		Coroutine picTimer;
 		PlayerManager lastPlayer;
 		HudGauge gauge;
+		float saySomethingCooldown = 0f;
 
 		public static List<KeyValuePair<CameraStand, PlayerManager>> affectedByCamStand = [];
 
@@ -243,6 +265,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Enter()
 		{
 			base.Enter();
+			cs.StopSayingAnything();
 			ChangeNavigationState(new NavigationState_DoNothing(cs, 0));
 		}
 
@@ -312,9 +335,22 @@ namespace BBTimes.CustomContent.NPCs
 	internal class CameraStand_Active(CameraStand cs) : CameraStand_StateBase(cs)
 	{
 		float timeActive = cs.activeLifetime, sightDelay = cs.pictureTakeDelay;
+		float saySomethingCooldown = 0f;
+		bool playerOnSight = false;
+		public override void Enter()
+		{
+			base.Enter();
+			saySomethingCooldown = Random.Range(cs.minSaySomethingCool, cs.maxSaySomethingCool);
+		}
 		public override void Update()
 		{
 			base.Update();
+			if (saySomethingCooldown > 0f)
+			{
+				saySomethingCooldown += Random.Range(cs.minSaySomethingCool, cs.maxSaySomethingCool);
+				cs.SaySomething();
+			}
+
 			timeActive -= cs.TimeScale * Time.deltaTime;
 			if (timeActive <= 0f)
 				cs.behaviorStateMachine.ChangeState(new CameraStand_WaitToRespawn(cs));
@@ -324,11 +360,17 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Unsighted();
 			sightDelay = cs.pictureTakeDelay;
+			playerOnSight = false;
 		}
 
 		public override void InPlayerSight(PlayerManager player)
 		{
 			base.InPlayerSight(player);
+			if (!playerOnSight)
+			{
+				playerOnSight = true;
+				cs.AnnounceFlash();
+			}
 			cs.transform.RotateSmoothlyToNextPoint(player.transform.position, 0.95f);
 			sightDelay -= cs.TimeScale * Time.deltaTime;
 			if (sightDelay <= 0f)

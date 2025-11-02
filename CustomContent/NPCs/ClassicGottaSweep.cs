@@ -1,10 +1,10 @@
-﻿using BBTimes.Extensions;
-using BBTimes.CustomComponents;
+﻿using BBTimes.CustomComponents;
+using BBTimes.Extensions;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-    public class ClassicGottaSweep : MonoBehaviour, INPCPrefab
+	public class ClassicGottaSweep : MonoBehaviour, INPCPrefab
 	{
 		public void SetupPrefab()
 		{
@@ -12,18 +12,19 @@ namespace BBTimes.CustomContent.NPCs
 			if (!gs) return;
 
 			gs.spriteRenderer[0].sprite = this.GetSprite(gs.spriteRenderer[0].sprite.pixelsPerUnit, "oldsweep.png");
-			gs.maxActive = 60f;
-			gs.minActive = 35f;
-			gs.minDelay = 45f;
-			gs.maxDelay = 60f;
-			gs.speed = 75f;
+			gs.maxActive = 45f;
+			gs.minActive = 30f;
+			gs.minDelay = 180f;
+			gs.maxDelay = 120f;
+			gs.speed *= 1.55f;
 			gs.moveMod = new(Vector3.zero, 0.5f);
-			gs.moveModMultiplier = 1f;
+			gs.moveModMultiplier = 0.95f;
 			gs.audMan.audioDevice.dopplerLevel = 2f; // I wonder why I didn't set it in here
 		}
 		public void SetupPrefabPost() { }
-		public string Name { get; set; } public string Category => "npcs";
-		
+		public string Name { get; set; }
+		public string Category => "npcs";
+
 		public NPC Npc { get; set; }
 		[SerializeField] Character[] replacementNPCs; public Character[] GetReplacementNPCs() => replacementNPCs; public void SetReplacementNPCs(params Character[] chars) => replacementNPCs = chars;
 		public int ReplacementWeight { get; set; }
