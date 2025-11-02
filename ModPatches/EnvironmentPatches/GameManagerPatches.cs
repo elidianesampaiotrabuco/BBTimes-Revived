@@ -812,9 +812,9 @@ namespace BBTimes.ModPatches.EnvironmentPatches
 				___ec.standardDarkLevel = new Color(1f, 0f, 0f);
 				foreach (var c in ___ec.AllExistentCells())
 				{
-					c.lightColor = Color.red;
+					c.permanentLight = true;
+					___ec.GenerateLight(c, Color.red, 1, true);
 					c.SetPower(true);
-					c.SetLight(true);
 				}
 
 				return;
@@ -837,8 +837,9 @@ namespace BBTimes.ModPatches.EnvironmentPatches
 
 				foreach (var c in ___ec.AllExistentCells()) // To avoid events like Freezing event from overriding it wrong
 				{
-					c.lightColor = Color.red;
-					c.SetLight(true);
+					c.permanentLight = true;
+					___ec.GenerateLight(c, Color.red, 1, true);
+					c.SetPower(true);
 				}
 
 				var gate = elevator.transform.Find("Gate");

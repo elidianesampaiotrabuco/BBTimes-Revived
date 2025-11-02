@@ -35,7 +35,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				"EverettTreewood", "Faker", "Glubotrony",
 				"HappyHolidays", "InkArtist", "PuddingFan",
 				"Leapy", "Magicalstudent", "Mopliss", "Mimicry",
-				"MrKreye", "Mugh", "NoseMan", "OfficeChair",
+				"MrKreye", "Cactungus", "NoseMan", "OfficeChair",
 				"PencilBoy", "Phawillow", "Penny", "Pran",
 				"Pix", "Quiker", "Rollingbot", "SerOran",
 				"ScienceTeacher", "Snowfolke", "Stunly",
@@ -164,7 +164,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
 			// EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
 			// EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
-			// for (int i = 1; i <= 4; i++)
+			// for (int i = 1; i <= 6; i++)
 			// 	EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
 			ReplaceEditorBasicObject(TimesPrefix + "SecretButton", EditorInterface.AddObjectVisual(TimesPrefix + "SecretButton", man.Get<GameObject>("editorPrefab_SecretButton"), true));
 
@@ -455,7 +455,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// objectTools.Add(new("Times_theYAYComputer", true, 5f));
 			// objectTools.Add(new("Times_TrueLorePaper", true, 5f));
 			// objectTools.Add(new("Times_GeneratorLever", true, 5f));
-			// for (int i = 1; i <= 4; i++)
+			// for (int i = 1; i <= 6; i++)
 			// 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
 			EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
 

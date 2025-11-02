@@ -1,4 +1,6 @@
-﻿using TMPro;
+﻿using System.Collections;
+using MTM101BaldAPI;
+using TMPro;
 using UnityEngine;
 
 namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
@@ -14,6 +16,19 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
 		{
 			assignedChar = letter;
 			renderer.text = $"{letter}";
+		}
+		public void DisableClickTemporarily(float delay)
+		{
+			selected = 0;
+			if (disableClickCor != null)
+				StopCoroutine(disableClickCor);
+			disableClickCor = StartCoroutine(TemporarilyDisableClick(delay));
+		}
+		IEnumerator TemporarilyDisableClick(float delay)
+		{
+			disabledClick = true;
+			yield return new WaitForSecondsEnvironmentTimescale(ec, delay);
+			disabledClick = false;
 		}
 
 		void Update()
@@ -31,17 +46,24 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
 
 		public void Clicked(int player)
 		{
-			if (!pen || char.IsWhiteSpace(assignedChar)) return;
+			if (!pen || disabledClick || char.IsWhiteSpace(assignedChar)) return;
 			pen.TakeLetter(assignedChar);
 		}
-		public void ClickableSighted(int player) =>
-			selected++;
-		public void ClickableUnsighted(int player) =>
-			selected--;
-		public bool ClickableHidden() => false;
+		public void ClickableSighted(int player)
+		{
+			if (!disabledClick)
+				selected++;
+		}
+		public void ClickableUnsighted(int player)
+		{
+			if (!disabledClick)
+				selected--;
+		}
+		public bool ClickableHidden() => disabledClick;
 		public bool ClickableRequiresNormalHeight() => false;
 
 		public string Text { get => renderer.text; set => renderer.text = value; }
+		bool disabledClick;
 
 		[SerializeField]
 		internal TextMeshPro renderer;
@@ -52,7 +74,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
 		EnvironmentController ec;
 		CustomContent.NPCs.Penny pen;
 		char assignedChar = ' ';
-
+		Coroutine disableClickCor;
 		int selected = 0;
 	}
 }

@@ -329,6 +329,8 @@ namespace BBTimes.Manager
 			man.Add("audExplosion", ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(GlobalAssetsPath, GetAssetName("loudExplosion.wav"))), string.Empty, SoundType.Effect, Color.white));
 			man.Get<SoundObject>("audExplosion").subtitle = false;
 
+			man.Add("TestExplosion", ((LookAtGuy)NPCMetaStorage.Instance.Get(Character.LookAt).value).explosionPrefab);
+
 			man.Add("audRobloxDrink", ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(GlobalAssetsPath, GetAssetName("potion_drink.wav"))), "Vfx_Roblox_drink", SoundType.Effect, Color.white));
 			man.Add("audPencilStab", ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(GlobalAssetsPath, GetAssetName("pc_stab.wav"))), "Vfx_PC_stab", SoundType.Effect, Color.yellow));
 			man.Add("basketBall", TextureExtensions.LoadSpriteSheet(5, 1, 25f, GlobalAssetsPath, GetAssetName("basketball.png")));

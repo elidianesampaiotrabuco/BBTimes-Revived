@@ -39,10 +39,11 @@ namespace BBTimes.CustomContent.CustomItems
 				var swingDoor = hit.transform.GetComponent<SwingDoor>();
 				if (swingDoor && !swingDoor.locked)
 				{
-					transform.position = door.doors[0].transform.position;
+					transform.position = swingDoor.doors[0].transform.position;
 					transform.position = new(transform.position.x, 0.3f, transform.position.z);
 
-					StartCoroutine(Timer(door));
+					StartCoroutine(Timer(swingDoor));
+					return true;
 				}
 			}
 			Destroy(gameObject);

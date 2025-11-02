@@ -132,7 +132,7 @@ namespace BBTimes.CustomContent.CustomItems
 		float lifeTime;
 
 		[SerializeField]
-		private float skateSpeed = 60f, rotationSpeed = 1.85f, totalLifeTime = 45f;
+		private float skateSpeed = 60f, rotationSpeed = 2.85f, totalLifeTime = 45f;
 		[SerializeField]
 		private SoundObject audSkateloop, audSkateHitWall;
 		[SerializeField]

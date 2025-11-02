@@ -18,13 +18,15 @@ namespace BBTimes.CustomContent.NPCs
 	{
 		public void SetupPrefab()
 		{
+			Color subColor = new(1f, 0.345f, 0.886f);
 			var sprs = this.GetSpriteSheet(3, 3, pixs, "bubblySheet.png");
 			spriteRenderer[0].sprite = sprs[0];
 			audMan = GetComponent<PropagatedAudioManager>();
+
 			sprWalkingAnim = [.. sprs.Take(7)];
 			sprPrepareBub = sprs[8];
 			renderer = spriteRenderer[0];
-			audFillUp = this.GetSound("Bubbly_BubbleSpawn.wav", "Vfx_Bubbly_Fillup", SoundType.Effect, new(1f, 0.345f, 0.886f));
+			audFillUp = this.GetSound("Bubbly_BubbleSpawn.wav", "Vfx_Bubbly_Fillup", SoundType.Effect, subColor);
 
 			var bubble = new GameObject("Bubble").AddComponent<Bubble>();
 			bubble.gameObject.ConvertToPrefab(true);
@@ -48,17 +50,20 @@ namespace BBTimes.CustomContent.NPCs
 			bubble.bubbleCanvas = canvas;
 			canvas.gameObject.SetActive(false);
 
+			var bucketObj = ObjectCreationExtensions.CreateSpriteBillboard(BBTimesManager.man.Get<Sprite>("fieldTripBucket")) // FireFuel_Sheet_0 is bucket
+				.AddSpriteHolder(out var bucketRenderer, 1.2f);
+			bucketRenderer.name = "Bucket_Renderer";
+			bucketObj.name = "Bucket";
+			bucketObj.gameObject.ConvertToPrefab(true);
+			bucketPre = bucketObj.gameObject.CreatePropagatedAudioManager(15f, 85f);
+
 			bubPre = bubble;
 		}
-		public void SetupPrefabPost() { }
+		public void SetupPrefabPost() =>
+			audRefill = ((Mopliss)BBTimesManager.man.Get<NPC>("NPC_Mopliss")).audRefill; // Same refill noise
+
 
 		const float pixs = 21f;
-
-		[SerializeField]
-		internal float speed = 17f;
-
-		[SerializeField]
-		internal float minBubbleCooldown = 0.5f, maxBubbleCooldown = 1.5f;
 
 		public string Name { get; set; }
 		public string Category => "npcs";
@@ -69,17 +74,30 @@ namespace BBTimes.CustomContent.NPCs
 
 
 
-
-
 		// prefab ^^
 		public override void Initialize()
 		{
 			base.Initialize();
+			map = new(ec, PathType.Nav, int.MaxValue, transform);
 			navigator.maxSpeed = speed;
 			navigator.SetSpeed(speed);
 
+			// Make buckets
+			var classrooms = new List<RoomController>();
+			foreach (var room in ec.rooms)
+			{
+				if (acceptableClassroomCategories.Contains(room.category))
+					classrooms.Add(room);
+			}
+			classrooms.Shuffle();
 
-			behaviorStateMachine.ChangeState(new Bubbly_NavigateToASpot(this));
+			for (int i = 0; i < 3 && i < classrooms.Count; i++)
+			{
+				var cell = classrooms[i].RandomEntitySafeCellNoGarbage();
+				Instantiate(bucketPre, cell.FloorWorldPosition, Quaternion.identity, ec.transform);
+			}
+
+			behaviorStateMachine.ChangeState(new Bubbly_Navigating(this));
 		}
 
 		internal Bubble SpitBubbleAtDirection(Vector3 dir)
@@ -101,6 +119,12 @@ namespace BBTimes.CustomContent.NPCs
 			base.Despawn();
 			for (int i = 0; i < bubbles.Count; i++)
 				bubbles[i]?.Pop();
+
+			foreach (var bucket in buckets)
+			{
+				if (bucket)
+					Destroy(bucket);
+			}
 		}
 
 		IEnumerator FillupBubble(Bubble b)
@@ -110,7 +134,7 @@ namespace BBTimes.CustomContent.NPCs
 			b.entity.SetFrozen(true);
 
 
-			float speed = Random.Range(2.6f, 3.5f);
+			float speed = Random.Range(minSpeedToFillupBubble, maxSpeedToFillupBubble);
 			while (true)
 			{
 				scale += (1.03f - scale) * speed * TimeScale * Time.deltaTime;
@@ -128,25 +152,67 @@ namespace BBTimes.CustomContent.NPCs
 			yield break;
 		}
 
-		internal void TargetRandomSpot()
+		internal void FindNewTarget()
 		{
-			List<Cell> spotsToGo = new(ec.mainHall.AllTilesNoGarbage(false, true));
-
-			for (int i = 0; i < spotsToGo.Count; i++)
-				if (spotsToGo[i] == lastSpotGone || (spotsToGo[i].shape != TileShapeMask.Corner && spotsToGo[i].shape != TileShapeMask.Single)) // Filter to the ones that are corners or singles
-					spotsToGo.RemoveAt(i--);
-
-			if (spotsToGo.Count <= 1) // Just one spot is not valid.
+			// If there's any ammo
+			if (bubbleAmmo > 0)
 			{
-				lastSpotGone = null;
+				List<Cell> spotsToGo = [.. ec.mainHall.AllTilesNoGarbage(false, true)];
+
+				for (int i = 0; i < spotsToGo.Count; i++)
+					if (spotsToGo[i] == lastSpotGone || (spotsToGo[i].shape != TileShapeMask.Corner && spotsToGo[i].shape != TileShapeMask.Single)) // Filter to the ones that are corners or singles
+						spotsToGo.RemoveAt(i--);
+
+				if (spotsToGo.Count <= 1) // Just one spot is not valid.
+				{
+					lastSpotGone = null;
+					TargetPosition(ec.mainHall.RandomEntitySafeCellNoGarbage().FloorWorldPosition);
+					return;
+				}
+				lastSpotGone = spotsToGo[Random.Range(0, spotsToGo.Count)];
+				TargetPosition(lastSpotGone.FloorWorldPosition);
+				return;
+			}
+
+			// Out of ammo, find a bucket
+			if (buckets.Count == 0)
+			{
+				// No buckets left, just wander
 				TargetPosition(ec.mainHall.RandomEntitySafeCellNoGarbage().FloorWorldPosition);
 				return;
 			}
-			lastSpotGone = spotsToGo[Random.Range(0, spotsToGo.Count)];
-			TargetPosition(lastSpotGone.FloorWorldPosition);
+
+			// Find all buckets
+			map.Calculate(int.MaxValue, true, [.. buckets.ConvertAll(b => IntVector2.GetGridPosition(b.transform.position))]);
+
+			nextBucket = null;
+			int closestDist = int.MaxValue;
+			foreach (var bucket in buckets)
+			{
+				int dist = map.Value(IntVector2.GetGridPosition(bucket.transform.position));
+				if (dist < closestDist)
+				{
+					closestDist = dist;
+					nextBucket = bucket;
+				}
+			}
+			if (nextBucket)
+				TargetPosition(nextBucket.transform.position);
+			else // Failsafe
+				TargetPosition(ec.mainHall.RandomEntitySafeCellNoGarbage().FloorWorldPosition);
 		}
 
+		[SerializeField]
+		internal float speed = 17f;
 
+		[SerializeField]
+		internal float minBubbleCooldown = 0.5f, maxBubbleCooldown = 1.5f, minSpeedToFillupBubble = 3f, maxSpeedToFillupBubble = 6.5f;
+
+		[SerializeField]
+		internal int bubbleAmmo = 3;
+
+		[SerializeField]
+		internal AudioManager bucketPre;
 
 		[SerializeField]
 		internal Bubble bubPre;
@@ -161,12 +227,18 @@ namespace BBTimes.CustomContent.NPCs
 		internal Sprite sprPrepareBub;
 
 		[SerializeField]
-		internal SoundObject audFillUp;
+		internal SoundObject audFillUp, audRefill;
 
 		[SerializeField]
 		internal PropagatedAudioManager audMan;
 
+		public AudioManager NextBucket => nextBucket;
+
+		DijkstraMap map;
 		readonly List<Bubble> bubbles = [];
+		readonly internal List<AudioManager> buckets = [];
+		AudioManager nextBucket;
+		readonly public static HashSet<RoomCategory> acceptableClassroomCategories = [RoomCategory.Class];
 		Cell lastSpotGone = null;
 	}
 
@@ -188,37 +260,49 @@ namespace BBTimes.CustomContent.NPCs
 		}
 	}
 
-	internal class Bubbly_NavigateToASpot(Bubbly bub) : Bubbly_WalkingStateBase(bub)
+	internal class Bubbly_Navigating(Bubbly bub) : Bubbly_WalkingStateBase(bub)
 	{
 		public override void Enter()
 		{
 			base.Enter();
-			bub.TargetRandomSpot();
+			bub.FindNewTarget();
 		}
 
 		public override void DestinationEmpty()
 		{
 			base.DestinationEmpty();
-			bub.behaviorStateMachine.ChangeState(new Bubbly_SpawnBubbles(bub));
+			if (bub.bubbleAmmo > 0)
+			{
+				bub.behaviorStateMachine.ChangeState(new Bubbly_SpawnBubble(bub));
+			}
+			else
+			{
+				// Reached a bucket
+				if (bub.NextBucket)
+				{
+					bub.NextBucket.PlaySingle(bub.audRefill);
+					bub.bubbleAmmo = 3;
+				}
+				// Find a new target immediately
+				bub.behaviorStateMachine.ChangeState(new Bubbly_Navigating(bub));
+			}
 		}
 	}
 
-	internal class Bubbly_SpawnBubbles(Bubbly bub) : Bubbly_StateBase(bub)
+	internal class Bubbly_SpawnBubble(Bubbly bub) : Bubbly_StateBase(bub)
 	{
-		Vector3 pos;
-		float fillUpCooldown = 0f;
-		readonly List<Vector3> dirsToSpit = [];
-		Bubble awaitingBubble = null;
-
 		public override void Enter()
 		{
 			base.Enter();
 			bub.renderer.sprite = bub.sprPrepareBub;
-			pos = bub.transform.position;
+			var pos = bub.transform.position;
 			ChangeNavigationState(new NavigationState_DoNothing(bub, 0));
+
+			var dirsToSpit = new List<Vector3>();
 			Vector3 direction = Direction.North.ToVector3();
 			var cell = bub.ec.CellFromPosition(pos);
 			var room = cell.room;
+
 			if (cell.open)
 			{
 				for (int i = 0; i < 8; i++)
@@ -227,41 +311,26 @@ namespace BBTimes.CustomContent.NPCs
 						dirsToSpit.Add(direction);
 					direction = Quaternion.AngleAxis(45, Vector3.up) * direction;
 				}
-				return;
 			}
-			for (int i = 0; i < 4; i++)
+			else
 			{
-				if (bub.ec.CellFromPosition(pos + (direction * 10f)).TileMatches(room))
-					dirsToSpit.Add(direction);
-				direction = Quaternion.AngleAxis(90, Vector3.up) * direction;
-			}
-		}
-
-		public override void Update()
-		{
-			base.Update();
-			if (awaitingBubble)
-			{
-				if (awaitingBubble.Initialized)
-					awaitingBubble = null;
-				return;
-			}
-			if (dirsToSpit.Count == 0 || pos != bub.transform.position)
-			{
-				bub.behaviorStateMachine.ChangeState(new Bubbly_NavigateToASpot(bub));
-				return;
+				for (int i = 0; i < 4; i++)
+				{
+					if (bub.ec.CellFromPosition(pos + (direction * 10f)).TileMatches(room))
+						dirsToSpit.Add(direction);
+					direction = Quaternion.AngleAxis(90, Vector3.up) * direction;
+				}
 			}
 
-			fillUpCooldown -= bub.TimeScale * Time.deltaTime;
-			if (fillUpCooldown < 0f)
+			if (dirsToSpit.Count > 0)
 			{
-				fillUpCooldown += Random.Range(bub.minBubbleCooldown, bub.maxBubbleCooldown);
 				int i = Random.Range(0, dirsToSpit.Count);
-				awaitingBubble = bub.SpitBubbleAtDirection(dirsToSpit[i]);
-				dirsToSpit.RemoveAt(i);
+				bub.SpitBubbleAtDirection(dirsToSpit[i]);
+				bub.bubbleAmmo--;
 			}
+
+			// Immediately transition back to navigating
+			bub.behaviorStateMachine.ChangeState(new Bubbly_Navigating(bub));
 		}
-
-
 	}
 }

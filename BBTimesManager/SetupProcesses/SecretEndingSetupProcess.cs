@@ -230,7 +230,7 @@ namespace BBTimes.Manager
             generatorCylinderRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, 50f);
             generatorCylinderRenderer.transform.localScale = new(7f, 12f, 7f);
 
-            Sprite[] baldis = TextureExtensions.LoadSpriteSheet(4, 1, 35f, secretEndingPath, "containedBaldis.png");
+            Sprite[] baldis = TextureExtensions.LoadSpriteSheet(6, 1, 35f, secretEndingPath, "containedBaldis.png");
             for (int i = 0; i < baldis.Length; i++)
             {
                 var baldiObj = ObjectCreationExtensions.CreateSpriteBillboard(baldis[i]).AddSpriteHolder(out var baldiRenderer, 0f, 0);

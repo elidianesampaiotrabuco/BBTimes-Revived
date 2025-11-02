@@ -2,23 +2,23 @@
 using BBTimes.CustomContent.NPCs;
 using UnityEngine;
 
-namespace BBTimes.CustomComponents
+namespace BBTimes.CustomComponents.NpcSpecificComponents
 {
 	public class PixLaserBeam : MonoBehaviour, IEntityTrigger
 	{
-		public void InitBeam(Pix pixc, PlayerManager pm)
+		public void InitBeam(Pix pixc, Entity target)
 		{
 			pix = pixc;
-			targetPlayer = pm;
-			ec = pm.ec;
+			targetEntity = target;
+			ec = pixc.ec;
 
 			entity.Initialize(ec, pix.transform.position);
-			transform.LookAt(targetPlayer.transform);
-			direction = ec.CellFromPosition(transform.position).open ? transform.forward : Directions.DirFromVector3(targetPlayer.transform.position - transform.position, 45f).ToVector3(); // If not in an open cell, just shoot a straight line
+			transform.LookAt(targetEntity.transform);
+			direction = ec.CellFromPosition(transform.position).open ? transform.forward : Directions.DirFromVector3(targetEntity.transform.position - transform.position, 45f).ToVector3(); // If not in an open cell, just shoot a straight line
 
 			entity.OnEntityMoveInitialCollision += (hit) =>
 			{
-				if (flying && hit.transform.gameObject.layer != 2)
+				if (flying)
 				{
 					flying = false;
 					pix?.DecrementBeamCount();
@@ -42,11 +42,11 @@ namespace BBTimes.CustomComponents
 			bool wasPlayer = other.CompareTag("Player");
 			if (other.isTrigger && (other.CompareTag("NPC") || wasPlayer))
 			{
-				var entity = other.GetComponent<Entity>();
-				if (entity)
+				var hitEntity = other.GetComponent<Entity>();
+				if (hitEntity)
 				{
 					flying = false;
-					if (other.gameObject == targetPlayer.gameObject)
+					if (other.gameObject == targetEntity.gameObject)
 					{
 						pix?.SetAsSuccess();
 						renderer.gameObject.SetActive(false);
@@ -58,16 +58,16 @@ namespace BBTimes.CustomComponents
 					audMan.maintainLoop = true;
 
 					pix?.DecrementBeamCount();
-					actMod = entity.ExternalActivity;
+					actMod = hitEntity.ExternalActivity;
 					actMod.moveMods.Add(moveMod);
-					entity.AddForce(new(other.transform.position - transform.position, 9f, -8.5f));
+					hitEntity.AddForce(new(other.transform.position - transform.position, 9f, -8.5f));
 
-					if (wasPlayer)
-						gauge = Singleton<CoreGameManager>.Instance.GetHud(other.GetComponent<PlayerManager>().playerNumber).gaugeManager.ActivateNewGauge(gaugeSprite, lifeTime);
+					var p = other.GetComponent<PlayerManager>();
+					if (p)
+						gauge = Singleton<CoreGameManager>.Instance.GetHud(p.playerNumber).gaugeManager.ActivateNewGauge(gaugeSprite, lifeTime);
 
 					StartCoroutine(Timer());
 				}
-
 			}
 		}
 
@@ -82,10 +82,10 @@ namespace BBTimes.CustomComponents
 			}
 			else
 			{
-				if (actMod != null)
+				if (actMod != null && actMod.entity != null)
 				{
 					entity.UpdateInternalMovement(Vector3.zero);
-					transform.position = actMod.transform.position;
+					transform.position = actMod.entity.transform.position;
 				}
 				frame += 14 * ec.EnvironmentTimeScale * Time.deltaTime;
 				frame %= shockSprites.Length;
@@ -106,8 +106,6 @@ namespace BBTimes.CustomComponents
 			gauge?.Deactivate();
 
 			Destroy(gameObject);
-
-			yield break;
 		}
 
 		bool flying = true, ignorePix = true;
@@ -139,7 +137,7 @@ namespace BBTimes.CustomComponents
 
 		HudGauge gauge;
 		Pix pix;
-		PlayerManager targetPlayer;
+		Entity targetEntity;
 		EnvironmentController ec;
 
 		ActivityModifier actMod = null;

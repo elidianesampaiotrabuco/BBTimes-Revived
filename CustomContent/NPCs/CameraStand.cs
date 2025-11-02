@@ -58,7 +58,6 @@ namespace BBTimes.CustomContent.NPCs
 			base.Initialize();
 			navigator.SetSpeed(0);
 			navigator.maxSpeed = 0;
-			saySomethingCooldown = Random.Range(minSaySomethingCool, maxSaySomethingCool);
 			Disappear(false);
 			behaviorStateMachine.ChangeState(new CameraStand_WaitToRespawn(this));
 		}
@@ -245,7 +244,6 @@ namespace BBTimes.CustomContent.NPCs
 		Coroutine picTimer;
 		PlayerManager lastPlayer;
 		HudGauge gauge;
-		float saySomethingCooldown = 0f;
 
 		public static List<KeyValuePair<CameraStand, PlayerManager>> affectedByCamStand = [];
 
@@ -345,7 +343,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
-			if (saySomethingCooldown > 0f)
+			saySomethingCooldown -= cs.TimeScale * Time.deltaTime;
+			if (saySomethingCooldown < 0f)
 			{
 				saySomethingCooldown += Random.Range(cs.minSaySomethingCool, cs.maxSaySomethingCool);
 				cs.SaySomething();

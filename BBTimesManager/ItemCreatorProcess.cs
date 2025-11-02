@@ -59,7 +59,6 @@ namespace BBTimes.Manager
 			floorDatas[F5].ShopItems.Add(new() { selection = item, weight = 15 });
 			floorDatas[END].ShopItems.Add(new() { selection = item, weight = 15 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 86 });
-			Mugh.AddHittableItem(item.itemType);
 			// Present
 			item = new ItemBuilder(plug.Info)
 				.SetItemComponent<ITM_Present>()
@@ -268,6 +267,7 @@ namespace BBTimes.Manager
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 17 });
 			ITM_Pencil.audStab = man.Get<SoundObject>("audPencilStab");
 			PencilBoy.AddStabbingItem(item.itemType);
+			Cactungus.AddHittableItem(item.itemType);
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 75 });
 
 			// Water Bottle

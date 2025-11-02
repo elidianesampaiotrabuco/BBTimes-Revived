@@ -7,6 +7,7 @@ using BBTimes.Manager;
 using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.Registers;
+using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
 using UnityEngine.AI;
@@ -51,6 +52,56 @@ namespace BBTimes.Extensions
 			}
 
 			return particleSystem;
+		}
+		static Ray ray = new();
+		public static void Explode(
+			this Transform transform,
+			float explosionRadius,
+			LayerMask collisionLayer,
+			float explosionForce,
+			float explosionAcceleration
+		)
+		{
+			Vector3 position = transform.position;
+
+			var colliders = Physics.OverlapSphere(
+				position,
+				explosionRadius,
+				collisionLayer,
+				QueryTriggerInteraction.Ignore
+			);
+
+			for (int i = 0; i < colliders.Length; i++)
+			{
+				if (colliders[i].transform == transform)
+					continue;
+
+				Entity entity = colliders[i].GetComponent<Entity>();
+				if (entity == null || !entity.InBounds)
+					continue;
+
+				Vector3 entityDirection = (entity.transform.position - position).normalized;
+				ray.origin = position;
+				ray.direction = entityDirection;
+
+				var allResults = Physics.RaycastAll(
+					ray,
+					9999f,
+					LayerStorage.principalLookerMask,
+					QueryTriggerInteraction.Ignore
+				);
+				for (int z = 0; z < allResults.Length; z++)
+				{
+					var hit = allResults[z];
+					if (hit.transform == colliders[i].transform)
+					{
+						entity.AddForce(
+							new Force(entityDirection, explosionForce, explosionAcceleration)
+						);
+						break;
+					}
+				}
+			}
 		}
 		public static T SpawnForeignNPC<T>(this EnvironmentController ec, T prefab, Vector3 position) where T : NPC
 		{

@@ -20,7 +20,7 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			renderer = spriteRenderer[0];
 			audMan = GetComponent<PropagatedAudioManager>();
-			stepAudMan = gameObject.CreatePropagatedAudioManager(115, 145);
+			stepAudMan = gameObject.CreatePropagatedAudioManager(35, 145);
 
 			this.CreateClickableLink()
 				.CopyColliderAttributes((CapsuleCollider)baseTrigger[0]);
@@ -139,7 +139,7 @@ namespace BBTimes.CustomContent.NPCs
 				let.renderer.transform.SetParent(let.transform);
 				let.renderer.transform.localPosition = Vector3.zero;
 
-				let.gameObject.AddComponent<SphereCollider>().radius = 0.8f;
+				let.gameObject.AddComponent<SphereCollider>().radius = 1.65f;
 				let.gameObject.layer = LayerMask.NameToLayer("HotSpot");
 				let.gameObject.AddStaticRigidBody();
 
@@ -170,16 +170,17 @@ namespace BBTimes.CustomContent.NPCs
 			col.isTrigger = true;
 			col.radius = 2f;
 
+			var blockingCol = new GameObject("CorruptedLetterBlockingRaycast").AddComponent<SphereCollider>();
+			blockingCol.transform.SetParent(corruptedLetterObj.transform, false);
+			blockingCol.isTrigger = true;
+			blockingCol.radius = 2.5f;
+			blockingCol.gameObject.layer = LayerMask.NameToLayer("ClickableCollideable");
+			blockingCol.enabled = false;
+
 			// Setup fields for the corrupted letter prefab
 			corruptedLetterPrefab.text = tmpro;
-			corruptedLetterPrefab.canvasPre = ObjectCreationExtensions.CreateCanvas();
-			corruptedLetterPrefab.canvasPre.name = "CorruptedLetterCanvas";
-			corruptedLetterPrefab.canvasPre.transform.SetParent(corruptedLetterPrefab.transform, false);
-			corruptedLetterPrefab.canvasPre.gameObject.SetActive(false);
-			corruptedLetterPrefab.uiText = ObjectCreationExtensions.CreateTextMeshProUGUI(Color.black);
-			corruptedLetterPrefab.uiText.name = "CorruptedLetterTextUI";
-			corruptedLetterPrefab.uiText.transform.SetParent(corruptedLetterPrefab.canvasPre.transform, false);
 			corruptedLetterPrefab.collider = col;
+			corruptedLetterPrefab.blockingCollider = blockingCol;
 		}
 		public void SetupPrefabPost() { }
 		public string Name { get; set; }
@@ -229,8 +230,8 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal int numberOfLetters = 5;
 		[SerializeField]
-		internal float letterCircleRadius = 5f, letterRotationSpeed = 2f, letterRotationSpeedIncrement = 1.5f, angryLetterRotationSpeed = 5f, maxLetterRotationSpeed = 35f,
-			minCorruptedLetterSpawnDelay = 3f, maxCorruptedLetterSpawnDelay = 15f;
+		internal float letterCircleRadius = 5f, letterRotationSpeed = 1.5f, letterRotationSpeedIncrement = 0.75f, angryLetterRotationSpeed = 3.5f, maxLetterRotationSpeed = 5f,
+			minCorruptedLetterSpawnDelay = 0.75f, maxCorruptedLetterSpawnDelay = 10f, corruptedLetterSpawnDecrementDelay = 0.65f, missClickDelay = 0.85f;
 		[SerializeField]
 		internal int corruptedLetterMaxCount = 150;
 		[SerializeField]
@@ -251,8 +252,16 @@ namespace BBTimes.CustomContent.NPCs
 			behaviorStateMachine.ChangeState(new Penny_Wandering(this));
 			for (int i = 0; i < letters.Length; i++)
 				letters[i].Initialize(this, ec);
+			spawnSpotsForCorruptedLetters = ec.AllTilesNoGarbage(false, true);
+			spawnSpotsForCorruptedLetters.RemoveAll(c => !c.HardCoverageFits(CellCoverage.Center)); // If it doesn't fit, it shouldn't be included
 
 			navigator.Entity.OnTeleport += Teleport;
+		}
+
+		public override void Despawn()
+		{
+			base.Despawn();
+			CleanUpCorruptedLetters();
 		}
 
 		public void NormalSpeed()
@@ -325,6 +334,9 @@ namespace BBTimes.CustomContent.NPCs
 			audMan.FlushQueue(true);
 			audMan.QueueRandomAudio(audIncorrectLetterChoice);
 			SetIdleOnMood(1);
+			// To prevent clicking too fast as abuse
+			for (int i = 0; i < letters.Length; i++)
+				letters[i].DisableClickTemporarily(missClickDelay);
 
 			if (--guesses <= 1)
 				guesses = 1;
@@ -351,6 +363,7 @@ namespace BBTimes.CustomContent.NPCs
 				float rotSpeed = angry ? angryLetterRotationSpeed : letterRotationSpeed;
 				rotSpeed += letterRotationSpeedIncrement * wordIndex;
 				circleAngle += letterRotationOrientation * Mathf.Min(maxLetterRotationSpeed, rotSpeed) * Time.deltaTime * ec.EnvironmentTimeScale;
+				circleAngle %= 360f;
 				for (int i = 0; i < letters.Length; i++)
 				{
 					float angle = circleAngle + (2 * Mathf.PI / letters.Length * i);
@@ -374,6 +387,9 @@ namespace BBTimes.CustomContent.NPCs
 		/* -------------------------------- MINI GAME --------------------------------*/
 		public void InitiateMinigame(PlayerManager pm)
 		{
+			if (!angry)
+				currentMaxCorruptedLetterSpawnDelay = maxCorruptedLetterSpawnDelay; // Reset here and only reset back when she's not angry
+
 			letterRotationOrientation = Random.value >= 0.5f ? 1 : -1;
 			minigame = StartCoroutine(Minigame());
 			chosenPlayer = pm;
@@ -461,24 +477,27 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-		public bool ClickableRequiresNormalHeight() => false;
-		public bool ClickableHidden() => currentWordIndex == -1 && behaviorStateMachine.CurrentState is not Penny_PunishmentIdle;
-		public void Clicked(int player)
+		public override void VirtualOnTriggerEnter(Collider other)
 		{
-			if (behaviorStateMachine.CurrentState is Penny_PunishmentIdle idleState)
-			{
-				var pm = Singleton<CoreGameManager>.Instance.GetPlayer(player);
-				if (pm != idleState.target) return;
+			base.VirtualOnTriggerEnter(other);
+			if (behaviorStateMachine.CurrentState is not Penny_PunishmentIdle idleState) return;
 
+			if (other.isTrigger && other.gameObject == idleState.target.gameObject)
+			{
+				var pm = idleState.target;
 				CleanUpCorruptedLetters();
 				if (playerSlowdownCoroutine != null)
 					StopCoroutine(playerSlowdownCoroutine);
 				playerSlowdownCoroutine = StartCoroutine(ApplyPlayerSlowdown(pm));
 
 				behaviorStateMachine.ChangeState(new Penny_ClassTime(this, pm));
-				return;
 			}
+		}
 
+		public bool ClickableRequiresNormalHeight() => false;
+		public bool ClickableHidden() => currentWordIndex == -1;
+		public void Clicked(int player)
+		{
 			if (currentWordIndex != -1 && Singleton<CoreGameManager>.Instance.GetPlayer(player) == chosenPlayer)
 			{
 				audMan.FlushQueue(true);
@@ -496,7 +515,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		IEnumerator SlowCorruptedLetterSpawn()
 		{
-			var tiles = ec.AllTilesNoGarbage(false, true);
+			var tiles = spawnSpotsForCorruptedLetters;
 			while (angry)
 			{
 				Cell selectedCell = tiles[Random.Range(0, tiles.Count)];
@@ -505,9 +524,16 @@ namespace BBTimes.CustomContent.NPCs
 					selectedCell = tiles[Random.Range(0, tiles.Count)];
 
 				var letter = Instantiate(corruptedLetterPrefab, selectedCell.CenterWorldPosition, Quaternion.identity);
-				activeCorruptedLetters.Add(letter);
+				letter.ec = ec;
+				letter.owner = gameObject;
 
-				yield return new WaitForSecondsNPCTimescale(this, Random.Range(minCorruptedLetterSpawnDelay, maxCorruptedLetterSpawnDelay)); // Wait for a delay before the next letter
+				activeCorruptedLetters.Add(letter);
+				yield return new WaitForSecondsNPCTimescale(this, Random.Range(minCorruptedLetterSpawnDelay, currentMaxCorruptedLetterSpawnDelay)); // Wait for a delay before the next letter
+
+				// To slowly build up faster the decrement
+				currentMaxCorruptedLetterSpawnDelay -= corruptedLetterSpawnDecrementDelay;
+				if (currentMaxCorruptedLetterSpawnDelay < minCorruptedLetterSpawnDelay)
+					currentMaxCorruptedLetterSpawnDelay = minCorruptedLetterSpawnDelay;
 
 				for (int i = 0; i < activeCorruptedLetters.Count; i++) // Clean up dead letters
 					if (!activeCorruptedLetters[i])
@@ -542,6 +568,7 @@ namespace BBTimes.CustomContent.NPCs
 		PlayerManager chosenPlayer;
 		Coroutine minigame, corruptedLetterCoroutine;
 		bool angry = false, step = false;
+		List<Cell> spawnSpotsForCorruptedLetters;
 
 		public bool IsAngry => angry;
 
@@ -552,7 +579,7 @@ namespace BBTimes.CustomContent.NPCs
 		public string FormingWord => formingWord;
 		public string SelectedWord => chosenWord;
 
-		float stepDelay = 0f;
+		float stepDelay = 0f, currentMaxCorruptedLetterSpawnDelay;
 		readonly char[] allowedCharacters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
 	}
 
@@ -686,7 +713,7 @@ namespace BBTimes.CustomContent.NPCs
 			base.Enter();
 			pen.SetAngry(true);
 			pen.ScreamOnPlayer();
-			pen.SetIdleOnMood(2);
+			pen.SetIdleOnMood(3);
 			pen.HideAboveText();
 		}
 

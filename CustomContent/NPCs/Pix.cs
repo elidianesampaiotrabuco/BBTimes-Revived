@@ -1,9 +1,12 @@
 ﻿using System.Collections;
 using BBTimes.CustomComponents;
+using BBTimes.CustomComponents.NpcSpecificComponents;
 using BBTimes.Extensions;
+using BBTimes.Manager;
 using BBTimes.Plugin;
 using MTM101BaldAPI;
 using PixelInternalAPI.Classes;
+using PixelInternalAPI.Components;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
 
@@ -51,6 +54,9 @@ namespace BBTimes.CustomContent.NPCs
 			happySprites = [storedSprites[14], storedSprites[15]];
 			idleShootingSprites = [storedSprites[20], storedSprites[21]];
 
+			explodingSprites = this.GetSpriteSheet(2, 1, 12f, "pix_explosion.png");
+			explosionPrefab = BBTimesManager.man.Get<QuickExplosion>("TestExplosion");
+
 			// laser (16, 17)
 			var laserRend = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[23]).AddSpriteHolder(out var laserRenderer, 0f, LayerStorage.standardEntities);
 			laserRend.gameObject.ConvertToPrefab(true);
@@ -70,6 +76,13 @@ namespace BBTimes.CustomContent.NPCs
 			laser.gaugeSprite = this.GetSprite(Storage.GaugeSprite_PixelsPerUnit, "gaugeIcon.png");
 
 			laserPre = laser;
+
+			// Target indicator
+			ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(20f, "pixIndicator.png")).AddSpriteHolder(out var targetIndcRenderer, 2.5f);
+			targetIndicator = targetIndcRenderer.gameObject.AddComponent<VisualAttacher>();
+			targetIndicator.gameObject.AddComponent<BillboardRotator>();
+			targetIndicator.name = "TargetIndicatorVisual";
+			targetIndicator.gameObject.ConvertToPrefab(true);
 		}
 
 		public void SetupPrefabPost() { }
@@ -84,8 +97,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Initialize()
 		{
 			base.Initialize();
-			navigator.maxSpeed = 14f;
-			navigator.SetSpeed(14f);
+			navigator.maxSpeed = walkingSpeed;
+			navigator.SetSpeed(walkingSpeed);
 			behaviorStateMachine.ChangeState(new Pix_Wandering(this, 0f));
 		}
 
@@ -98,12 +111,20 @@ namespace BBTimes.CustomContent.NPCs
 			navigator.Am.moveMods.Add(moveMod);
 		}
 
-		public void DoneShootingState(bool failed)
+		public void DoneShootingState(bool failed, bool saySomething = true)
 		{
-			audMan.PlayRandomAudio(failed ? audAngry : audHappy);
+			if (rageStreak == maxRageStreak)
+			{
+				currentState = 3;
+				StartCoroutine(ExplosionAnimation());
+				return;
+			}
+			if (saySomething)
+				audMan.PlayRandomAudio(failed ? audAngry : audHappy);
 			currentState = failed ? 1u : 2u;
+
 			if (failed)
-				rageStreak = Mathf.Min(rageStreak + 1, 3);
+				rageStreak = Mathf.Min(rageStreak + 1, maxRageStreak);
 			else
 				rageStreak = 0;
 			navigator.Am.moveMods.Remove(moveMod);
@@ -117,46 +138,73 @@ namespace BBTimes.CustomContent.NPCs
 		public override void VirtualUpdate()
 		{
 			base.VirtualUpdate();
+
 			switch (currentState)
 			{
 				case 3: // do nothing lol
 					return;
 				case 2:
-					frame += walkingSpeed * TimeScale * Time.deltaTime;
+					frame += walkingAnimSpeed * TimeScale * Time.deltaTime;
 					frame %= happySprites.Length;
 					rotator.targetSprite = happySprites[Mathf.FloorToInt(frame)];
 					return;
 				case 1:
-					frame += walkingSpeed * TimeScale * Time.deltaTime;
+					frame += walkingAnimSpeed * TimeScale * Time.deltaTime;
 					frame %= angrySprites.Length;
 					rotator.targetSprite = angrySprites[Mathf.FloorToInt(frame)];
 					return;
 				default:
-					frame += walkingSpeed * TimeScale * Time.deltaTime;
+					frame += walkingAnimSpeed * TimeScale * Time.deltaTime;
 					frame %= normalSprites.Length;
 					rotator.targetSprite = normalSprites[Mathf.FloorToInt(frame)];
 					return;
 			}
 		}
 
-		public void InitiateShooting(PlayerManager target)
+		public void InitiateShooting(Entity target)
 		{
-			SetReadyToShoot();
-			StartCoroutine(Shooting(target));
+			StartCoroutine(PreparationAndShooting(target));
 		}
 
-		void Shoot(PlayerManager player)
+		private IEnumerator PreparationAndShooting(Entity target)
+		{
+			SetReadyToShoot();
+
+			var indicator = Instantiate(targetIndicator);
+			indicator.AttachTo(target.transform, true);
+			indicator.SetOwnerRefToSelfDestruct(gameObject);
+
+			while (audMan.AnyAudioIsPlaying)
+				yield return null;
+
+			yield return new WaitForSecondsNPCTimescale(this, delayBeforeShooting); // Preparation time
+
+			if (target && target.gameObject.activeInHierarchy)
+			{
+				yield return StartCoroutine(Shooting(target));
+			}
+			else
+			{
+				DoneShootingState(true); // Target lost
+				behaviorStateMachine.ChangeState(new Pix_Wandering(this, postShootingCooldown));
+			}
+
+			if (indicator)
+				Destroy(indicator.gameObject);
+		}
+
+		void Shoot(Entity target)
 		{
 			beams++;
 			var l = Instantiate(laserPre);
-			l.InitBeam(this, player);
+			l.InitBeam(this, target);
 			StartCoroutine(ShootingAnimation(l));
 
 
 			audMan.PlaySingle(audShoot);
 		}
 
-		IEnumerator Shooting(PlayerManager player)
+		IEnumerator Shooting(Entity target)
 		{
 			hasFailed = true;
 			beams = 0;
@@ -175,7 +223,7 @@ namespace BBTimes.CustomContent.NPCs
 					yield return null;
 				}
 
-				Shoot(player);
+				Shoot(target);
 				yield return null;
 			}
 
@@ -183,25 +231,33 @@ namespace BBTimes.CustomContent.NPCs
 				yield return null;
 
 			DoneShootingState(hasFailed);
-			behaviorStateMachine.ChangeState(new Pix_Wandering(this, 20f));
-
-			yield break;
+			behaviorStateMachine.ChangeState(new Pix_Wandering(this, postShootingCooldown));
 		}
 
 		IEnumerator ShootingAnimation(PixLaserBeam beam)
 		{
-
 			rotator.targetSprite = idleShootingSprites[1];
 			yield return null;
 			if (beam)
 				beam.transform.position = transform.position; // workaround for the stupid entity thing from the game
 
 			int frame = 0;
-			while (frame++ < idleSpeed)
+			while (frame++ < idleAnimSpeed)
 				yield return null;
 
 			rotator.targetSprite = idleShootingSprites[0];
-			yield break;
+		}
+
+		IEnumerator ExplosionAnimation()
+		{
+			rotator.targetSprite = explodingSprites[0];
+			yield return new WaitForSecondsNPCTimescale(this, explosionDelay);
+			transform.Explode(explosionRadius, looker.layerMask, explosionForce, -explosionForce);
+			Instantiate(explosionPrefab, transform.position, Quaternion.identity);
+			rotator.targetSprite = explodingSprites[1];
+			yield return new WaitForSecondsNPCTimescale(this, postExplosionWait);
+			rageStreak = 0;
+			DoneShootingState(false, false);
 		}
 
 		internal void SetAsSuccess() => hasFailed = false;
@@ -219,7 +275,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal AnimatedSpriteRotator rotator;
 
 		[SerializeField]
-		internal Sprite[] idleShootingSprites, normalSprites, angrySprites, happySprites;
+		internal Sprite[] idleShootingSprites, normalSprites, angrySprites, happySprites, explodingSprites;
 
 		[SerializeField]
 		internal AudioManager audMan;
@@ -233,13 +289,22 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal PixLaserBeam laserPre;
 
+		[SerializeField]
+		internal QuickExplosion explosionPrefab;
+		[SerializeField]
+		internal float explosionRadius = 40f, explosionForce = 50f, explosionDelay = 5f, postExplosionWait = 15f,
+			postShootingCooldown = 20f, delayBeforeShooting = 1.5f, prepShootSpeed = 26f, walkingSpeed = 14f,
+			idleAnimSpeed = 10f, walkingAnimSpeed = 5f;
+		[SerializeField]
+		internal VisualAttacher targetIndicator;
+		[SerializeField]
+		internal int maxRageStreak = 3;
+
 		uint currentState = 0; // 0 = normal, 1 = angry, 2 = happy, 3 = idle
 
 		float frame = 0f;
 
 		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
-
-		const float idleSpeed = 10f, walkingSpeed = 5f;
 	}
 
 	internal class Pix_StateBase(Pix pix) : NpcState(pix)
@@ -247,13 +312,8 @@ namespace BBTimes.CustomContent.NPCs
 		protected Pix pix = pix;
 	}
 
-	internal class Pix_Wandering : Pix_StateBase
+	internal class Pix_Wandering(Pix pix, float cooldown) : Pix_StateBase(pix)
 	{
-		internal Pix_Wandering(Pix pix, float cooldown) : base(pix)
-		{
-			this.cooldown = cooldown;
-			requireNormalState = cooldown > 0f;
-		}
 		public override void Enter()
 		{
 			base.Enter();
@@ -263,50 +323,98 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Update()
 		{
 			base.Update();
-			if (!requireNormalState) return;
-
-			cooldown -= pix.TimeScale * Time.deltaTime;
-			if (cooldown <= 0f)
+			if (cooldown > 0f)
 			{
-				pix.SetToNormalState();
-				requireNormalState = false;
+				cooldown -= pix.TimeScale * Time.deltaTime;
+				if (cooldown <= 0f)
+				{
+					pix.SetToNormalState();
+				}
+				return;
+			}
+
+			scanTime -= pix.TimeScale * Time.deltaTime;
+			if (scanTime <= 0f)
+			{
+				scanTime = 1f; // Scan every second
+
+				Entity target = FindTarget();
+				if (target != null)
+				{
+					pix.behaviorStateMachine.ChangeState(new Pix_PrepShoot(pix, target));
+				}
 			}
 		}
 
-		public override void PlayerInSight(PlayerManager player)
+		private Entity FindTarget()
 		{
-			if (requireNormalState) return;
+			if (pix.Blinded) return null;
 
-			base.PlayerInSight(player);
-			if (!player.Tagged)
-				pix.behaviorStateMachine.ChangeState(new Pix_PrepShoot(pix, player));
+			Entity closestTarget = null;
+			float closestDist = float.MaxValue;
+
+			// Find players first
+			for (int i = 0; i < Singleton<CoreGameManager>.Instance.setPlayers; i++)
+			{
+				PlayerManager player = Singleton<CoreGameManager>.Instance.GetPlayer(i);
+				if (player.Tagged) continue;
+
+				if (pix.looker.PlayerInSight(player))
+				{
+					float dist = Vector3.Distance(pix.transform.position, player.transform.position);
+					if (dist < closestDist)
+					{
+						closestDist = dist;
+						closestTarget = player.plm.Entity;
+					}
+				}
+			}
+
+			// Find NPCs
+			foreach (NPC npc in pix.ec.Npcs)
+			{
+				if (npc == pix) continue;
+
+				if (pix.looker.RaycastNPC(npc))
+				{
+					float dist = Vector3.Distance(pix.transform.position, npc.transform.position);
+					if (dist < closestDist)
+					{
+						closestDist = dist;
+						closestTarget = npc.Navigator.Entity;
+					}
+				}
+			}
+			return closestTarget;
 		}
 
-		float cooldown;
-
-		bool requireNormalState;
+		float cooldown = cooldown;
+		float scanTime = 1f;
 	}
 
-	internal class Pix_PrepShoot(Pix pix, PlayerManager player) : Pix_StateBase(pix)
+	internal class Pix_PrepShoot(Pix pix, Entity target) : Pix_StateBase(pix)
 	{
 		public override void Enter()
 		{
 			base.Enter();
-			pix.Navigator.maxSpeed = 26f;
-			pix.Navigator.SetSpeed(26f);
-			pix.Navigator.FindPath(pix.transform.position, player.transform.position);
+			pix.Navigator.maxSpeed = pix.prepShootSpeed;
+			pix.Navigator.SetSpeed(pix.prepShootSpeed);
+			pix.Navigator.FindPath(pix.transform.position, target.transform.position);
 			ChangeNavigationState(new NavigationState_TargetPosition(pix, 63, pix.Navigator.NextPoint));
-
 		}
 		public override void DestinationEmpty()
 		{
-
-			if (pix.looker.PlayerInSight() && !player.Tagged)
+			if (target != null && target.gameObject.activeInHierarchy)
 			{
-				base.DestinationEmpty();
-				pix.InitiateShooting(player);
-				pix.behaviorStateMachine.ChangeState(new Pix_StateBase(pix)); // Who will change state now is Pix himself
-				return;
+				pix.looker.Raycast(target.transform, float.PositiveInfinity, out bool sighted);
+				PlayerManager pm = target.GetComponent<PlayerManager>();
+				if (sighted && (pm == null || !pm.Tagged))
+				{
+					base.DestinationEmpty();
+					pix.InitiateShooting(target);
+					pix.behaviorStateMachine.ChangeState(new Pix_StateBase(pix)); // Who will change state now is Pix himself
+					return;
+				}
 			}
 
 			pix.behaviorStateMachine.ChangeState(new Pix_Wandering(pix, 0f));
@@ -315,10 +423,10 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Exit()
 		{
 			base.Exit();
-			pix.Navigator.maxSpeed = 14f;
-			pix.Navigator.SetSpeed(14f);
+			pix.Navigator.maxSpeed = pix.walkingSpeed;
+			pix.Navigator.SetSpeed(pix.walkingSpeed);
 		}
 
-		readonly protected PlayerManager player = player;
+		readonly protected Entity target = target;
 	}
 }

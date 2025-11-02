@@ -343,17 +343,17 @@ namespace BBTimes.Manager
 			floorDatas[F2].NPCs.Add(new(npc, 35));
 			floorDatas[END].NPCs.Add(new(npc, 66));
 
-			// Mugh
-			npc = new NPCBuilder<Mugh>(plug.Info)
+			// Cactungus
+			npc = new NPCBuilder<Cactungus>(plug.Info)
 				.SetMinMaxAudioDistance(30f, 100f)
 				.AddSpawnableRoomCategories(RoomCategory.Hall)
 				.SetMetaTags([STUDENT_TAG])
-				.SetEnum("Mugh")
-				.SetMetaName("PST_Mugh_Name")
-				.SetName("Mugh")
+				.SetEnum("Cactungus")
+				.SetMetaName("PST_Cactungus_Name")
+				.SetName("Cactungus")
 				.AddTrigger()
 				.Build()
-				.SetupNPCData("Mugh", "PST_Mugh_Name", "PST_Mugh_Desc", -1.36f);
+				.SetupNPCData("Cactungus", "PST_Cactungus_Name", "PST_Cactungus_Desc", -2f);
 
 			floorDatas[F1].NPCs.Add(new(npc, 50));
 			floorDatas[END].NPCs.Add(new(npc, 35));
