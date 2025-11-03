@@ -6,7 +6,7 @@ using BBTimes.Extensions;
 using BBTimes.Plugin;
 using MTM101BaldAPI;
 using MTM101BaldAPI.Components;
-using PixelInternalAPI.Components;
+using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
 using UnityEngine;
 
@@ -23,6 +23,7 @@ namespace BBTimes.CustomContent.NPCs
 			SoundObject[] soundObjects = [this.GetSound("WCH_ambience.wav", "Vfx_Wch_Idle", SoundType.Effect, normalColor),
 		this.GetSoundNoSub("WCH_see.wav", SoundType.Effect),
 		this.GetSound("WCH_teleport.wav", "Vfx_Wch_Teleport", SoundType.Effect, normalColor),
+		this.GetSound("WCH_angered.wav", "Vfx_Wch_Angered", SoundType.Effect, normalColor),
 		this.GetSound("SHDWCH_spawn.wav", "Vfx_Wch_Spawn", SoundType.Effect, shadowColor),
 		this.GetSound("SHDWCH_ambience.wav", "Vfx_Wch_Idle", SoundType.Effect, shadowColor)
 			];
@@ -32,36 +33,42 @@ namespace BBTimes.CustomContent.NPCs
 			angrySprite = storedSprites[1];
 
 			audMan = GetComponent<PropagatedAudioManager>();
+			screenAudMan = gameObject.CreateAudioManager(35f, 60f).MakeAudioManagerNonPositional();
 
 			audAmbience = soundObjects[0];
 			audSpot = soundObjects[1];
 			audTeleport = soundObjects[2];
+			audAngered = soundObjects[3];
 
 			spriteToHide = spriteRenderer[0];
-			screenAudMan = gameObject.CreateAudioManager(45f, 75f).MakeAudioManagerNonPositional();
 
 			// Hallucination Setup
-			var hallRender = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[2]);
+			var hallObj = ObjectCreationExtensions.CreateSpriteBillboard(storedSprites[2]).AddSpriteHolder(out var hallRender, 0f, LayerStorage.ignoreRaycast);
 			hallRender.gameObject.layer = LayerMask.NameToLayer("Overlay");
-			hallRender.name = "WatcherHallucination";
-			hallRender.gameObject.ConvertToPrefab(true);
+			hallObj.name = "WatcherHallucination";
+			hallObj.gameObject.ConvertToPrefab(true);
 
-			var col = hallRender.gameObject.AddComponent<CapsuleCollider>();
+			var col = hallObj.gameObject.AddComponent<CapsuleCollider>();
 			col.isTrigger = true;
 			col.radius = 2f;
 			col.height = 10f;
 			col.center = new Vector3(0f, 5f, 0f);
 
-			var hall = hallRender.gameObject.AddComponent<Hallucinations>();
+			var hall = hallObj.gameObject.AddComponent<Hallucinations>();
 			hall.audMan = hall.gameObject.CreateAudioManager(15f, 25f);
-			hall.audSpawn = soundObjects[3];
-			hall.audLoop = soundObjects[4];
+			hall.audSpawn = soundObjects[4];
+			hall.audLoop = soundObjects[5];
 			hall.renderer = hallRender;
-			hall.nav = hallRender.gameObject.AddComponent<MomentumNavigator>();
+
+			hall.nav = hallObj.gameObject.AddComponent<MomentumNavigator>();
+			hall.nav.pathType = PathType.Const; // It ignores obstacles, it's literally a hallucination
+			hall.nav.maxSpeed = 20f;
+			hall.nav.accel = 2.5f;
+			hall.nav.useAcceleration = true;
 
 			hallPre = hall;
 
-			gaugeSprite = this.GetSprite(Storage.GaugeSprite_PixelsPerUnit, "gaugeIcon.png");
+			Navigator.accel = 4.5f;
 		}
 		public void SetupPrefabPost() { }
 		public string Name { get; set; }
@@ -75,9 +82,20 @@ namespace BBTimes.CustomContent.NPCs
 		{
 			base.Initialize();
 			audMan.maintainLoop = true;
-			screenAudMan.maintainLoop = true;
 
-			behaviorStateMachine.ChangeState(new Watcher_WaitBelow(this, false));
+			behaviorStateMachine.ChangeState(new Watcher_Inactive(this));
+		}
+
+		public override void Despawn()
+		{
+			base.Despawn();
+			DespawnHallucinations(true);
+			if (obscurityDebuff != null)
+			{
+				ec.RemoveFog(obscurityDebuff);
+				obscurityDebuff = null;
+				ec.UpdateFog();
+			}
 		}
 
 		public void DespawnHallucinations(bool instaDespawn)
@@ -103,12 +121,59 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-		public override void Despawn()
+		internal void TeleportAwayFromPlayer(PlayerManager pm)
 		{
-			base.Despawn();
-			DespawnHallucinations(true);
-			ClearDebuffs();
+			var map = pm.DijkstraMap;
+			bool storeCell = map.storeFoundCells;
+			map.StoreFoundCells = true;
+			map.Calculate();
+			map.StoreFoundCells = storeCell;
+
+			var cam = Singleton<CoreGameManager>.Instance.GetCamera(pm.playerNumber);
+			var validCells = new List<Cell>();
+
+			int maxDist = 0;
+			foreach (var cell in ec.AllCells())
+			{
+				if (cell.room.type == RoomType.Hall && !cell.HasAnyHardCoverage)
+				{
+					int dist = map.Value(cell.position);
+					if (dist > maxDist)
+						maxDist = dist;
+				}
+			}
+
+			float fov = cam.camCom.fieldOfView;
+			Vector3 camPos = cam.transform.position;
+			Vector3 camFwd = cam.transform.forward;
+
+			foreach (var cell in ec.AllCells())
+			{
+				if (cell.room.type == RoomType.Hall && !cell.HasAnyHardCoverage)
+				{
+					int dist = map.Value(cell.position);
+					Vector3 targetDir = cell.CenterWorldPosition - camPos;
+					float angle = Vector3.Angle(camFwd, targetDir);
+
+					// Far away AND outside player's Field of View.
+					if (dist > maxDist * 0.75f && angle > fov * 0.5f)
+					{
+						validCells.Add(cell);
+					}
+				}
+			}
+
+			if (validCells.Count > 0)
+			{
+				Cell targetCell = validCells[Random.Range(0, validCells.Count)];
+				navigator.Entity.Teleport(targetCell.CenterWorldPosition);
+			}
+			else // Failsafe if no ideal spot is found
+			{
+				navigator.Entity.Teleport(ec.RandomCell(false, false, true).CenterWorldPosition);
+			}
 		}
+
 
 		public void AngryHide()
 		{
@@ -118,9 +183,6 @@ namespace BBTimes.CustomContent.NPCs
 
 		public void Hide(bool hide)
 		{
-			if (!hide)
-				spriteToHide.sprite = normalSprite;
-
 			spriteToHide.enabled = !hide;
 			for (int i = 0; i < baseTrigger.Length; i++)
 				baseTrigger[i].enabled = !hide;
@@ -146,92 +208,6 @@ namespace BBTimes.CustomContent.NPCs
 
 		}
 
-		public void GoToRandomSpot()
-		{
-			_randomSpots.Clear();
-			for (int i = 0; i < ec.levelSize.x; i++)
-			{
-				for (int j = 0; j < ec.levelSize.z; j++)
-				{
-					if (!ec.cells[i, j].Null && ec.cells[i, j].room.type == RoomType.Hall && (ec.cells[i, j].shape == TileShapeMask.Corner || ec.cells[i, j].shape == TileShapeMask.End || ec.cells[i, j].shape == TileShapeMask.Single) && !ec.cells[i, j].HardCoverageFits(CellCoverage.Down | CellCoverage.Center))
-						_randomSpots.Add(ec.cells[i, j]);
-				}
-			}
-
-			navigator.Entity.Teleport(_randomSpots[Random.Range(0, _randomSpots.Count)].CenterWorldPosition);
-			StartCoroutine(SpawnDelay());
-		}
-
-
-		// Add these methods to the Watcher class
-		public void ApplyPlayerDebuff(PlayerManager player)
-		{
-			int debuffType = Random.Range(0, 3);
-			switch (debuffType)
-			{
-				case 0: // Slow
-					player.Am.moveMods.Add(slowMod);
-					slowDebuffs.Add(slowMod);
-					break;
-				case 1: // Fog
-					if (obscurityDebuff == null)
-					{
-						obscurityDebuff = new Fog
-						{
-							color = Color.black,
-							startDist = 0f,
-							maxDist = 20f,
-							strength = 0f,
-							priority = 70 // High priority
-						};
-						ec.AddFog(obscurityDebuff);
-					}
-					obscurityDebuff.strength = Mathf.Min(obscurityDebuff.strength + 0.15f, 0.8f);
-					ec.UpdateFog();
-					break;
-				case 2: // Displacement
-					float distance = Random.Range(10f, 20f) * (Random.value > 0.5f ? 1f : -1f);
-					Vector3 newPos = player.transform.position + player.transform.forward * distance;
-					// Basic check to avoid teleporting into walls
-					if (ec.CellFromPosition(newPos).ConstBin == 0)
-						player.Teleport(newPos);
-					break;
-			}
-		}
-
-		public void StartDebuffTimer(PlayerManager pm)
-		{
-			if (debuffRoutine != null)
-				StopCoroutine(debuffRoutine);
-			debuffRoutine = StartCoroutine(DebuffCleanupCoroutine(pm));
-		}
-
-		IEnumerator DebuffCleanupCoroutine(PlayerManager pm)
-		{
-			yield return new WaitForSecondsNPCTimescale(this, 45f);
-
-			ClearDebuffs(pm);
-			debuffRoutine = null;
-		}
-		public void ClearDebuffs() => ClearDebuffs(null);
-		public void ClearDebuffs(PlayerManager targetedPlayer)
-		{
-			if (targetedPlayer)
-			{
-				while (slowDebuffs.Count != 0)
-				{
-					targetedPlayer.Am.moveMods.Remove(slowDebuffs[0]);
-					slowDebuffs.RemoveAt(0);
-				}
-			}
-			if (obscurityDebuff != null)
-			{
-				ec.RemoveFog(obscurityDebuff);
-				obscurityDebuff = null;
-				ec.UpdateFog();
-			}
-		}
-
 		public void SpawnHallucinations(PlayerManager pm) =>
 			StartCoroutine(HallucinationSpawner(pm));
 
@@ -243,32 +219,8 @@ namespace BBTimes.CustomContent.NPCs
 				var hal = Instantiate(hallPre);
 				hal.AttachToPlayer(pm, this);
 				hallucinations.Add(hal);
-				yield return new WaitForSeconds(Random.Range(0.2f, 0.8f));
+				yield return new WaitForSecondsNPCTimescale(this, Random.Range(0.2f, 0.8f));
 			}
-		}
-
-		IEnumerator SpawnDelay()
-		{
-			EntityOverrider overrider = new();
-			navigator.Entity.Override(overrider);
-			float normHeight = navigator.Entity.InternalHeight;
-			overrider.SetHeight(0f);
-			float curHeight = 0f;
-			float tar = normHeight - 0.05f;
-
-			while (true)
-			{
-				curHeight += (normHeight - curHeight) / 3f * TimeScale * Time.deltaTime * 15f;
-				if (curHeight >= tar)
-					break;
-
-				overrider.SetHeight(curHeight);
-				yield return null;
-			}
-			overrider.SetHeight(normHeight);
-			overrider.Release();
-
-			yield break;
 		}
 
 		IEnumerator GradualHide()
@@ -280,46 +232,36 @@ namespace BBTimes.CustomContent.NPCs
 				spriteToHide.color = alpha;
 				yield return null;
 			}
-			Hide(true);
+			behaviorStateMachine.ChangeState(new Watcher_Dead(this));
 			spriteToHide.color = Color.white;
 		}
-		readonly List<MovementModifier> slowDebuffs = [];
-		Fog obscurityDebuff;
-		Coroutine debuffRoutine;
 
 		[SerializeField]
 		internal SpriteRenderer spriteToHide;
 
 		[SerializeField]
-		internal PropagatedAudioManager audMan;
+		internal AudioManager audMan, screenAudMan;
 
 		[SerializeField]
-		internal AudioManager screenAudMan;
-
-		[SerializeField]
-		internal SoundObject audAmbience, audSpot, audTeleport;
+		internal SoundObject audAmbience, audSpot, audTeleport, audAngered;
 
 		[SerializeField]
 		internal Hallucinations hallPre;
 
 		[SerializeField]
-		internal Sprite gaugeSprite, angrySprite, normalSprite;
+		internal Sprite angrySprite, normalSprite;
 
 		[SerializeField]
 		internal int minHallucinations = 7, maxHallucinations = 9;
 
 		[SerializeField]
-		internal float minWaitCooldown = 20f, maxWaitCooldown = 40f;
-
-		public HudGauge Gauge { get; private set; }
-
-		public bool HasActiveHallucinations => hallucinations.Count != 0;
+		internal float runSpeed = 30f, sustainedStareDuration = 1.5f, glimpzeLimit = 0.15f, minActiveCooldown = 30f, maxActiveCooldown = 60f, deadCooldown = 20f;
 
 		readonly List<Hallucinations> hallucinations = [];
 
 		readonly MovementModifier moveMod = new(Vector3.zero, 0f);
-		readonly MovementModifier slowMod = new(Vector3.zero, 0.65f);
-		readonly List<Cell> _randomSpots = [];
+
+		public Fog obscurityDebuff;
 	}
 
 	internal class Watcher_StateBase(Watcher w) : NpcState(w)
@@ -327,77 +269,64 @@ namespace BBTimes.CustomContent.NPCs
 		protected Watcher w = w;
 	}
 
-	internal class Watcher_WaitBelow(Watcher w, bool activeHallucinations) : Watcher_StateBase(w)
+	internal class Watcher_Inactive(Watcher w) : Watcher_StateBase(w)
 	{
-		public float Cooldown { get; private set; }
-		public float OriginalCooldown { get; private set; }
-		bool hasActiveHallucinations = activeHallucinations;
+		float glimpseTime = 0f;
+		PlayerManager sightedPlayer = null;
+
 		public override void Enter()
 		{
 			base.Enter();
-			Cooldown = Random.Range(w.minWaitCooldown, w.maxWaitCooldown);
-			OriginalCooldown = Cooldown;
+			w.TeleportAwayFromPlayer(Singleton<CoreGameManager>.Instance.GetPlayer(0)); // Just use the default player
+			w.spriteToHide.sprite = w.normalSprite;
+			w.spriteToHide.enabled = true; // frozen
+			w.SetFrozen(true);
+			w.audMan.FlushQueue(true); // no ambient sound
 			ChangeNavigationState(new NavigationState_DoNothing(w, 0));
-			w.Hide(true);
 		}
 
-		public override void Update()
+		public override void PlayerInSight(PlayerManager player)
 		{
-			base.Update();
-			Cooldown -= w.TimeScale * Time.deltaTime;
-			if (hasActiveHallucinations)
+			base.PlayerInSight(player);
+			sightedPlayer = player;
+			glimpseTime += w.TimeScale * Time.deltaTime;
+			if (glimpseTime >= w.glimpzeLimit) // Player has glimpsed for 0.15s
 			{
-				w.Gauge?.SetValue(OriginalCooldown, Cooldown);
-				if (!w.HasActiveHallucinations)
-				{
-					hasActiveHallucinations = false;
-					w.Gauge?.Deactivate();
-				}
+				w.behaviorStateMachine.ChangeState(new Watcher_Teleporting(w, sightedPlayer));
 			}
-			if (Cooldown <= 0f)
-			{
-				w.behaviorStateMachine.ChangeState(new Watcher_Active(w));
-				if (hasActiveHallucinations)
-					w.Gauge?.Deactivate();
-			}
+		}
+
+		public override void PlayerLost(PlayerManager player)
+		{
+			base.PlayerLost(player);
+			glimpseTime = 0f;
+			sightedPlayer = null;
+		}
+	}
+
+	internal class Watcher_Teleporting(Watcher w, PlayerManager pm) : Watcher_StateBase(w)
+	{
+		public override void Enter()
+		{
+			base.Enter();
+			w.TeleportAwayFromPlayer(pm);
+			w.behaviorStateMachine.ChangeState(new Watcher_Active(w));
 		}
 	}
 
 	internal class Watcher_Active(Watcher w) : Watcher_StateBase(w)
 	{
-		public override void Initialize()
+		float stareTime = 0f;
+		PlayerManager staredPlayer = null;
+
+		public override void Enter()
 		{
-			base.Initialize();
-			w.DespawnHallucinations(false);
-			w.GoToRandomSpot();
-			w.SetFrozen(true);
+			base.Enter();
+			w.spriteToHide.sprite = w.angrySprite;
 			w.Hide(false);
-			w.screenAudMan.FlushQueue(true);
-			w.screenAudMan.Pause(true);
-		}
-
-		public override void Sighted()
-		{
-			base.Sighted();
-			if (!hasPlayed)
-			{
-				hasPlayed = true;
-
-				w.screenAudMan.SetLoop(true);
-				w.screenAudMan.QueueAudio(w.audSpot);
-			}
-			w.screenAudMan.Pause(false);
-			stillInSight = true;
-		}
-
-		public override void Unsighted()
-		{
-			base.Unsighted();
-			w.screenAudMan.Pause(true);
-			mod.addend = 0;
-			stillInSight = false;
-			if (lastSawPlayer && moveMods.TryGetValue(lastSawPlayer, out var mmod))
-				mmod.movementAddend = Vector3.zero;
+			w.SetFrozen(false);
+			ChangeNavigationState(new NavigationState_DoNothing(w, 0));
+			stareTime = 0f;
 		}
 
 		public override void InPlayerSight(PlayerManager player)
@@ -407,7 +336,7 @@ namespace BBTimes.CustomContent.NPCs
 			if (!moveMods.TryGetValue(player, out var moveMod))
 				return;
 
-			lastSawPlayer = player;
+			staredPlayer = player;
 			spotStrength += w.TimeScale * Time.deltaTime * 6.5f;
 			if (Time.timeScale > 0)
 				mod.addend = spotStrength * (-1f + Random.value * 2f) * 2f;
@@ -439,12 +368,32 @@ namespace BBTimes.CustomContent.NPCs
 		public override void PlayerLost(PlayerManager player)
 		{
 			base.PlayerLost(player);
-			player.GetCustomCam().RemoveModifier(mod);
-			if (moveMods.TryGetValue(player, out var modifier))
+			stareTime = 0f;
+			staredPlayer = null;
+		}
+
+		public override void Sighted()
+		{
+			base.Sighted();
+			if (!hasPlayed)
 			{
-				player.Am.moveMods.Remove(modifier);
-				moveMods.Remove(player);
+				hasPlayed = true;
+
+				w.screenAudMan.SetLoop(true);
+				w.screenAudMan.QueueAudio(w.audSpot);
 			}
+			w.screenAudMan.Pause(false);
+			stillInSight = true;
+		}
+
+		public override void Unsighted()
+		{
+			base.Unsighted();
+			w.screenAudMan.Pause(true);
+			mod.addend = 0;
+			stillInSight = false;
+			if (staredPlayer && moveMods.TryGetValue(staredPlayer, out var mmod))
+				mmod.movementAddend = Vector3.zero;
 		}
 
 		public override void Update()
@@ -454,7 +403,7 @@ namespace BBTimes.CustomContent.NPCs
 
 			leaveCooldown -= w.TimeScale * Time.deltaTime;
 			if (leaveCooldown <= 0f)
-				w.behaviorStateMachine.ChangeState(new Watcher_WaitBelow(w, false));
+				w.behaviorStateMachine.ChangeState(new Watcher_Dead(w));
 		}
 
 		public override void Exit()
@@ -467,44 +416,83 @@ namespace BBTimes.CustomContent.NPCs
 		bool hasPlayed = false, stillInSight = false;
 
 
-		float spotStrength = 0f, leaveCooldown = Random.Range(30f, 60f);
+		float spotStrength = 0f, leaveCooldown = Random.Range(w.minActiveCooldown, w.maxActiveCooldown);
 		const float strengthLimit = 12f;
 		readonly ValueModifier mod = new();
 
 		readonly Dictionary<PlayerManager, MovementModifier> moveMods = [];
-		PlayerManager lastSawPlayer;
 
 	}
 
 	internal class Watcher_Attack(Watcher w, PlayerManager pm) : Watcher_StateBase(w)
 	{
-		readonly PlayerManager target = pm;
-		CustomPlayerCameraComponent comp;
+		readonly NavigationState_TargetPlayer targetState = new(w, 63, pm.transform.position);
 
-		public override void Initialize()
+		public override void Enter()
 		{
-			base.Initialize();
-			comp = target.GetCustomCam();
-			comp.RemoveModifier(mod);
+			base.Enter();
+			w.Navigator.maxSpeed = w.runSpeed;
+			w.Navigator.SetSpeed(0f); // Go by acceleration
+
 			w.screenAudMan.FlushQueue(true);
-			w.screenAudMan.PlaySingle(w.audTeleport);
-			w.Hide(true); // Watcher disappears
+			w.screenAudMan.SetLoop(true);
+			w.screenAudMan.maintainLoop = true;
+			w.screenAudMan.QueueAudio(w.audAngered);
 
-			w.StartDebuffTimer(target);
-			w.SpawnHallucinations(target); // Starts spawning hallucinations
-
-			// After starting the attack, go back to waiting state
-			var waitState = new Watcher_WaitBelow(w, true);
-			w.behaviorStateMachine.ChangeState(waitState);
-			w.Gauge.Activate(w.gaugeSprite, waitState.OriginalCooldown);
+			ChangeNavigationState(targetState);
+		}
+		public override void PlayerInSight(PlayerManager player)
+		{
+			base.PlayerInSight(player);
+			if (player == pm)
+				targetState.UpdatePosition(player.transform.position);
+		}
+		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		{
+			base.OnStateTriggerEnter(other, validCollision);
+			if (validCollision && other.CompareTag("Player") && other.gameObject == pm.gameObject)
+			{
+				// summon hallucinations
+				w.behaviorStateMachine.ChangeState(new Watcher_Summoning(w, pm));
+			}
 		}
 
 		public override void Exit()
 		{
 			base.Exit();
-			comp?.RemoveModifier(mod);
+			targetState.priority = 0;
+		}
+	}
+
+	internal class Watcher_Summoning(Watcher w, PlayerManager pm) : Watcher_StateBase(w)
+	{
+		public override void Enter()
+		{
+			base.Enter();
+			ChangeNavigationState(new NavigationState_DoNothing(w, 0));
+			w.SpawnHallucinations(pm);
+			w.AngryHide();
+		}
+	}
+
+	internal class Watcher_Dead(Watcher w) : Watcher_StateBase(w)
+	{
+		public override void Enter()
+		{
+			base.Enter();
+			w.Hide(true);
+			w.SetFrozen(true);
+			ChangeNavigationState(new NavigationState_DoNothing(w, 0));
 		}
 
-		readonly ValueModifier mod = new();
+		public override void Update()
+		{
+			base.Update();
+			deadCooldown -= w.TimeScale * Time.deltaTime;
+			if (deadCooldown <= 0f)
+				w.behaviorStateMachine.ChangeState(new Watcher_Inactive(w));
+		}
+
+		float deadCooldown = w.deadCooldown;
 	}
 }

@@ -569,16 +569,6 @@ namespace BBTimes.Manager
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 35 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 35 });
 
-			// Coal (useless lmao)
-			item = new ItemBuilder(plug.Info)
-				.SetItemComponent<Item>() // Item class returns false
-				.SetShopPrice(450)
-				.SetNameAndDescription("Coal_Name", string.Empty)
-				.SetMeta(ItemFlags.Persists | ItemFlags.NoUses, [PIRATE_CANN_HATE])
-				.Build("Coal");
-
-			HappyHolidays.itmCoal = item;
-
 			// Division icon
 			item = new ItemBuilder(plug.Info)
 				.SetItemComponent<ITM_DivideYTP>()

@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.Events;
 
 public class MomentumNavigator : MonoBehaviour
 {
@@ -29,20 +28,15 @@ public class MomentumNavigator : MonoBehaviour
 
 	protected bool beenMoved;
 
-	[SerializeField]
 	public bool preciseTarget = true;
 
-	[SerializeField]
 	public bool autoRotate = true;
 
-	[SerializeField]
 	public bool decelerate = false;
 
-	[SerializeField]
 	public bool useAcceleration = false;
-
-	[SerializeField]
 	public float height = 5f;
+	public PathType pathType = PathType.Nav;
 
 	protected bool recalculatePath;
 
@@ -182,8 +176,11 @@ public class MomentumNavigator : MonoBehaviour
 		if (_targetTile == currentTargetTile && !recalculatePath) return;
 
 		//TempOpenObstacles();
-		ec.FindPath(_startTile, _targetTile, PathType.Nav, out _path, out bool success);
+		ec.FindPath(_startTile, _targetTile, pathType, out _path, out bool success);
 		//TempCloseObstacles();
+
+		if (_path.Count != 1)
+			_path.RemoveAt(0);
 
 		if (success)
 		{

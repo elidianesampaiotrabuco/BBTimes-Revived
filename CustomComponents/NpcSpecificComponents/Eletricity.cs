@@ -19,6 +19,13 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 				moveMod.movementAddend.z = Random.Range(-eletricityForce, eletricityForce);
 				frameDelay = 0;
 			}
+
+			speedDelay -= ec.EnvironmentTimeScale * Time.deltaTime;
+			if (speedDelay <= 0f)
+			{
+				speedDelay += delayToChangeSpeed;
+				moveMod.movementMultiplier = Random.Range(minSpeedFactor, maxSpeedFactor);
+			}
 		}
 
 		[SerializeField]
@@ -27,6 +34,10 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 		[SerializeField]
 		internal float eletricityForce = 5f;
 
+		[SerializeField]
+		internal float delayToChangeSpeed = 2.5f, minSpeedFactor = 0.75f, maxSpeedFactor = 1.25f;
+
 		int frameDelay = 0;
+		float speedDelay = 0f;
 	}
 }

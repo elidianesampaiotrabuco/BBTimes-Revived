@@ -1189,7 +1189,7 @@ namespace BBTimes.Manager
 
 			sets.container = room[0].selection.roomFunctionContainer;
 
-			room.ForEach(x => { x.selection.maxItemValue = 999; x.selection.posterChance = 0; x.selection.MysteryRoomCover(); });
+			room.ForEach(x => { x.selection.maxItemValue = 999; x.selection.posterChance = 0; });
 
 			AddAssetsToEvent<SuperMysteryRoom>(room);
 
@@ -1880,6 +1880,15 @@ namespace BBTimes.Manager
 						asset.mapMaterial.SetTexture("_MapBackground", mapBg);
 						asset.mapMaterial.SetShaderKeywords(["_KEYMAPSHOWBACKGROUND_ON"]);
 						asset.mapMaterial.name = asset.name;
+					}
+
+					if (secretRoom)
+					{
+						List<IntVector2> cellPositions = [.. asset.cells.Select(c => c.pos)];
+						asset.secretCells.AddRange(cellPositions);
+						asset.blockedWallCells.AddRange(cellPositions);
+						asset.eventSafeCells.Clear();
+						asset.entitySafeCells.Clear();
 					}
 
 					if (isAHallway)

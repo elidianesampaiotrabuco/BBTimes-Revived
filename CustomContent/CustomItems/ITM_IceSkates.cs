@@ -35,10 +35,14 @@ namespace BBTimes.CustomContent.CustomItems
 
 		public override bool Use(PlayerManager pm)
 		{
-			if (active) return false;
+			if (uses > 0)
+			{
+				Destroy(gameObject);
+				return false;
+			}
 
 			lifeTime = totalLifeTime;
-
+			uses++;
 			this.pm = pm;
 			ec = pm.ec;
 			active = true;
@@ -126,13 +130,19 @@ namespace BBTimes.CustomContent.CustomItems
 
 		void OnDestroy()
 		{
-			if (active) Cleanup();
+			if (active)
+			{
+				uses--;
+				if (uses < 0)
+					uses = 0;
+				Cleanup();
+			}
 		}
 
 		float lifeTime;
 
 		[SerializeField]
-		private float skateSpeed = 60f, rotationSpeed = 2.85f, totalLifeTime = 45f;
+		internal float skateSpeed = 60f, rotationSpeed = 2.85f, totalLifeTime = 45f;
 		[SerializeField]
 		private SoundObject audSkateloop, audSkateHitWall;
 		[SerializeField]
@@ -148,6 +158,7 @@ namespace BBTimes.CustomContent.CustomItems
 		HudGauge gauge;
 		Vector3 currentDirection;
 		bool active = false;
+		static int uses = 0;
 		EnvironmentController ec;
 		readonly HashSet<Cell> foundCells = [];
 		readonly List<SlippingMaterial> generatedSlippers = [];

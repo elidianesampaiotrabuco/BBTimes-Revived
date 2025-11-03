@@ -1,0 +1,18 @@
+{"items": [
+	{"key":"Ed_GlobalStructure_SecurityCamera_Settings","value":"Security Camera Settings"},
+	{"key":"Ed_GlobalStructure_SecurityCamera_DetectionLabel","value":"Detection Delay: "},
+	{"key":"Ed_GlobalStructure_SecurityCamera_TurningCooldownLabel","value":"Turning Cooldown: "},
+	
+	{"key":"Ed_GlobalStructure_Squisher_Settings","value":"Squisher Settings"},
+	{"key":"Ed_GlobalStructure_Squisher_SpeedLabel","value":"Speed: "},
+	{"key":"Ed_GlobalStructure_Squisher_CooldownLabel","value":"Cooldown: "},
+	
+	
+	{"key":"Ed_GlobalStructure_Trapdoor_Settings","value":"Trapdoor Settings"},
+	{"key":"Ed_GlobalStructure_Trapdoor_CooldownLabel","value":"Cooldown: "},
+	
+	{"key":"Ed_RandomStructure_OutsideBox_RGBLabel","value":"Outside Color (RGB):"},
+	{"key":"Ed_RandomStructure_OutsideBox_StrengthLabel","value":"Lighting Strength:"},
+	{"key":"Ed_RandomStructure_OutsideBox_LastFloorLabel","value":"The ceiling is lower (last floor):"},
+	{"key":"Ed_RandomStructure_OutsideBox_IncludeGrassLabel","value":"Include grass outside:"}
+]}

@@ -78,7 +78,7 @@ namespace BBTimes.CustomContent.NPCs
 			laserPre = laser;
 
 			// Target indicator
-			ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(20f, "pixIndicator.png")).AddSpriteHolder(out var targetIndcRenderer, 2.5f);
+			ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(27.5f, "pixIndicator.png")).AddSpriteHolder(out var targetIndcRenderer, 2.5f);
 			targetIndicator = targetIndcRenderer.gameObject.AddComponent<VisualAttacher>();
 			targetIndicator.gameObject.AddComponent<BillboardRotator>();
 			targetIndicator.name = "TargetIndicatorVisual";
@@ -113,7 +113,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		public void DoneShootingState(bool failed, bool saySomething = true)
 		{
-			if (rageStreak == maxRageStreak)
+			if (rageStreak + 1 == maxRageStreak)
 			{
 				currentState = 3;
 				StartCoroutine(ExplosionAnimation());
@@ -171,7 +171,7 @@ namespace BBTimes.CustomContent.NPCs
 			SetReadyToShoot();
 
 			var indicator = Instantiate(targetIndicator);
-			indicator.AttachTo(target.transform, true);
+			indicator.AttachTo(target.transform, Vector3.up * targetOffset, true);
 			indicator.SetOwnerRefToSelfDestruct(gameObject);
 
 			while (audMan.AnyAudioIsPlaying)
@@ -293,8 +293,8 @@ namespace BBTimes.CustomContent.NPCs
 		internal QuickExplosion explosionPrefab;
 		[SerializeField]
 		internal float explosionRadius = 40f, explosionForce = 50f, explosionDelay = 5f, postExplosionWait = 15f,
-			postShootingCooldown = 20f, delayBeforeShooting = 1.5f, prepShootSpeed = 26f, walkingSpeed = 14f,
-			idleAnimSpeed = 10f, walkingAnimSpeed = 5f;
+			postShootingCooldown = 20f, delayBeforeShooting = 1f, prepShootSpeed = 26f, walkingSpeed = 14f,
+			idleAnimSpeed = 10f, walkingAnimSpeed = 5f, targetOffset = 3f;
 		[SerializeField]
 		internal VisualAttacher targetIndicator;
 		[SerializeField]
@@ -333,16 +333,11 @@ namespace BBTimes.CustomContent.NPCs
 				return;
 			}
 
-			scanTime -= pix.TimeScale * Time.deltaTime;
-			if (scanTime <= 0f)
-			{
-				scanTime = 1f; // Scan every second
 
-				Entity target = FindTarget();
-				if (target != null)
-				{
-					pix.behaviorStateMachine.ChangeState(new Pix_PrepShoot(pix, target));
-				}
+			Entity target = FindTarget();
+			if (target != null)
+			{
+				pix.behaviorStateMachine.ChangeState(new Pix_PrepShoot(pix, target));
 			}
 		}
 
@@ -389,7 +384,6 @@ namespace BBTimes.CustomContent.NPCs
 		}
 
 		float cooldown = cooldown;
-		float scanTime = 1f;
 	}
 
 	internal class Pix_PrepShoot(Pix pix, Entity target) : Pix_StateBase(pix)
@@ -404,13 +398,11 @@ namespace BBTimes.CustomContent.NPCs
 		}
 		public override void DestinationEmpty()
 		{
-			if (target != null && target.gameObject.activeInHierarchy)
+			if (target != null)
 			{
-				pix.looker.Raycast(target.transform, float.PositiveInfinity, out bool sighted);
-				PlayerManager pm = target.GetComponent<PlayerManager>();
-				if (sighted && (pm == null || !pm.Tagged))
+				if ((target.CompareTag("Player") && target.TryGetComponent<PlayerManager>(out var pm) && pix.looker.PlayerInSight(pm)) ||
+				(target.CompareTag("NPC") && target.TryGetComponent<NPC>(out var npc) && pix.looker.RaycastNPC(npc)))
 				{
-					base.DestinationEmpty();
 					pix.InitiateShooting(target);
 					pix.behaviorStateMachine.ChangeState(new Pix_StateBase(pix)); // Who will change state now is Pix himself
 					return;

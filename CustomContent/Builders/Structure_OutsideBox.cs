@@ -369,7 +369,8 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 							  Raycast(windowData.Corner2, targetCenter) ||
 							  Raycast(windowData.Center + halfForwardOffset, targetCenter) ||
 							  Raycast(windowData.Corner1 + halfForwardOffset, targetCenter) ||
-							  Raycast(windowData.Corner2 + halfForwardOffset, targetCenter);
+							  Raycast(windowData.Corner2 + halfForwardOffset, targetCenter) ||
+							  Raycast(windowData.Center + windowData.forwardOffset * 1.75f, targetCenter);
 
 				if (canSee)
 				{

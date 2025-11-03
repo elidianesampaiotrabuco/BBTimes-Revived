@@ -239,7 +239,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		internal float circleAngle = 0f;
 
-		internal static readonly List<CorruptedLetter> activeCorruptedLetters = [];
+		internal readonly List<CorruptedLetter> activeCorruptedLetters = [];
 
 		internal readonly MovementModifier playerSlowdownMod = new(Vector3.zero, 0.8f);
 		private Coroutine playerSlowdownCoroutine;

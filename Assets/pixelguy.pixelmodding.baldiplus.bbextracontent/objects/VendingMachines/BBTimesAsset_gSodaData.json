@@ -1,0 +1,26 @@
+{
+  "sodaMachineWeight": 35,
+  "usesLeft": 1,
+  "normalTextureFileName": "BBTimesAsset_gSoda.png",
+  "outOfStockTextureFileName": "BBTimesAsset_gSoda_out.png",
+  "items": [
+    {
+      "item": "GSoda",
+      "weight": 100,
+      "mod_guid": "pixelguy.pixelmodding.baldiplus.bbextracontent"
+    }
+  ],
+  "allowedLevels": [
+    "F1",
+    "F2",
+    "F3",
+	"F4",
+	"F5",
+    "END",
+    "INF13"
+  ],
+  "allowedLevelTypes": [
+	"Factory",
+	"Maintenance"
+  ]
+}

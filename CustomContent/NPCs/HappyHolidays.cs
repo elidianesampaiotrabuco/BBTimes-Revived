@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using BBTimes.CustomComponents;
 using BBTimes.Extensions;
 using BBTimes.Extensions.ObjectCreationExtensions;
+using BBTimes.Plugin;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.NPCs
 {
-	// TODO: make this disabled by default when it is not christmas (to appear at the store); otherwise, leave it enabled in christmas mode
 	public class HappyHolidays : NPC, INPCPrefab, IClickable<int>, IItemAcceptor
 	{
 		public void SetupPrefab()
@@ -27,6 +27,8 @@ namespace BBTimes.CustomContent.NPCs
 			col.height = myCol.height;
 			col.direction = myCol.direction;
 			col.radius = myCol.radius;
+
+			gaugeSprite = this.GetSprite(Storage.GaugeSprite_PixelsPerUnit, "gaugeIcon.png");
 		}
 		public void SetupPrefabPost() =>
 			objects = [.. GameExtensions.GetAllShoppingItems()];
@@ -46,7 +48,13 @@ namespace BBTimes.CustomContent.NPCs
 
 		internal void GivePlayerItem(PlayerManager pm)
 		{
-			pm.itm.AddItem(Random.value > coalChance ? objects[Random.Range(0, objects.Length)] : itmCoal);
+			pm.itm.AddItem(objects[Random.Range(0, objects.Length)]);
+			pm.RuleBreak(guiltRule, guiltTimeOnGift, 0.25f);
+			if (gauge)
+				gauge.Deactivate();
+			gauge = Singleton<CoreGameManager>.Instance.GetHud(pm.playerNumber).gaugeManager.ActivateNewGauge(gaugeSprite, guiltTimeOnGift);
+			StartCoroutine(GuiltTimer(pm));
+
 			behaviorStateMachine.ChangeState(new HappyHolidays_WaitToRespawn(this));
 			audMan.PlaySingle(audHappyHolidays);
 		}
@@ -107,6 +115,20 @@ namespace BBTimes.CustomContent.NPCs
 				hhDisables = 0;
 		}
 
+		IEnumerator GuiltTimer(PlayerManager pm)
+		{
+			float time = guiltTimeOnGift;
+			while (time > 0f && pm.ruleBreak == guiltRule)
+			{
+				time -= Time.deltaTime * pm.PlayerTimeScale;
+				if (gauge)
+					gauge.SetValue(guiltTimeOnGift, time);
+				yield return null;
+			}
+			if (gauge)
+				gauge.Deactivate();
+		}
+
 		[SerializeField]
 		internal ItemObject[] objects = [];
 
@@ -118,14 +140,21 @@ namespace BBTimes.CustomContent.NPCs
 
 		[SerializeField]
 		internal Sprite[] unwrapSprites;
-
 		[SerializeField]
-		internal float coalChance = 0.25f, maxClickDelay = 0.75f, normSpeed = 14.5f, runSpeed = 23.05f, fleeCooldown = 15f, despawnHeight = -15f, respawnCooldown = 50f, aboutToRespawnCooldown = 5f;
+
+		internal float maxClickDelay = 0.75f, normSpeed = 14.5f, runSpeed = 23.05f, fleeTime = 5f, despawnHeight = -15f, respawnCooldown = 50f, aboutToRespawnCooldown = 5f;
+		[SerializeField]
+		internal float guiltTimeOnGift = 15f;
+		[SerializeField]
+		internal string guiltRule = "Bullying";
 
 		[SerializeField]
 		internal AudioManager audMan;
 
-		internal static ItemObject itmCoal;
+		HudGauge gauge;
+
+		[SerializeField]
+		internal Sprite gaugeSprite;
 
 		int unwraps = 0;
 		float clickDelay = 0;
@@ -155,7 +184,7 @@ namespace BBTimes.CustomContent.NPCs
 
 	internal class HappyHolidays_FleeFromPlayer(HappyHolidays hh, HappyHolidays_StateBase prevState, params Transform[] runningFrom) : HappyHolidays_StateBase(hh)
 	{
-		float fleeCooldown = hh.fleeCooldown;
+		float fleeCooldown = hh.fleeTime;
 		readonly HappyHolidays_StateBase prevState = prevState;
 		readonly DijkstraMap map = new(hh.ec, PathType.Nav, int.MaxValue, runningFrom);
 		public override void Enter()

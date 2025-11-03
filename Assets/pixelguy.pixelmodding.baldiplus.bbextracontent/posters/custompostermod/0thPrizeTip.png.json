@@ -1,0 +1,5 @@
+{
+    "posterWeight": 125,
+    "lvlTitleWhitelist": ["F1,F2,END"],
+    "reverseTitleWhitelist": true
+}

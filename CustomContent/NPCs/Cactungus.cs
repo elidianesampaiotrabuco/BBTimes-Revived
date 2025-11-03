@@ -150,7 +150,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal float slownessWalkFactor = 0.1f;
 
 		[SerializeField]
-		internal float hugCooldown = 20f, hugDistanceTolerance = 14f, normalPostHugCooldown = 5f, sadPostHugCooldown = 15f, walkSpeed = 12f, maxPullForce = 17f;
+		internal float hugCooldown = 20f, hugDistanceTolerance = 14f, normalPostHugCooldown = 5f, sadPostHugCooldown = 15f, walkSpeed = 12f, maxPullForce = 22f, minimumHugDistance = 4.5f;
 
 		[SerializeField]
 		internal Sprite gaugeSprite;
@@ -285,12 +285,12 @@ namespace BBTimes.CustomContent.NPCs
 				else
 					hugged.hugMod.movementMultiplier = 0.5f; // Can move slowly after 3 seconds
 
-				hugged.hugMod.movementAddend = dist.normalized * Mathf.Min(dist.magnitude, mu.maxPullForce); // Pull velocity towards Cactungus
+				hugged.hugMod.movementAddend = dist.normalized * Mathf.Min(dist.magnitude * 2f, mu.maxPullForce); // Pull velocity towards Cactungus
 
 				// Tighten the hug tolerance over time
-				hugged.hugTolerance -= mu.TimeScale * Time.deltaTime * dist.magnitude * 0.5f;
-				if (hugged.hugTolerance < 3f)
-					hugged.hugTolerance = 3f;
+				hugged.hugTolerance -= mu.TimeScale * Time.deltaTime * dist.magnitude * 0.85f;
+				if (hugged.hugTolerance < mu.minimumHugDistance)
+					hugged.hugTolerance = mu.minimumHugDistance;
 			}
 		}
 
@@ -320,7 +320,7 @@ namespace BBTimes.CustomContent.NPCs
 		class HuggedEntity(Cactungus owner, Entity e, float initialTolerance)
 		{
 			public readonly Entity entity = e;
-			public readonly MovementModifier hugMod = new MovementModifier(Vector3.zero, 0f);
+			public readonly MovementModifier hugMod = new(Vector3.zero, 0f);
 			public float hugTolerance = initialTolerance;
 			public float timer = 0f;
 			public bool InteractionDisabled => interactionDisables != 0;

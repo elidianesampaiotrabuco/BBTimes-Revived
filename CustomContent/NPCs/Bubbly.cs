@@ -78,6 +78,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Initialize()
 		{
 			base.Initialize();
+			bubbleAmmo = bubbleMaxAmmo;
 			map = new(ec, PathType.Nav, int.MaxValue, transform);
 			navigator.maxSpeed = speed;
 			navigator.SetSpeed(speed);
@@ -89,12 +90,16 @@ namespace BBTimes.CustomContent.NPCs
 				if (acceptableClassroomCategories.Contains(room.category))
 					classrooms.Add(room);
 			}
+
+			if (classrooms.Count == 0)
+				classrooms.AddRange(ec.rooms);
+
 			classrooms.Shuffle();
 
 			for (int i = 0; i < 3 && i < classrooms.Count; i++)
 			{
 				var cell = classrooms[i].RandomEntitySafeCellNoGarbage();
-				Instantiate(bucketPre, cell.FloorWorldPosition, Quaternion.identity, ec.transform);
+				buckets.Add(Instantiate(bucketPre, cell.FloorWorldPosition, Quaternion.identity, ec.transform));
 			}
 
 			behaviorStateMachine.ChangeState(new Bubbly_Navigating(this));
@@ -209,7 +214,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal float minBubbleCooldown = 0.5f, maxBubbleCooldown = 1.5f, minSpeedToFillupBubble = 3f, maxSpeedToFillupBubble = 6.5f;
 
 		[SerializeField]
-		internal int bubbleAmmo = 3;
+		internal int bubbleMaxAmmo = 3;
 
 		[SerializeField]
 		internal AudioManager bucketPre;
@@ -234,6 +239,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		public AudioManager NextBucket => nextBucket;
 
+		internal int bubbleAmmo;
 		DijkstraMap map;
 		readonly List<Bubble> bubbles = [];
 		readonly internal List<AudioManager> buckets = [];
@@ -281,7 +287,7 @@ namespace BBTimes.CustomContent.NPCs
 				if (bub.NextBucket)
 				{
 					bub.NextBucket.PlaySingle(bub.audRefill);
-					bub.bubbleAmmo = 3;
+					bub.bubbleAmmo = bub.bubbleMaxAmmo;
 				}
 				// Find a new target immediately
 				bub.behaviorStateMachine.ChangeState(new Bubbly_Navigating(bub));

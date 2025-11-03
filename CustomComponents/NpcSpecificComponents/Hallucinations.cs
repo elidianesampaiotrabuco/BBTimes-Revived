@@ -1,6 +1,10 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using BBTimes.CustomContent.NPCs;
+using MTM101BaldAPI;
+using MTM101BaldAPI.Components;
+using PixelInternalAPI.Components;
+using PixelInternalAPI.Extensions;
 using UnityEngine;
 
 namespace BBTimes.CustomComponents.NpcSpecificComponents
@@ -23,9 +27,6 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 
 			// Initialize the navigator
 			nav.Initialize(ec);
-			nav.maxSpeed = Random.Range(5f, 10f);
-			nav.useAcceleration = true;
-			nav.accel = 5f;
 
 			activeHallucinations.Add(new(this, pm));
 			StartCoroutine(Hallucinating());
@@ -33,11 +34,18 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 
 		IEnumerator Hallucinating()
 		{
+			map.StoreFoundCells = true;
+			map.Calculate();
+			map.StoreFoundCells = false;
+
 			int distance = Random.Range(minDistanceFromPlayer, maxDistanceFromPlayer + 1);
 			List<Cell> candidateCells = map.FoundCells();
 			for (int i = 0; i < candidateCells.Count; i++)
-				if (map.Value(candidateCells[i].position) > distance)
+			{
+				int valDist = map.Value(candidateCells[i].position);
+				if (valDist < minDistanceFromPlayer || valDist > distance)
 					candidateCells.RemoveAt(i--);
+			}
 
 			// Spawn at a random position around the player
 			transform.position = candidateCells.Count != 0 ? candidateCells[Random.Range(0, candidateCells.Count)].CenterWorldPosition :
@@ -97,10 +105,38 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents
 
 			if (other.isTrigger && other.CompareTag("Player") && other.gameObject == target.gameObject)
 			{
-				watcher.ApplyPlayerDebuff(target);
+				// Camera Flicker
+				StartCoroutine(FlickerFOV(target.GetCustomCam()));
+
+				// Cumulative Fog
+				if (watcher.obscurityDebuff == null)
+				{
+					watcher.obscurityDebuff = new Fog
+					{
+						color = Color.black,
+						startDist = 5f,
+						maxDist = 20f,
+						strength = 0f,
+						priority = 1
+					};
+					ec.AddFog(watcher.obscurityDebuff);
+				}
+				watcher.obscurityDebuff.strength = Mathf.Min(watcher.obscurityDebuff.strength + 0.15f, 0.8f);
+				ec.UpdateFog();
+
+
 				Despawn();
 			}
 		}
+
+		IEnumerator FlickerFOV(CustomPlayerCameraComponent cam)
+		{
+			var mod = new ValueModifier() { addend = 20f };
+			cam.AddModifier(mod);
+			yield return new WaitForSecondsEnvironmentTimescale(ec, 0.1f);
+			cam.RemoveModifier(mod);
+		}
+
 
 		public void SetToDespawn() =>
 			timeAlive = 0f;

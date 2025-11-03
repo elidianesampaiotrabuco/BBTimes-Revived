@@ -134,7 +134,6 @@ namespace BBTimes.CustomContent.NPCs
 			eletricities.RemoveAt(0);
 		}
 
-		// Item fits feature: accept items to fix bot
 
 		public bool ItemFits(Items itm)
 		{
@@ -152,11 +151,12 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-		// IClickable feature: recharge items
 		public void Clicked(int player)
 		{
-			if (IsItemRechargeable(Singleton<CoreGameManager>.Instance.GetPlayer(player).itm, true))
+			var pm = Singleton<CoreGameManager>.Instance.GetPlayer(player);
+			if (IsItemRechargeable(pm.itm, true))
 			{
+				pm.plm.Entity.AddForce(new((pm.transform.position - transform.position).normalized, shockForce, -shockForce));
 				audMan.PlaySingle(audRechargeItem);
 			}
 		}
@@ -201,7 +201,7 @@ namespace BBTimes.CustomContent.NPCs
 
 		[SerializeField]
 		internal float minErrorCooldown = 25f, maxErrorCooldown = 40f, errorThreshold = 10f,
-			errorMinActiveCooldown = 15f, errorMaxActiveCooldown = 30f, electricityShakingForce = 1.25f;
+			errorMinActiveCooldown = 15f, errorMaxActiveCooldown = 30f, electricityShakingForce = 1.25f, shockForce = 25f;
 
 		readonly List<Eletricity> eletricities = [];
 

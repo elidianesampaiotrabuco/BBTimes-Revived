@@ -166,7 +166,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
 			// for (int i = 1; i <= 6; i++)
 			// 	EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
-			ReplaceEditorBasicObject(TimesPrefix + "SecretButton", EditorInterface.AddObjectVisual(TimesPrefix + "SecretButton", man.Get<GameObject>("editorPrefab_SecretButton"), true));
+			// ReplaceEditorBasicObject(TimesPrefix + "SecretButton", EditorInterface.AddObjectVisual(TimesPrefix + "SecretButton", man.Get<GameObject>("editorPrefab_SecretButton"), true));
 
 			// NPCs
 			foreach (var npcName in allNpcs)
@@ -457,7 +457,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			// objectTools.Add(new("Times_GeneratorLever", true, 5f));
 			// for (int i = 1; i <= 6; i++)
 			// 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
-			EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
+			// EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
 
 			foreach (var pair in objectTools)
 			{

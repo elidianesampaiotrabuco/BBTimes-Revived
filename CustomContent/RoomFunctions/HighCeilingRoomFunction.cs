@@ -283,8 +283,8 @@ namespace BBTimes.CustomContent.RoomFunctions
 		[SerializeField]
 		public Texture2D customCeiling = null;
 		[SerializeField]
-		public Texture2D[] customWallProximityToCeil = new Texture2D[0];
+		public Texture2D[] customWallProximityToCeil = [];
 
-		readonly Dictionary<Cell, int> ogCellBins = new Dictionary<Cell, int>();
+		readonly Dictionary<Cell, int> ogCellBins = [];
 	}
 }

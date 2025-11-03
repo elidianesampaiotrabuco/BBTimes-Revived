@@ -138,9 +138,9 @@ namespace BBTimes.CustomContent.NPCs
 		[SerializeField]
 		internal float minSpotSweepTime = 8f, maxSpotSweepTime = 14f;
 		[SerializeField]
-		internal float spotSweepBaseChance = 0.01f;
+		internal float spotSweepBaseChance = 0.05f;
 		[SerializeField]
-		internal float spotSweepChancePerEntity = 0.05f;
+		internal float spotSweepChancePerEntity = 0.1f;
 
 		[SerializeField]
 		internal SoundObject audSweep, audStartSweep;
@@ -152,7 +152,7 @@ namespace BBTimes.CustomContent.NPCs
 		internal AudioManager audMan;
 
 		[SerializeField]
-		internal float moveModMultiplier = 0.97f, minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 80f, minAwakeningDelay = 4f, maxAwakeningDelay = 6f;
+		internal float moveModMultiplier = 0.97f, minActive = 30f, maxActive = 50f, minWait = 40f, maxWait = 60f, speed = 80f, sweepingSpeed = 25f, minAwakeningDelay = 4f, maxAwakeningDelay = 6f;
 	}
 	internal class ZeroPrize_StateBase(ZeroPrize prize) : NpcState(prize)
 	{
@@ -289,7 +289,8 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Enter()
 		{
 			base.Enter();
-			prize.navigator.SetSpeed(0f);
+			prize.navigator.maxSpeed = prize.sweepingSpeed;
+			prize.navigator.SetSpeed(prize.sweepingSpeed);
 			prize.moveMod.movementAddend = Vector3.zero;
 			prize.moveMod.movementMultiplier = 1f;
 			prize.animComp.animation = prize.sweepingSprites;
