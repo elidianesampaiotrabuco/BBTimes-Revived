@@ -69,7 +69,7 @@ namespace BBTimes.CustomContent.Builders
 			// Makes the LoaderStructureData for the trapdoor spawn
 			LevelLoaderPlugin.Instance.structureAliases.Add(EditorIntegration.TimesPrefix + "Trapdoor", new() { structure = this });
 
-			return new() { prefab = this, parameters = new() { minMax = [new(3, 4)], chance = [0.55f] } };
+			return new() { prefab = this, parameters = new() { minMax = [new(3, 4)], chance = [1f] } };
 		}
 
 		public void SetupPrefabPost() { }

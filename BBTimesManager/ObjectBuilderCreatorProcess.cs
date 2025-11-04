@@ -32,8 +32,7 @@ namespace BBTimes.Manager
 			floorDatas[F2].WeightedObjectBuilders.Add(new(vent, 50, LevelType.Schoolhouse, LevelType.Maintenance));
 
 			vent = CloneParameter(vent);
-			vent.parameters.minMax[0] = new(4, 5);
-			vent.parameters.chance[0] = 0.35f;
+			vent.parameters.minMax[0] = new(4, 6);
 
 			floorDatas[F3].WeightedObjectBuilders.Add(new(vent, 25, LevelType.Schoolhouse, LevelType.Maintenance));
 
