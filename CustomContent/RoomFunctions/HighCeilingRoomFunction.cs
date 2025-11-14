@@ -4,6 +4,7 @@ using BBTimes.Extensions;
 using BBTimes.Extensions.ObjectCreationExtensions;
 using BBTimes.Manager;
 using BBTimes.ModPatches.GeneratorPatches;
+using BBTimes.Plugin;
 using NewPlusDecorations.Components;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
@@ -74,7 +75,7 @@ namespace BBTimes.CustomContent.RoomFunctions
 			var wallMaterials = new List<Material>();
 			var baseWallTex = usesSingleCustomWall ? customWallProximityToCeil[0] : room.wallTex;
 			var baseWallMat = new Material(room.defaultAlphaMat) { mainTexture = TextureExtensions.GenerateTextureAtlas(ObjectCreationExtension.transparentTex, baseWallTex, ObjectCreationExtension.transparentTex) };
-			baseWallMat.SetTexture("_LightMap", Singleton<CoreGameManager>.Instance.lightMapTexture);
+			baseWallMat.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, Singleton<CoreGameManager>.Instance.lightMapTexture);
 
 			for (int i = 0; i < ceilingHeight; i++)
 			{
@@ -83,7 +84,7 @@ namespace BBTimes.CustomContent.RoomFunctions
 					int customIndex = i - (ceilingHeight - customWallProximityToCeil.Length);
 					var customTex = customWallProximityToCeil[customIndex];
 					var customMat = new Material(room.defaultAlphaMat) { mainTexture = TextureExtensions.GenerateTextureAtlas(ObjectCreationExtension.transparentTex, customTex, ObjectCreationExtension.transparentTex) };
-					customMat.SetTexture("_LightMap", Singleton<CoreGameManager>.Instance.lightMapTexture);
+					customMat.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, Singleton<CoreGameManager>.Instance.lightMapTexture);
 					wallMaterials.Add(customMat);
 				}
 				else
@@ -98,7 +99,7 @@ namespace BBTimes.CustomContent.RoomFunctions
 			{
 				var ceilTex = customCeiling ?? originalCeilTex;
 				ceilMat = new Material(room.defaultAlphaMat) { mainTexture = TextureExtensions.GenerateTextureAtlas(ceilTex, ObjectCreationExtension.transparentTex, ObjectCreationExtension.transparentTex) };
-				ceilMat.SetTexture("_LightMap", Singleton<CoreGameManager>.Instance.lightMapTexture);
+				ceilMat.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, Singleton<CoreGameManager>.Instance.lightMapTexture);
 			}
 
 			// For each cell, create a separate mesh GameObject

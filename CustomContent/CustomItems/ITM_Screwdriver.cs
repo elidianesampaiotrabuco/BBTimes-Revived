@@ -47,19 +47,17 @@ namespace BBTimes.CustomContent.CustomItems
 						if (balloonPopper && !balloonPopper.IsCompleted)
 						{
 							balloonPopper.unpoppedBalloons.Clear();
-							int num = 0;
 							for (int i = 0; i < balloonPopper.startingTotal; i++)
 							{
 								if (!balloonPopper.balloon[i].popped)
 								{
-									balloonPopper.balloon[i].Disable();
-									num++;
+									balloonPopper.balloon[i].Pop(false);
 									balloonPopper.unpoppedBalloons.Add(balloonPopper.balloon[i]);
 								}
 							}
 							balloonPopper.Completed(0, true);
 							balloonPopper.audMan.PlaySingle(balloonPopper.audWin);
-							Singleton<BaseGameManager>.Instance.PleaseBaldi(balloonPopper.baldiPause + balloonPopper.poppedBallonBaldiPauseRate * balloonPopper.poppedBalloons);
+							Singleton<BaseGameManager>.Instance.PleaseBaldi(balloonPopper.baldiPause + balloonPopper.poppedBallonBaldiPauseRate * balloonPopper.poppedBalloons, false);
 							Singleton<CoreGameManager>.Instance.AddPoints(balloonPopper.bonusMode ? balloonPopper.bonusPoints : balloonPopper.normalPoints, 0, true);
 							Singleton<CoreGameManager>.Instance.GetPlayer(0).plm.AddStamina(Singleton<CoreGameManager>.Instance.GetPlayer(0).plm.staminaMax, true);
 							success = true;

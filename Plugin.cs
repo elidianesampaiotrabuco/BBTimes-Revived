@@ -6,7 +6,7 @@ using System.Linq;
 using BBTimes.CompatibilityModule;
 using BBTimes.CustomComponents;
 using BBTimes.CustomContent.CustomItems;
-using BBTimes.CustomContent.NPCs;
+using BBTimes.CustomContent.Misc;
 using BBTimes.CustomContent.Objects;
 using BBTimes.Extensions;
 using BBTimes.Manager;
@@ -15,14 +15,12 @@ using BBTimes.Manager.InternalClasses.LevelTypeWeights;
 using BBTimes.ModPatches.EnvironmentPatches;
 using BBTimes.Plugin;
 using BepInEx;
-using BepInEx.Bootstrap;
 using BepInEx.Configuration;
 using HarmonyLib;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI.Registers;
 using MTM101BaldAPI.SaveSystem;
-using PixelInternalAPI.Extensions;
 using UnityEngine;
 
 
@@ -53,17 +51,18 @@ namespace BBTimes
 	{
 		IEnumerator SetupFinal()
 		{
-			yield return 2
+			yield return 3
 			+ (Storage.IsBaldiFirstReleaseDate ? 1 : 0);
 			yield return "Calling custom data setup prefab post...";
 			_cstData.ForEach(x => x.SetupPrefabPost());
 			// Other stuff to setup
 			yield return "Setup the rest of the assets...";
 			SnowPile.SetupItemRandomization();
+			JoeChef.SearchForFoodToAdd();
 			Tresent.GatherShopItems();
 			if (Storage.IsBaldiFirstReleaseDate)
 			{
-				yield return "Time for classic...";
+				yield return "Time for classic (may take a while)...";
 				BBTimesManager.SetupMarch31Holiday();
 			}
 		}

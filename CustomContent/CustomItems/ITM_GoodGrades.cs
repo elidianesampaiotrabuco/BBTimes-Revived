@@ -54,7 +54,7 @@ namespace BBTimes.CustomContent.CustomItems
 
 			if (npc && npc is Baldi baldo)
 			{
-				baldo.Praise(praiseTimer);
+				baldo.Praise(praiseTimer, false);
 				Destroy(gameObject);
 			}
 			else

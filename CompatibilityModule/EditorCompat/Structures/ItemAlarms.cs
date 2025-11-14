@@ -30,6 +30,7 @@ public class ItemAlarmTool : EditorTool
         lastItemSelected?.Highlight("none");
         successfullyPlaced = false;
         currentAlarm = null;
+        lastItemSelected = null;
         currentStructure = null;
         EditorController.Instance.CancelHeldUndo();
     }
@@ -40,6 +41,7 @@ public class ItemAlarmTool : EditorTool
             EditorController.Instance.RemoveVisual(currentAlarm);
 
         lastItemSelected?.Highlight("none");
+        lastItemSelected = null;
         currentAlarm = null;
         currentStructure = null;
         EditorController.Instance.CancelHeldUndo();
@@ -61,6 +63,7 @@ public class ItemAlarmTool : EditorTool
 
             currentAlarm = currentStructure.CreateAlarm();
             currentAlarm.position = new Vector3(itemPlacement.position.x, 5f, itemPlacement.position.y);
+            currentAlarm.attachedPlacement = itemPlacement;
 
             if (!currentAlarm.ValidatePosition(EditorController.Instance.levelData))
             {
@@ -106,6 +109,7 @@ public class ItemAlarmLocation : IEditorVisualizable, IEditorDeletable
 {
     public ItemAlarmStructureLocation owner;
     public Vector3 position;
+    public ItemPlacement attachedPlacement;
 
     public void CleanupVisual(GameObject visualObject) { }
 
@@ -127,7 +131,7 @@ public class ItemAlarmLocation : IEditorVisualizable, IEditorDeletable
     public void UpdateVisual(GameObject visualObject) => visualObject.transform.position = position;
 
     public bool ValidatePosition(EditorLevelData data) =>
-        data.items.Exists(i => (new Vector3(i.position.x, 5f, i.position.y) - position).sqrMagnitude < 0.1f); // Check if there's at least one item nearby it
+        attachedPlacement != null && data.items.Contains(attachedPlacement); // Check if there's at least one item nearby it
 }
 
 public class ItemAlarmStructureLocation : StructureLocation

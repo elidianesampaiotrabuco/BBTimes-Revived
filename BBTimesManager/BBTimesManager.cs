@@ -240,6 +240,9 @@ namespace BBTimes.Manager
 			// Setup wall clock poster
 			man.Add("WallClock", ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, GetAssetName("wall_clock.png")))]));
 
+			// Setup snowy grass tile
+			man.Add("Texture_SnowyGrass", AssetLoader.TextureFromFile(GetRoomAsset("SnowyPlayground", "snowyPlaygroundFloor.png")));
+
 			// Principal's extra dialogues
 			AddRule("breakingproperty", "principal_nopropertybreak.wav", "Vfx_PRI_NoPropertyBreak");
 			AddRule("littering", "principal_noLittering.wav", "Vfx_PRI_NoLittering");
@@ -255,8 +258,8 @@ namespace BBTimes.Manager
 
 			if (Storage.IsChristmas)
 			{
-				selectedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, GetAssetName("BBTChristmasV2.png"))), 1f);
-				speechMenu = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_timesChristmas.wav")), "Vfx_BAL_BalMainMenuSpeech_Christmas_1", SoundType.Voice, Color.green);
+				selectedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(ChristmasPath, GetAssetName("BBTChristmasV2.png"))), 1f);
+				speechMenu = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_timesChristmas.wav")), "Vfx_BAL_BalMainMenuSpeech_Christmas_1", SoundType.Voice, Color.green);
 				speechMenu.additionalKeys = [
 					new() { key = "Vfx_BAL_BalMainMenuSpeech_1", time = 2.269f },
 				new() { key = "Vfx_BAL_BalMainMenuSpeech_Christmas_2", time = 7.146f },
@@ -429,7 +432,10 @@ namespace BBTimes.Manager
 		}
 
 		// Misc getters and methods
-		internal static string MiscPath => Path.Combine(BasePlugin.ModPath, "misc"); static string GlobalAssetsPath => Path.Combine(BasePlugin.ModPath, "GlobalAssets");
+		internal static string MiscPath => Path.Combine(BasePlugin.ModPath, "misc"); internal static string GlobalAssetsPath => Path.Combine(BasePlugin.ModPath, "GlobalAssets");
+		internal static string ChristmasPath => Path.Combine(BasePlugin.ModPath, "misc", "SpecialAssets", "ChristmasMode");
+		internal static string SecretEndingPath => Path.Combine(BasePlugin.ModPath, "misc", "SpecialAssets", "SecretEnding");
+		internal static string March31Path => Path.Combine(BasePlugin.ModPath, "misc", "SpecialAssets", "March31");
 
 		internal static string GetAssetName(string name) => TimesAssetPrefix + name;
 

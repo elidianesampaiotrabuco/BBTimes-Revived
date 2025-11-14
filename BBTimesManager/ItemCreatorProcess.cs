@@ -30,6 +30,7 @@ namespace BBTimes.Manager
 			CRIMINALPACK_CONTRABAND = "crmp_contraband",
 			NONSTACKABLE_TAG = "StackableItems_NotAllowStacking",
 			RCC_THROWABLE_TAG = "recchars_daycare_throwable",
+			TIMES_CHEFJOEFOOD = Storage.TAG_CHEFJOE_SELECTFOOD,
 			FOODTAG = Storage.FOOD_TAG,
 			DRINKTAG = Storage.DRINK_TAG;
 
@@ -83,7 +84,7 @@ namespace BBTimes.Manager
 				.SetGeneratorCost(20)
 				.SetShopPrice(325)
 				.SetNameAndDescription("GUM_Name", "GUM_Desc")
-				.SetMeta(ItemFlags.CreatesEntity | ItemFlags.Persists, [FOODTAG])
+				.SetMeta(ItemFlags.CreatesEntity | ItemFlags.Persists, [FOODTAG, TIMES_CHEFJOEFOOD])
 				.Build("Gum");
 
 			//CreatorExtensions.CreateItem<ITM_Gum, GumCustomData>("Gum", "GUM_Name", "GUM_Desc", 225, 20).AddMeta(plug, ItemFlags.CreatesEntity | ItemFlags.Persists).value;
@@ -99,7 +100,6 @@ namespace BBTimes.Manager
 			floorDatas[END].ShopItems.Add(new() { selection = item, weight = 65 });
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 15 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 45 });
-			JoeChef.AddFood(item, 25);
 			// Bell
 			item = new ItemBuilder(plug.Info)
 				.SetItemComponent<ITM_Bell>()
@@ -195,7 +195,7 @@ namespace BBTimes.Manager
 				.SetGeneratorCost(20)
 				.SetShopPrice(400)
 				.SetNameAndDescription("BSED_Name", "BSED_Desc")
-				.SetMeta(ItemFlags.Persists, [DRINKTAG])
+				.SetMeta(ItemFlags.Persists, [DRINKTAG, TIMES_CHEFJOEFOOD])
 				.Build("BSED");
 			//CreatorExtensions.CreateItem<ITM_StaminaDrinkable, CustomItemData>("BSED", "BSED_Name", "BSED_Desc", 245, 20).AddMeta(plug, ItemFlags.Persists).value;
 			floorDatas[F2].Items.Add(new(item, 35));
@@ -215,7 +215,6 @@ namespace BBTimes.Manager
 			((ITM_StaminaDrinkable)item.item).audDrink = man.Get<SoundObject>("audRobloxDrink");
 			((ITM_StaminaDrinkable)item.item).gaugeSprite = item.itemSpriteSmall;
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 90 });
-			JoeChef.AddFood(item, 55);
 
 			// Speed Potion
 			item = new ItemBuilder(plug.Info)
@@ -397,7 +396,7 @@ namespace BBTimes.Manager
 				.SetGeneratorCost(24)
 				.SetShopPrice(200)
 				.SetNameAndDescription("HotChoc_Name", "HotChoc_Desc")
-				.SetMeta(ItemFlags.Persists, [DRINKTAG])
+				.SetMeta(ItemFlags.Persists, [DRINKTAG, TIMES_CHEFJOEFOOD])
 				.Build("HotChocolate");
 			//CreatorExtensions.CreateItem<ITM_StaminaDrinkable, CustomItemData>("HotChocolate", "HotChoc_Name", "HotChoc_Desc", 365, 24).AddMeta(plug, ItemFlags.Persists).value;
 			floorDatas[F1].Items.Add(new(item, 35));
@@ -416,7 +415,6 @@ namespace BBTimes.Manager
 			((ITM_HotChocolate)item.item).audDrink = man.Get<SoundObject>("audRobloxDrink");
 			((ITM_HotChocolate)item.item).attribute = Storage.HOTCHOCOLATE_ATTR_TAG;
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 55 });
-			JoeChef.AddFood(item, 46);
 
 			// Invisibility Controller
 			item = new ItemBuilder(plug.Info)
@@ -534,8 +532,6 @@ namespace BBTimes.Manager
 
 			item = itemBs;
 
-
-
 			floorDatas[F1].Items.Add(new(item, 5));
 			floorDatas[F2].Items.Add(new(item, 35));
 			floorDatas[F3].Items.Add(new(item, 39));
@@ -548,7 +544,7 @@ namespace BBTimes.Manager
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 65 });
 
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 35 });
-			JoeChef.AddFood(item, 15);
+			item.GetMeta().tags.Add(TIMES_CHEFJOEFOOD);
 
 			// Soap Item
 			item = new ItemBuilder(plug.Info)
@@ -705,7 +701,7 @@ namespace BBTimes.Manager
 				.SetGeneratorCost(70)
 				.SetShopPrice(450)
 				.SetNameAndDescription("RotCheese_Name", "RotCheese_Desc")
-				.SetMeta(ItemFlags.Persists | ItemFlags.CreatesEntity, [])
+				.SetMeta(ItemFlags.Persists | ItemFlags.CreatesEntity, [TIMES_CHEFJOEFOOD])
 				.Build("RottenCheese");
 
 			floorDatas[F1].Items.Add(new(item, 10));
@@ -722,7 +718,6 @@ namespace BBTimes.Manager
 			floorDatas[END].ShopItems.Add(new() { selection = item, weight = 25 });
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 25 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 35 });
-			JoeChef.AddFood(item, 15);
 
 			// Soap Bubbles Item
 			item = new ItemBuilder(plug.Info)
@@ -777,6 +772,7 @@ namespace BBTimes.Manager
 			floorDatas[END].ShopItems.Add(new() { selection = item, weight = 55 });
 			floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 45 });
 			ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 25 });
+			item.GetMeta().tags.Add(TIMES_CHEFJOEFOOD);
 
 			// Beehive
 			item = new ItemBuilder(plug.Info)
@@ -1109,7 +1105,7 @@ namespace BBTimes.Manager
 			.SetItemComponent<ITM_ChillyChilli>()
 			.SetGeneratorCost(32)
 			.SetShopPrice(650)
-			.SetMeta(ItemFlags.Persists, [FOODTAG, PIRATE_CANN_HATE])
+			.SetMeta(ItemFlags.Persists, [FOODTAG, PIRATE_CANN_HATE, TIMES_CHEFJOEFOOD])
 			.SetNameAndDescription("ChillyChilli_Name", "ChillyChilli_Desc")
 			.Build("ChillyChilli");
 
@@ -1130,7 +1126,7 @@ namespace BBTimes.Manager
 				.SetItemComponent<ITM_ComicallyLargeJello>()
 				.SetGeneratorCost(38)
 				.SetShopPrice(450)
-				.SetMeta(ItemFlags.CreatesEntity | ItemFlags.Persists, [FOODTAG, PIRATE_CANN_HATE, RCC_THROWABLE_TAG])
+				.SetMeta(ItemFlags.CreatesEntity | ItemFlags.Persists, [FOODTAG, PIRATE_CANN_HATE, RCC_THROWABLE_TAG, TIMES_CHEFJOEFOOD])
 				.SetNameAndDescription("ComicallyLargeJello_Name", "ComicallyLargeJello_Desc")
 				.Build("ComicallyLargeJello");
 

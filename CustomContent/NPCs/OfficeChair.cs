@@ -160,8 +160,6 @@ namespace BBTimes.CustomContent.NPCs
 			chair.audMan.QueueAudio(chair.audRoll, true);
 			chair.audMan.SetLoop(true);
 			chair.bringingState = this;
-
-
 		}
 
 		public override void DestinationEmpty() // Destination empty (means it got to its location), now just wait idle
@@ -208,12 +206,11 @@ namespace BBTimes.CustomContent.NPCs
 			List<RoomController> rooms = [.. chair.ec.rooms];
 			rooms.RemoveAll(x => x == room || (x.category != RoomCategory.Office && x.category != RoomCategory.Faculty));
 
-#if CHEAT
-            Debug.Log($"(Office Chair): Original amount of rooms found: {chair.ec.rooms.Count}");
-            Debug.Log($"(Office Chair): Amount of rooms found: {rooms.Count}");
-#endif
 			if (rooms.Count == 0) // Just for pre-caution.... even though this might not even happen
+			{
+				Debug.LogWarning("Office chair has found no single spot to go to!");
 				return [];
+			}
 
 			if (!allTiles)
 			{

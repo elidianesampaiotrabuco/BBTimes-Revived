@@ -595,12 +595,6 @@
             The level data class used by the editor itself.
             </summary>
         </member>
-        <member name="M:PlusLevelStudio.Editor.EditorLevelData.AddDefaultTextureAction(System.Action{System.Collections.Generic.Dictionary{System.String,PlusStudioLevelFormat.TextureContainer}})">
-            <summary>
-            Adds the specified action to be called whenever default textures need to be defined or redefined.
-            </summary>
-            <param name="action"></param>
-        </member>
         <member name="F:PlusLevelStudio.Editor.EditorGlobalPage.pageName">
             <summary>
             The name of the category object.

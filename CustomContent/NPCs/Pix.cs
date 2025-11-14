@@ -78,7 +78,7 @@ namespace BBTimes.CustomContent.NPCs
 			laserPre = laser;
 
 			// Target indicator
-			ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(27.5f, "pixIndicator.png")).AddSpriteHolder(out var targetIndcRenderer, 2.5f);
+			var targetIndcRenderer = ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(27.5f, "pixIndicator.png"));
 			targetIndicator = targetIndcRenderer.gameObject.AddComponent<VisualAttacher>();
 			targetIndicator.gameObject.AddComponent<BillboardRotator>();
 			targetIndicator.name = "TargetIndicatorVisual";

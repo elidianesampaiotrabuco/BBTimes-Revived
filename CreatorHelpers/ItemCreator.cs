@@ -8,6 +8,7 @@ using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using MTM101BaldAPI.ObjectCreation;
 using MTM101BaldAPI.Registers;
+using PixelInternalAPI.Extensions;
 using PlusStudioLevelLoader;
 using UnityEngine;
 using static UnityEngine.Object;

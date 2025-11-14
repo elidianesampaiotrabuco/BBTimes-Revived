@@ -16,6 +16,10 @@ namespace BBTimes.CompatibilityModule
 			for (int i = 1; i <= elvTips; i++)
 				strs.Add($"times_elv_tip{i}");
 			ApiManager.AddNewTips(BBTimesManager.plug.Info, [.. strs]);
+
+			// Very important for christmas mode
+			if (Storage.IsChristmas)
+				PitOverrides.DisableEnglishClass();
 		}
 		const int elvTips = 9;
 	}

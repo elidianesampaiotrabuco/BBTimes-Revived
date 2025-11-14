@@ -73,9 +73,14 @@ namespace BBTimes.Plugin
 		ATTR_FREEZE_STAMINA_UPDATE_TAG = "disableStaminaUpdate",
 		ATTR_FREEZE_PLAYER_MOVEMENT_TAG = "disablePlayerMovement",
 		ATTR_STOP_PLAYER_MOVEMENT_RUN_TAG = "disablePlayerRunning",
+		TAG_CHEFJOE_SELECTFOOD = "Times_ChefJoeFood",
 		FOOD_TAG = "food",
 		DRINK_TAG = "drink";
 		public const string ChristmasSpecial_TimesTag = "Times_SpecialTags_ChristmasSpecial";
+
+		public const string
+		SPRITESTANDARD_LIGHTGUIDE = "Texture2D_0ebe02d67a8a4acb8705243366af66aa",
+		SPRITESTANDARD_LIGHTMAP = "_LightMap";
 
 		// -------------------- GUIDs ------------------
 		public const string

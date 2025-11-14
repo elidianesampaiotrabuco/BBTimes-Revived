@@ -335,10 +335,6 @@ namespace BBTimes.Manager
 			joeChef.audKitchen = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(GetRoomAsset("Kitchen", "KitchenThing.wav")), string.Empty, SoundType.Voice, Color.white);
 			joeChef.audKitchen.subtitle = false;
 
-			JoeChef.AddFood(ItemMetaStorage.Instance.FindByEnum(Items.Bsoda).value, 15);
-			JoeChef.AddFood(ItemMetaStorage.Instance.FindByEnum(Items.ZestyBar).value, 45);
-			JoeChef.AddFood(ItemMetaStorage.Instance.FindByEnum(Items.Apple).value, 5);
-
 			// Joe's Sign
 			var joeSign = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(GetRoomAsset("Kitchen", "JoeChefSign.png")), 15f)).AddSpriteHolder(out _, 0f, LayerStorage.ignoreRaycast);
 			joeSign.name = "JoeSign";
@@ -1321,7 +1317,7 @@ namespace BBTimes.Manager
 			commonRoomWeight = christmasIncreaseFactor + 75;
 
 			room = GetAllAssets(GetRoomAsset("SnowyPlayground"), commonRoomWeight, 1, cont: playgroundClonedRoomContainer, mapBg: Storage.HasCrispyPlus ? AssetLoader.TextureFromFile(GetRoomAsset("SnowyPlayground", "mapIcon_snow.png")) : null, squaredShape: true, keepTextures: true, autoSizeLimitControl: -1);
-			floorTex = AssetLoader.TextureFromFile(GetRoomAsset("SnowyPlayground", "snowyPlaygroundFloor.png"));
+			floorTex = man.Get<Texture2D>("Texture_SnowyGrass");
 			AddTextureToEditor("snowyPlaygroundFloor", floorTex);
 
 			room.ForEach(x =>

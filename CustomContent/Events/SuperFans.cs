@@ -54,23 +54,30 @@ namespace BBTimes.CustomContent.Events
 
 		public override void PremadeSetup()
 		{
-			base.PremadeSetup();
-			foreach (var su in FindObjectsOfType<SuperFan>())
+			try
 			{
-				var chosenDirection = Directions.DirFromVector3(su.transform.forward, 45f);
-				if (chosenDirection == Direction.Null)
+				base.PremadeSetup();
+				foreach (var su in FindObjectsOfType<SuperFan>())
 				{
-					Debug.LogWarning("A Super Fan was located on a spot with no available wall to be chosen! Destroying it instead.", this);
-					Destroy(su.gameObject);
-					continue;
+					var chosenDirection = Directions.DirFromVector3(su.transform.forward, 45f);
+					if (chosenDirection == Direction.Null)
+					{
+						Debug.LogWarning("A Super Fan was located on a spot with no available wall to be chosen! Destroying it instead.", this);
+						Destroy(su.gameObject);
+						continue;
+					}
+
+					// If the direction it faces is a wall, set it to face the opposite
+					if (ec.CellFromPosition(su.transform.position).HasWallInDirection(chosenDirection)) // The chosenDirection should always be facing the where the fan will blow, not the wall it is attached to
+						chosenDirection = chosenDirection.GetOpposite();
+
+					su.Initialize(ec, IntVector2.GetGridPosition(su.transform.position), chosenDirection, out _);
+					superFans.Add(su);
 				}
-
-				// If the direction it faces is a wall, set it to face the opposite
-				if (ec.CellFromPosition(su.transform.position).HasWallInDirection(chosenDirection)) // The chosenDirection should always be facing the where the fan will blow, not the wall it is attached to
-					chosenDirection = chosenDirection.GetOpposite();
-
-				su.Initialize(ec, IntVector2.GetGridPosition(su.transform.position), chosenDirection, out _);
-				superFans.Add(su);
+			}
+			catch (System.Exception e)
+			{
+				Debug.LogException(e);
 			}
 		}
 

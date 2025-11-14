@@ -5,6 +5,7 @@ using BBTimes.CompatibilityModule.EditorCompat;
 using BBTimes.CustomComponents;
 using BBTimes.Extensions;
 using BBTimes.Manager;
+using BBTimes.Plugin;
 using PixelInternalAPI.Classes;
 using PlusStudioLevelLoader;
 using UnityEngine;
@@ -36,6 +37,10 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 	private static readonly List<Direction> allDirections = Directions.All();
 	private const float WallOffsetDistance = (LayerStorage.TileBaseOffset / 2f) - 0.001f;
 	private const float FenceOffsetDistance = (LayerStorage.TileBaseOffset / 2f) - 0.01f;
+
+	[SerializeField]
+	[Range(0f, 1f)]
+	internal float wallReduceHeightFactor = 0.75f;
 
 	public override void OnGenerationFinished(LevelBuilder lb)
 	{
@@ -293,8 +298,8 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		for (int i = 0; i < mr.materials.Length; i++)
 		{
 			var mat = mr.materials[i];
-			if (!mat.GetTexture("_LightMap")) // Manually add the light map if it doesn't exist
-				mat.SetTexture("_LightMap", Singleton<CoreGameManager>.Instance.lightMapTexture);
+			if (!mat.GetTexture(Storage.SPRITESTANDARD_LIGHTMAP)) // Manually add the light map if it doesn't exist
+				mat.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, Singleton<CoreGameManager>.Instance.lightMapTexture);
 		}
 		return go;
 	}
@@ -326,7 +331,15 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 	{
 		if (mats.Length != 0) return;
 		var baseMat = BBTimesManager.man.Get<GameObject>("TransparentPlaneTemplate").GetComponent<MeshRenderer>().material;
-		var grassMat = new Material(baseMat) { mainTexture = BBTimesManager.man.Get<Texture2D>("Tex_Grass") };
+
+		var grassMat = new Material(baseMat)
+		{
+			mainTexture = BBTimesManager.man.Get<Texture2D>(
+			Storage.IsChristmas ?
+			"Texture_SnowyGrass" :
+			"Tex_Grass")
+		};
+
 		var fenceMat = new Material(baseMat) { mainTexture = BBTimesManager.man.Get<Texture2D>("Tex_Fence") };
 		mats = [grassMat, fenceMat];
 	}
@@ -362,17 +375,27 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			bool objectIsVisible = false;
 			foreach (var windowData in windowFovPoints)
 			{
-				Vector3 halfForwardOffset = windowData.forwardOffset * (LayerStorage.TileBaseOffset * 0.5f);
-				// Debug.Log($"[Visibility] Checking if object at ({objectPosition.ToString()}) can be seen from window at ({windowData.CullingCell.position.ToString()})");
-				bool canSee = Raycast(windowData.Center, targetCenter) ||
-							  Raycast(windowData.Corner1, targetCenter) ||
-							  Raycast(windowData.Corner2, targetCenter) ||
-							  Raycast(windowData.Center + halfForwardOffset, targetCenter) ||
-							  Raycast(windowData.Corner1 + halfForwardOffset, targetCenter) ||
-							  Raycast(windowData.Corner2 + halfForwardOffset, targetCenter) ||
-							  Raycast(windowData.Center + windowData.forwardOffset * 1.75f, targetCenter);
+				IntVector2 offset = windowData.LookingCell.position - targetCell.position;
+				Direction dir = windowData.windowDir;
+				// First check: if the window is one tile away from the target in the perpendicular axis, it's always gonna be visible regardless of distance; therefore, it's always considered visible
+				bool canSee = (offset.x <= 1 && (dir == Direction.North || dir == Direction.South)) || (offset.z <= 1 && (dir == Direction.West || dir == Direction.East));
 
-				if (canSee)
+				if (!canSee) // Second check: if the window is more than 1 tile away, then raycast check is done
+				{
+					Vector3 halfForwardOffset = windowData.forwardOffset * (LayerStorage.TileBaseOffset * 0.5f);
+					// Debug.Log($"[Visibility] Checking if object at ({objectPosition.ToString()}) can be seen from window at ({windowData.CullingCell.position.ToString()})");
+					canSee = Raycast(windowData.Center, targetCenter) ||
+								  Raycast(windowData.Corner1, targetCenter) ||
+								  Raycast(windowData.Corner2, targetCenter) ||
+								  Raycast(windowData.Center + halfForwardOffset, targetCenter) ||
+								  Raycast(windowData.Corner1 + halfForwardOffset, targetCenter) ||
+								  Raycast(windowData.Corner2 + halfForwardOffset, targetCenter);
+
+					for (int i = 1; i <= 5 && !canSee; i++) // Additional checks for a very forward view, to guarantee no gaps are missed
+						canSee = Raycast(windowData.Center + windowData.forwardOffset * i * 5f, targetCenter);
+				}
+
+				if (canSee) // If the object is seen by the window, it should be affected by the window's culling position
 				{
 					// Debug.Log($"[Visibility] SUCCESS: Object at ({objectPosition.ToString()}) IS VISIBLE from window ({windowData.CullingCell.position.ToString()}).");
 					// As soon as one window sees it, mark it as visible for that window
@@ -395,7 +418,7 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 			if (objectIsVisible)
 			{
 				// Wall Visibility by height check
-				int distanceToHeightLimit = Math.Max(2, Mathf.FloorToInt(0.85f * highestDistance));
+				int distanceToHeightLimit = Math.Max(2, Mathf.FloorToInt(wallReduceHeightFactor * highestDistance));
 				for (int i = 0; i < targetObject.verticalWalls.Count; i++)
 				{
 					var wall = targetObject.verticalWalls[i];
@@ -568,6 +591,7 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 	private readonly struct WindowFovData
 	{
 		public readonly Cell CullingCell;
+		public readonly Cell LookingCell;
 		public readonly Vector3 Center;
 		public readonly Vector3 Corner1;
 		public readonly Vector3 Corner2;
@@ -578,6 +602,7 @@ public class Structure_OutsideBox : StructureBuilder, IBuilderPrefab
 		public WindowFovData(Window window)
 		{
 			CullingCell = window.aTile.Null ? window.bTile : window.aTile;
+			LookingCell = window.aTile == CullingCell ? window.bTile : window.aTile;
 			Center = (window.aTile.CenterWorldPosition + window.bTile.CenterWorldPosition) * 0.5f;
 			forwardOffset = window.direction.ToVector3();
 			windowDir = window.direction;

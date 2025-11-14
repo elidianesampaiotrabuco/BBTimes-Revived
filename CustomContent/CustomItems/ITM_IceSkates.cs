@@ -99,16 +99,9 @@ namespace BBTimes.CustomContent.CustomItems
 			CreateSlipper(ec.CellFromPosition(transform.position));
 		}
 
-		void Cleanup()
-		{
-			active = false;
-			pm.Am.moveMods.Remove(blockMovementMod);
-			pm.plm.Entity.OnTeleport -= OnTeleportEv;
-			for (int i = 0; i < generatedSlippers.Count; i++)
-				Destroy(generatedSlippers[i].gameObject);
+		void Cleanup() =>
 			Destroy(gameObject);
-			gauge.Deactivate();
-		}
+
 
 		void CreateSlipper(Cell cell)
 		{
@@ -132,10 +125,15 @@ namespace BBTimes.CustomContent.CustomItems
 		{
 			if (active)
 			{
-				uses--;
-				if (uses < 0)
+				pm.Am.moveMods.Remove(blockMovementMod);
+				pm.plm.Entity.OnTeleport -= OnTeleportEv;
+				for (int i = 0; i < generatedSlippers.Count; i++)
+					Destroy(generatedSlippers[i].gameObject);
+				Destroy(gameObject);
+				gauge.Deactivate();
+				active = false;
+				if (--uses < 0)
 					uses = 0;
-				Cleanup();
 			}
 		}
 

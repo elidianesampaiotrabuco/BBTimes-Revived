@@ -3,6 +3,7 @@ using BBTimes.CustomContent.Builders;
 using BBTimes.CustomContent.Misc;
 using BBTimes.Extensions;
 using BBTimes.ModPatches.EnvironmentPatches;
+using BBTimes.Plugin;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using PixelInternalAPI.Extensions;
@@ -29,7 +30,7 @@ namespace BBTimes.Manager
 			fire.gameObject.ConvertToPrefab(true);
 			// 
 			fire.name = "Fire";
-			fire.material.SetTexture("_LightMap", null); // Don't get affected by reddish from schoolhouse
+			fire.material.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, null); // Don't get affected by reddish from schoolhouse
 			var fireAnim = fire.gameObject.AddComponent<SchoolFire>();
 			fireAnim.animation = TextureExtensions.LoadSpriteSheet(2, 1, 15f, MiscPath, TextureFolder, GetAssetName("schoolFire.png"));
 			fireAnim.speed = 2f;

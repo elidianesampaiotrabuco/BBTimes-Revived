@@ -57,7 +57,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			LoadEditorAssets();
 			InitializeVisuals(man);
 			InitializeOtherTextures();
-			EditorLevelData.AddDefaultTextureAction(InitializeDefaultTextures);
+			InitializeDefaultTextures(LevelStudioPlugin.Instance.defaultRoomTextures);
 			EditorInterfaceModes.AddModeCallback(InitializeTools);
 		}
 
@@ -247,7 +247,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			trapdoorLinkedObj_lineRenderer.widthMultiplier = 0.95f;
 			trapdoorLinkedObj_lineRenderer.gameObject.layer = LayerMask.NameToLayer("Overlay");
 			trapdoorLinkedObj_lineRenderer.positionCount = 2;
-			trapdoorLinkedObj_lineRenderer.material.SetTexture("_LightMap", null); // No light map effect
+			trapdoorLinkedObj_lineRenderer.material.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, null); // No light map effect
 
 			var trapdoorLinkedObj_visualManager = trapdoorLinkedObj.AddComponent<TrapdoorEditorVisualManager>();
 			trapdoorLinkedObj_visualManager.container = trapdoorLinkedObj.GetComponent<EditorRendererContainer>();
@@ -293,7 +293,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 			duct_lineRenderer.widthMultiplier = 0.75f;
 			duct_lineRenderer.positionCount = 2;
 			duct_lineRenderer.gameObject.layer = LayerMask.NameToLayer("Overlay");
-			duct_lineRenderer.material.SetTexture("_LightMap", null);
+			duct_lineRenderer.material.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, null);
 			ductVisualManager.lineRendererPrefab = duct_lineRenderer;
 
 			LevelStudioPlugin.Instance.structureTypes.Add(TimesPrefix + "Duct", typeof(DuctStructureLocation));
@@ -529,6 +529,47 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 					{
 						toFinalize.secretCells[i, j] = true;
 					}
+				}
+			}
+		}
+
+		[HarmonyPatch(typeof(EditorLevelData), nameof(EditorLevelData.Compile))]
+		[HarmonyPostfix]
+		static void TimesCompileMysteryDoors(EditorLevelData __instance, ref BaldiLevel __result) // Copypaste from Compile to work with SuperMysteryRoom (seriously, make an event/callback or something for sanitizing these doors)
+		{
+			for (int m = 0; m < __instance.doors.Count; m++)
+			{
+				string prefab = __instance.doors[m].type;
+				bool smartDoorPosition = __instance.GetSmartDoorPosition(__instance.doors[m].position, __instance.doors[m].direction, out var outPos, out var outDir);
+				bool foundMysteryDoor = false;
+
+				if (__instance.doors[m].type == "standard")
+				{
+					if (__instance.RoomFromPos(outPos, forEditor: false).roomType == "SuperMystery")
+					{
+						foundMysteryDoor = true;
+						prefab = "mysterydoor";
+					}
+					else if (__instance.RoomFromPos(__instance.doors[m].position + __instance.doors[m].direction.ToIntVector2(), forEditor: false).roomType == "SuperMystery")
+					{
+						foundMysteryDoor = true;
+						outPos = __instance.doors[m].position + __instance.doors[m].direction.ToIntVector2();
+						outDir = __instance.doors[m].direction.GetOpposite();
+						prefab = "mysterydoor";
+					}
+				}
+
+				if (foundMysteryDoor)
+				{
+					ByteVector2 outBytePos = outPos.ToByte();
+					__result.doors.RemoveAll(door => door.position == outBytePos && door.direction == (PlusDirection)outDir);
+					__result.doors.Add(new DoorInfo
+					{
+						prefab = prefab,
+						position = outBytePos,
+						direction = (PlusDirection)outDir,
+						roomId = __instance.GetCellSafe(outPos.x, outPos.z).roomId
+					});
 				}
 			}
 		}

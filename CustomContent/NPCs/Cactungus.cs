@@ -15,14 +15,6 @@ namespace BBTimes.CustomContent.NPCs
 		public void SetupPrefab()
 		{
 			Color subColor = new Color32(0, 145, 32, 255);
-			SoundObject[] soundObjects = [
-			this.GetSound("Cactungus_LetsHug.wav", "Vfx_Cactungus_Hug1", SoundType.Voice, subColor),
-			this.GetSound("Cactungus_LetsBeFriends.wav", "Vfx_Cactungus_Hug2", SoundType.Voice, subColor),
-			this.GetSound("Cactungus_LoveYou.wav", "Vfx_Cactungus_Hug3", SoundType.Voice, subColor),
-			this.GetSound("Cactungus_WhyAreYouRunning.wav", "Vfx_Cactungus_Left1", SoundType.Voice, subColor),
-			this.GetSound("Cactungus_DontLeaveMe.wav", "Vfx_Cactungus_Left2", SoundType.Voice, subColor),
-			this.GetSound("Cactungus_noises.wav", "Vfx_Cactungus_Noise", SoundType.Effect, subColor)
-			];
 
 			audMan = GetComponent<PropagatedAudioManager>();
 			walkAudMan = gameObject.CreatePropagatedAudioManager(30f, 100f);
@@ -31,10 +23,7 @@ namespace BBTimes.CustomContent.NPCs
 			normSprite = storedSprites[0];
 			sadSprite = storedSprites[1];
 			renderer.sprite = storedSprites[0];
-
-			audFindPlayer = [.. soundObjects.Take(3)];
-			audLostPlayer = [.. soundObjects.Skip(3).Take(2)];
-			audWalk = soundObjects[5];
+			audWalk = this.GetSound("Cactungus_noises.wav", "Vfx_Cactungus_Noise", SoundType.Effect, subColor);
 
 			var can = ObjectCreationExtensions.CreateCanvas();
 			can.gameObject.ConvertToPrefab(false);
@@ -83,18 +72,9 @@ namespace BBTimes.CustomContent.NPCs
 			gauge?.Deactivate();
 		}
 
-		public void SeeYouNoise()
-		{
-			audMan.FlushQueue(true);
-			audMan.PlayRandomAudio(audFindPlayer);
-		}
-
-		public void SadState()
-		{
-			audMan.FlushQueue(true);
-			audMan.PlayRandomAudio(audLostPlayer);
+		public void SadState() =>
 			renderer.sprite = sadSprite;
-		}
+
 
 
 		public void NormalState() =>
@@ -135,12 +115,6 @@ namespace BBTimes.CustomContent.NPCs
 
 		[SerializeField]
 		internal AudioManager audMan, walkAudMan;
-
-		[SerializeField]
-		internal SoundObject[] audFindPlayer;
-
-		[SerializeField]
-		internal SoundObject[] audLostPlayer;
 
 		[SerializeField]
 		internal SoundObject audWalk;
@@ -242,7 +216,6 @@ namespace BBTimes.CustomContent.NPCs
 		public override void Enter()
 		{
 			base.Enter();
-			mu.SeeYouNoise();
 			hugCooldown = mu.hugCooldown;
 		}
 

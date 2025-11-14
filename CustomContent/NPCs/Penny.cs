@@ -159,6 +159,7 @@ namespace BBTimes.CustomContent.NPCs
 			corruptedLetterPrefab = corruptedLetterObj.AddComponent<CorruptedLetter>();
 
 			var corruptedLetterVisual = new GameObject("CorruptedLetterRenderer");
+			corruptedLetterVisual.layer = LayerStorage.billboardLayer;
 			corruptedLetterVisual.transform.SetParent(corruptedLetterObj.transform, false);
 			var tmpro = corruptedLetterVisual.AddComponent<TextMeshPro>();
 			tmpro.alignment = TextAlignmentOptions.Center;

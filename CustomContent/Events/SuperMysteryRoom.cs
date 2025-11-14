@@ -89,15 +89,22 @@ namespace BBTimes.CustomContent.Events
 
 		public override void PremadeSetup()
 		{
-			foreach (RoomController roomController in ec.rooms)
+			try
 			{
-				if (roomController.category == target)
+				foreach (RoomController roomController in ec.rooms)
 				{
-					room = roomController;
-					break;
+					if (roomController.category == target)
+					{
+						room = roomController;
+						break;
+					}
 				}
+				UpdateDoor();
 			}
-			UpdateDoor();
+			catch (System.Exception e)
+			{
+				Debug.LogException(e);
+			}
 		}
 
 		[SerializeField]

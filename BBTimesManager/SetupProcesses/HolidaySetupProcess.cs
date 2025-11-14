@@ -2,13 +2,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using BBTimes.CustomComponents;
-using BBTimes.CustomContent.Objects;
+using BBTimes.CustomContent.Misc;
 using BBTimes.CustomContent.RoomFunctions;
 using BBTimes.Extensions;
+using BBTimes.Plugin;
 using MTM101BaldAPI;
 using MTM101BaldAPI.AssetTools;
 using PixelInternalAPI.Classes;
 using PixelInternalAPI.Extensions;
+using PlusStudioLevelFormat;
+using PlusStudioLevelLoader;
 using UnityEngine;
 
 namespace BBTimes.Manager;
@@ -18,7 +21,7 @@ internal static partial class BBTimesManager
     public static void SetupChristmasHoliday()
     {
         // --- Setup Christmas Baldi prefab and audio ---
-        var baldiSPrites = TextureExtensions.LoadSpriteSheet(6, 1, 30f, MiscPath, TextureFolder, GetAssetName("christmasBaldi.png"));
+        var baldiSPrites = TextureExtensions.LoadSpriteSheet(6, 1, 30f, ChristmasPath, GetAssetName("christmasBaldi.png"));
         var chBaldi = ObjectCreationExtensions.CreateSpriteBillboard(baldiSPrites[0])
             .AddSpriteHolder(out var chBaldiRenderer, 4f, LayerStorage.iClickableLayer); // Baldo offset should be exactly 5f + hisDefaultoffset
         chBaldi.gameObject.AddBoxCollider(Vector3.up * 5f, new(2.5f, 10f, 2.5f), true);
@@ -33,7 +36,7 @@ internal static partial class BBTimesManager
         christmasBaldi.audMan = christmasBaldi.gameObject.CreatePropagatedAudioManager(95f, 175f);
         christmasBaldi.present = man.Get<ItemObject>("Item_Present");
         christmasBaldi.audBell = man.Get<SoundObject>("audRing");
-        christmasBaldi.audIntro = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_PresentIntro.wav")), "Vfx_BAL_Pitstop_PresentIntro_1", SoundType.Voice, Color.green);
+        christmasBaldi.audIntro = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_PresentIntro.wav")), "Vfx_BAL_Pitstop_PresentIntro_1", SoundType.Voice, Color.green);
         christmasBaldi.audIntro.additionalKeys = [
             new() { key = "Vfx_BAL_Pitstop_PresentIntro_2", time = 2.417f },
                     new() { key = "Vfx_BAL_Pitstop_PresentIntro_3", time = 5.492f },
@@ -42,21 +45,21 @@ internal static partial class BBTimesManager
                     new() { key = "Vfx_BAL_Pitstop_PresentIntro_5", time = 14.059f }
             ];
 
-        christmasBaldi.audBuyItem = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_buypresent.wav")), "Vfx_BAL_Pitstop_MerryChristmas", SoundType.Voice, Color.green);
+        christmasBaldi.audBuyItem = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_buypresent.wav")), "Vfx_BAL_Pitstop_MerryChristmas", SoundType.Voice, Color.green);
 
-        christmasBaldi.audNoYtps = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_needYtpsForPresent.wav")), "Vfx_BAL_Pitstop_Nopresent_1", SoundType.Voice, Color.green);
+        christmasBaldi.audNoYtps = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_needYtpsForPresent.wav")), "Vfx_BAL_Pitstop_Nopresent_1", SoundType.Voice, Color.green);
         christmasBaldi.audNoYtps.additionalKeys = [
             new() { key = "Vfx_BAL_Pitstop_Nopresent_2", time = 0.818f }
             ];
 
-        christmasBaldi.audGenerous = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_Pitstop_Generous.wav")), "Vfx_BAL_Pitstop_Generous_1", SoundType.Voice, Color.green);
+        christmasBaldi.audGenerous = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_Pitstop_Generous.wav")), "Vfx_BAL_Pitstop_Generous_1", SoundType.Voice, Color.green);
         christmasBaldi.audGenerous.additionalKeys = [
             new() { key = "Vfx_BAL_Pitstop_Generous_2", time = 2.597f }
             ];
 
         christmasBaldi.audCollectingPresent = [
-            ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_Pitstop_Thanks1.wav")), "Vfx_BAL_Pitstop_Thanks1", SoundType.Voice, Color.green),
-                    ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_Pitstop_Thanks2.wav")), "Vfx_BAL_Pitstop_Thanks2", SoundType.Voice, Color.green)
+            ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_Pitstop_Thanks1.wav")), "Vfx_BAL_Pitstop_Thanks1", SoundType.Voice, Color.green),
+                    ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(ChristmasPath, "BAL_Pitstop_Thanks2.wav")), "Vfx_BAL_Pitstop_Thanks2", SoundType.Voice, Color.green)
             ];
 
         // --- Add sprite volume animator ---
@@ -68,7 +71,34 @@ internal static partial class BBTimesManager
 
         // --- Add Christmas Baldi to pitstop asset ---
         var pitstopAsset = GenericExtensions.FindResourceObjectByName<LevelAsset>("Pitstop"); // Find shop pitstop here
-        pitstopAsset.tbos.Add(new() { direction = Direction.North, position = new(30, 11), prefab = christmasBaldi });
+                                                                                              // Load RBPL file
+        using (BinaryReader reader = new(File.OpenRead(Path.Combine(ChristmasPath, "OutsideRoom.rbpl"))))
+        {
+            var christmasRoom = LevelImporter.CreateRoomAsset(BaldiRoomAsset.Read(reader));
+            christmasRoom.name = "ChristmasBaldisRoom";
+            christmasRoom.keepTextures = true;
+
+            pitstopAsset.roomAssetPlacements.Add(new()
+            {
+                room = christmasRoom,
+                position = new(37, 8),
+                direction = Direction.East,
+                doorSpawnId = 0
+            });
+            pitstopAsset.doors.Add(new(
+                0, // Room id is 0 because how the heck am I supposed to know which index a roomAssetPlacement will be at?
+                GenericExtensions.FindResourceObjectByName<SwingDoor>("Door_Swinging"),
+                new(36, 8),
+                Direction.East
+                ));
+        }
+        pitstopAsset.tbos.Add(new()
+        {
+            prefab = christmasBaldi,
+            position = new(40, 8),
+            direction = Direction.West
+        });
+
     }
 
     public static void SetupMarch31Holiday()
@@ -256,15 +286,16 @@ internal static partial class BBTimesManager
                     }
                 }
             }
-            string marchPath = Path.Combine(MiscPath, AudioFolder, "March31");
 
-            var tutorBaldi_Hi = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(marchPath, "BAL_Hi.wav")), "Vfx_BAL_March31_OhHi", SoundType.Voice, Color.green);
+            // Baldi Changes
+
+            var tutorBaldi_Hi = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(March31Path, "BAL_Hi.wav")), "Vfx_BAL_March31_OhHi", SoundType.Voice, Color.green);
             SoundObject[] tutorBaldi_Countdown = new SoundObject[10];
             for (int i = tutorBaldi_Countdown.Length - 1; i >= 0; i--)
             {
                 int idx = i + 1;
                 tutorBaldi_Countdown[i] = ObjectCreators.CreateSoundObject(
-                    AssetLoader.AudioClipFromFile(Path.Combine(marchPath, $"BAL_Math_{idx}_Classic.wav")),
+                    AssetLoader.AudioClipFromFile(Path.Combine(March31Path, $"BAL_Math_{idx}_Classic.wav")),
                     $"Vfx_{(idx == 10 ? 0 : idx)}",
                     SoundType.Voice,
                     Color.green);
@@ -279,7 +310,7 @@ internal static partial class BBTimesManager
             for (int i = 0; i < praiseSounds.Length; i++)
             {
                 praiseSounds[i] = ObjectCreators.CreateSoundObject(
-                    AssetLoader.AudioClipFromFile(Path.Combine(marchPath, $"BAL_Praise{i + 1}_Classic.wav")),
+                    AssetLoader.AudioClipFromFile(Path.Combine(March31Path, $"BAL_Praise{i + 1}_Classic.wav")),
                     $"Vfx_BAL_Praise{i + 1}",
                     SoundType.Voice,
                     Color.green);
@@ -292,6 +323,19 @@ internal static partial class BBTimesManager
                     weightedPraiseSounds[i] = baldi.correctSounds[i];
                     weightedPraiseSounds[i].selection = praiseSounds[i];
                 }
+            }
+
+            // Decor_ExitSign changes
+            var classicExit = AssetLoader.TextureFromFile(Path.Combine(March31Path, "ExitSign.png"));
+            var classicExitMap = AssetLoader.TextureFromFile(Path.Combine(March31Path, "ExitSign_Lightmap.png"));
+            var classicExitSprite = AssetLoader.SpriteFromTexture2D(classicExit, new(0.5f, 1f), 50f);
+
+            foreach (var decor in GenericExtensions.FindResourceObjects<SpriteRenderer>())
+            {
+                if (decor.name != "Decor_ExitSign") continue;
+                decor.sharedMaterial.mainTexture = classicExit;
+                decor.sharedMaterial.SetTexture(Storage.SPRITESTANDARD_LIGHTGUIDE, classicExitMap);
+                decor.sprite = classicExitSprite;
             }
         }
     }

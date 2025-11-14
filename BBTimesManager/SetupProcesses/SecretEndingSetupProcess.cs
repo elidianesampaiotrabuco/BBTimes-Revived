@@ -20,9 +20,8 @@ namespace BBTimes.Manager
     {
         public static void SetupPreAssetsForSecretEnding()
         {
-            string secretEndingPath = Path.Combine(MiscPath, TextureFolder, "SecretEnding");
             // ** Secret Button **
-            var sprs = TextureExtensions.LoadSpriteSheet(3, 1, 25f, secretEndingPath, "BBTimesAsset_SecretButton.png");
+            var sprs = TextureExtensions.LoadSpriteSheet(3, 1, 25f, SecretEndingPath, "BBTimesAsset_SecretButton.png");
             var but = ObjectCreationExtensions.CreateSpriteBillboard(sprs[0], false)
                 .AddSpriteHolder(out var butRenderer, 0f, LayerStorage.iClickableLayer);
             but.name = "SecretButton";
@@ -39,7 +38,7 @@ namespace BBTimes.Manager
 
             // Secret Button Room
             // Load RBPL file
-            using (BinaryReader reader = new(File.OpenRead(Path.Combine(secretEndingPath, "TheSecretRoom.rbpl"))))
+            using (BinaryReader reader = new(File.OpenRead(Path.Combine(SecretEndingPath, "TheSecretRoom.rbpl"))))
             {
                 var secretButtonRoom = LevelImporter.CreateRoomAsset(BaldiRoomAsset.Read(reader));
                 secretButtonRoom.name = "SecretTimesButtonRoom";
@@ -79,7 +78,7 @@ namespace BBTimes.Manager
             }
 
             // ** Sus Baldi **
-            sprs = TextureExtensions.LoadSpriteSheet(6, 3, 25f, secretEndingPath, "susComputerBaldi.png");
+            sprs = TextureExtensions.LoadSpriteSheet(6, 3, 25f, SecretEndingPath, "susComputerBaldi.png");
 
             var bal = ObjectCreationExtensions.CreateSpriteBillboard(sprs[0])
                 .AddSpriteHolder(out var balRenderer, 0.345f, 0);
@@ -100,7 +99,7 @@ namespace BBTimes.Manager
             secBal.sprFacingFront = sprs.TakeAPair(5, 6);
             secBal.sprFacingFrontNervous = sprs.TakeAPair(11, 6);
 
-            sprs = TextureExtensions.LoadSpriteSheet(12, 3, 25f, secretEndingPath, "evilBaldiSheet.png");
+            sprs = TextureExtensions.LoadSpriteSheet(12, 3, 25f, SecretEndingPath, "evilBaldiSheet.png");
             secBal.sprAngryBal = sprs.TakeAPair(0, 6);
             secBal.sprAngryHappyBal = sprs.TakeAPair(6, 6);
             secBal.sprAngryHappySideEyeBal = sprs.TakeAPair(12, 6);
@@ -108,16 +107,16 @@ namespace BBTimes.Manager
             secBal.sprTakeRulerAnim = sprs.TakeAPair(24, 5);
             secBal.sprWithRulerBal = sprs.TakeAPair(28, 6);
 
-            secBal.sprCatchBal = TextureExtensions.LoadSpriteSheet(3, 2, 27f, secretEndingPath, "baldiCatchSheet.png");
+            secBal.sprCatchBal = TextureExtensions.LoadSpriteSheet(3, 2, 27f, SecretEndingPath, "baldiCatchSheet.png");
 
 
             // Audios for Baldi
-            secBal.audMeetMe1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_MeetBaldi_1.wav")), "Vfx_SecBAL_Meet_1", SoundType.Voice, Color.green);
+            secBal.audMeetMe1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_MeetBaldi_1.wav")), "Vfx_SecBAL_Meet_1", SoundType.Voice, Color.green);
             secBal.audMeetMe1.additionalKeys = [new() { key = "Vfx_SecBAL_Meet_2", time = 2.976f }];
 
-            secBal.audMeetMe2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_MeetBaldi_2.wav")), "Vfx_SecBAL_Meet_3", SoundType.Voice, Color.green);
+            secBal.audMeetMe2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_MeetBaldi_2.wav")), "Vfx_SecBAL_Meet_3", SoundType.Voice, Color.green);
 
-            secBal.audMeetMe3 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_MeetBaldi_3.wav")), "Vfx_SecBAL_Meet_4", SoundType.Voice, Color.green);
+            secBal.audMeetMe3 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_MeetBaldi_3.wav")), "Vfx_SecBAL_Meet_4", SoundType.Voice, Color.green);
             secBal.audMeetMe3.additionalKeys = [
                 new() { key = "Vfx_SecBAL_Meet_5", time = 2.266f },
                 new() { key = "Vfx_SecBAL_Meet_6", time = 7.912f },
@@ -125,17 +124,17 @@ namespace BBTimes.Manager
                 new() { key = "Vfx_SecBAL_Meet_8", time = 16.249f }
                 ];
 
-            secBal.audMeetMe4 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_MeetBaldi_4.wav")), "Vfx_SecBAL_Meet_9", SoundType.Voice, Color.green);
+            secBal.audMeetMe4 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_MeetBaldi_4.wav")), "Vfx_SecBAL_Meet_9", SoundType.Voice, Color.green);
             secBal.audMeetMe4.additionalKeys = [
                 new() { key = "Vfx_SecBAL_Meet_10", time = 1.572f }
                 ];
 
-            secBal.audAngry1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence1.wav")), "Vfx_SecBAL_EndSequence_1", SoundType.Voice, Color.green);
+            secBal.audAngry1 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence1.wav")), "Vfx_SecBAL_EndSequence_1", SoundType.Voice, Color.green);
 
-            secBal.audAngry2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence2.wav")), "Vfx_SecBAL_EndSequence_2", SoundType.Voice, Color.green);
+            secBal.audAngry2 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence2.wav")), "Vfx_SecBAL_EndSequence_2", SoundType.Voice, Color.green);
 
 
-            secBal.audAngry3 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence3.wav")), "Vfx_SecBAL_EndSequence_3", SoundType.Voice, Color.green);
+            secBal.audAngry3 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence3.wav")), "Vfx_SecBAL_EndSequence_3", SoundType.Voice, Color.green);
             secBal.audAngry3.additionalKeys = [
                 new() { key = "Vfx_SecBAL_EndSequence_4", time = 2.26f },
                 new() { key = "Vfx_SecBAL_EndSequence_5", time = 5.031f },
@@ -146,10 +145,10 @@ namespace BBTimes.Manager
                 new() { key = "Vfx_SecBAL_EndSequence_10", time = 18.853f }
                 ];
 
-            secBal.audAngry4 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence4.wav")), "Vfx_SecBAL_EndSequence_11", SoundType.Voice, Color.green);
-            secBal.audAngry5 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence5.wav")), "Vfx_SecBAL_EndSequence_12", SoundType.Voice, Color.green);
+            secBal.audAngry4 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence4.wav")), "Vfx_SecBAL_EndSequence_11", SoundType.Voice, Color.green);
+            secBal.audAngry5 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence5.wav")), "Vfx_SecBAL_EndSequence_12", SoundType.Voice, Color.green);
 
-            secBal.audAngry6 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence6.wav")), "Vfx_SecBAL_EndSequence_13", SoundType.Voice, Color.green);
+            secBal.audAngry6 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence6.wav")), "Vfx_SecBAL_EndSequence_13", SoundType.Voice, Color.green);
             secBal.audAngry6.additionalKeys = [
                 new() { key = "Vfx_SecBAL_EndSequence_14", time = 1.629f },
                 new() { key = "Vfx_SecBAL_EndSequence_15", time = 3.619f },
@@ -158,10 +157,10 @@ namespace BBTimes.Manager
                 new() { key = "Vfx_SecBAL_EndSequence_18", time = 12.914f }
                 ];
 
-            secBal.audAngry7 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence7.wav")), "Vfx_SecBAL_EndSequence_19", SoundType.Voice, Color.green);
-            secBal.audAngry8 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence8.wav")), "Vfx_SecBAL_EndSequence_20", SoundType.Voice, Color.green);
+            secBal.audAngry7 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence7.wav")), "Vfx_SecBAL_EndSequence_19", SoundType.Voice, Color.green);
+            secBal.audAngry8 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence8.wav")), "Vfx_SecBAL_EndSequence_20", SoundType.Voice, Color.green);
 
-            secBal.audAngry9 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence9.wav")), "Vfx_SecBAL_EndSequence_21", SoundType.Voice, Color.green);
+            secBal.audAngry9 = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence9.wav")), "Vfx_SecBAL_EndSequence_21", SoundType.Voice, Color.green);
             secBal.audAngry9.additionalKeys = [
                 new() { key = "Vfx_SecBAL_EndSequence_22", time = 1.804f },
                 new() { key = "Vfx_SecBAL_EndSequence_23", time = 4.561f }
@@ -204,7 +203,7 @@ namespace BBTimes.Manager
             var generatorComp = new GameObject("Times_SecretGenerator");
             generatorComp.AddBoxCollider(Vector3.zero, new(19f, 10f, 21f), false);
 
-            var generator = ObjectCreationExtension.CreateCube(AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "SecretGeneratorBox.png")));
+            var generator = ObjectCreationExtension.CreateCube(AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "SecretGeneratorBox.png")));
             generator.name = "Times_SecretGeneratorRenderer";
             Object.Destroy(generator.GetComponent<BoxCollider>());
             generator.transform.SetParent(generatorComp.transform);
@@ -214,7 +213,7 @@ namespace BBTimes.Manager
             generatorComp.AddObjectToEditor();
 
 
-            var genNoise = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "generatorLoop.wav")), string.Empty, SoundType.Effect, Color.white);
+            var genNoise = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "generatorLoop.wav")), string.Empty, SoundType.Effect, Color.white);
             genNoise.subtitle = false;
 
             generatorComp.gameObject.CreatePropagatedAudioManager(10f, 65f)
@@ -230,7 +229,7 @@ namespace BBTimes.Manager
             generatorCylinderRenderer.transform.localRotation = Quaternion.Euler(0f, 0f, 50f);
             generatorCylinderRenderer.transform.localScale = new(7f, 12f, 7f);
 
-            Sprite[] baldis = TextureExtensions.LoadSpriteSheet(6, 1, 35f, secretEndingPath, "containedBaldis.png");
+            Sprite[] baldis = TextureExtensions.LoadSpriteSheet(6, 1, 35f, SecretEndingPath, "containedBaldis.png");
             for (int i = 0; i < baldis.Length; i++)
             {
                 var baldiObj = ObjectCreationExtensions.CreateSpriteBillboard(baldis[i]).AddSpriteHolder(out var baldiRenderer, 0f, 0);
@@ -241,18 +240,18 @@ namespace BBTimes.Manager
                 baldiRenderer.name = "ContainedBaldiRenderer";
             }
 
-            var yayComputer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromFile(Path.Combine(secretEndingPath, "theYAYComputer.png"), Vector2.one * 0.5f, 25f));
+            var yayComputer = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromFile(Path.Combine(SecretEndingPath, "theYAYComputer.png"), Vector2.one * 0.5f, 25f));
             yayComputer.name = "Times_theYAYComputer";
             yayComputer.gameObject.AddObjectToEditor();
 
-            var lorePaper = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromFile(Path.Combine(secretEndingPath, "TheTrueLorePaper.png"), Vector2.one * 0.5f, 40f), false)
+            var lorePaper = ObjectCreationExtensions.CreateSpriteBillboard(AssetLoader.SpriteFromFile(Path.Combine(SecretEndingPath, "TheTrueLorePaper.png"), Vector2.one * 0.5f, 40f), false)
                 .AddSpriteHolder(out var paperRenderer, 0.07f);
             paperRenderer.name = "LorePaperRenderer";
             paperRenderer.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             lorePaper.name = "Times_TrueLorePaper";
             lorePaper.gameObject.AddObjectToEditor();
 
-            var genLeverSprs = TextureExtensions.LoadSpriteSheet(2, 1, 25f, secretEndingPath, "generatorLever.png");
+            var genLeverSprs = TextureExtensions.LoadSpriteSheet(2, 1, 25f, SecretEndingPath, "generatorLever.png");
 
             var genLever = ObjectCreationExtensions.CreateSpriteBillboard(genLeverSprs[0], false)
                 .AddSpriteHolder(out var genLeverRender, Vector3.forward * 0.24f, LayerStorage.iClickableLayer);
@@ -268,8 +267,6 @@ namespace BBTimes.Manager
 
         public static void SetupPostAssetsForSecretEnding()
         {
-            string secretEndingPath = Path.Combine(MiscPath, TextureFolder, "SecretEnding");
-
             // --- Times Ending Manager Setup ---
             var sceneObjectClone = Object.Instantiate(GenericExtensions.FindResourceObjectByName<SceneObject>("EndlessPremadeMedium"));
             sceneObjectClone.name = "TimesSecretEnding";
@@ -292,52 +289,52 @@ namespace BBTimes.Manager
             sceneObjectClone.levelObject = null;
 
 
-            using (BinaryReader reader = new(File.OpenRead(Path.Combine(secretEndingPath, "secretLevel.bpl"))))
+            using (BinaryReader reader = new(File.OpenRead(Path.Combine(SecretEndingPath, "secretLevel.bpl"))))
             {
                 // --- Setup secret ending level asset and textures ---
                 sceneObjectClone.levelAsset = LevelImporter.LoadLevelAsset(BaldiLevel.Read(reader));
                 sceneObjectClone.levelAsset.name = "TimesSecretEndingAsset";
-                sceneObjectClone.levelAsset.rooms[0].ceilTex = AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "secretLabCeiling.png"));
-                sceneObjectClone.levelAsset.rooms[0].wallTex = AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "secretLabWall.png"));
-                sceneObjectClone.levelAsset.rooms[0].florTex = AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "secretLabFloor.png"));
+                sceneObjectClone.levelAsset.rooms[0].ceilTex = AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "secretLabCeiling.png"));
+                sceneObjectClone.levelAsset.rooms[0].wallTex = AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "secretLabWall.png"));
+                sceneObjectClone.levelAsset.rooms[0].florTex = AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "secretLabFloor.png"));
 
                 // --- Setup door materials and mask ---
                 sceneObjectClone.levelAsset.rooms[0].doorMats = ObjectCreators.CreateDoorDataObject("TimesSecretLabMetalDoor",
-                    AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "smallMetalDoorOpen.png")),
-                    AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "smallMetalDoorClosed.png")));
+                    AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "smallMetalDoorOpen.png")),
+                    AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "smallMetalDoorClosed.png")));
 
-                var doorTextureMask = AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "metalDoorMask.png"));
+                var doorTextureMask = AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "metalDoorMask.png"));
                 sceneObjectClone.levelAsset.rooms[0].doorMats.open.SetTexture("_Mask", doorTextureMask);
                 sceneObjectClone.levelAsset.rooms[0].doorMats.shut.SetTexture("_Mask", doorTextureMask);
 
                 // --- Add posters to the secret ending room ---
                 sceneObjectClone.levelAsset.posters.Add(new()
                 {
-                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "liveTubeMakeUp.png"))]),
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "liveTubeMakeUp.png"))]),
                     position = new(16, 12),
                     direction = Direction.North
                 });
                 sceneObjectClone.levelAsset.posters.Add(new()
                 {
-                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "levelGenMakeUp.png"))]),
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "levelGenMakeUp.png"))]),
                     position = new(15, 10),
                     direction = Direction.South
                 });
                 sceneObjectClone.levelAsset.posters.Add(new()
                 {
-                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "chk_funFormula.png"))]),
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "chk_funFormula.png"))]),
                     position = new(15, 7),
                     direction = Direction.South
                 });
                 sceneObjectClone.levelAsset.posters.Add(new()
                 {
-                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "chk_theNoWinFormula.png"))]),
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "chk_theNoWinFormula.png"))]),
                     position = new(15, 9),
                     direction = Direction.North
                 });
                 sceneObjectClone.levelAsset.posters.Add(new()
                 {
-                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(secretEndingPath, "chk_noRealWin.png"))]),
+                    poster = ObjectCreators.CreatePosterObject([AssetLoader.TextureFromFile(Path.Combine(SecretEndingPath, "chk_noRealWin.png"))]),
                     position = new(16, 8),
                     direction = Direction.East
                 });
@@ -345,8 +342,8 @@ namespace BBTimes.Manager
                 sceneObjectClone.levelAsset.rooms[0].activity = null;
                 // --- Setup door clone ---
                 var newDoor = (StandardDoor)sceneObjectClone.levelAsset.doors[0].doorPre.SafeDuplicatePrefab(true);
-                newDoor.audDoorShut = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorShut.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
-                newDoor.audDoorOpen = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "metalDoorOpen.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
+                newDoor.audDoorShut = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "metalDoorShut.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
+                newDoor.audDoorOpen = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "metalDoorOpen.wav")), "Sfx_Doors_StandardShut", SoundType.Effect, Color.white);
                 newDoor.name = "SmallMetalDoor";
 
                 sceneObjectClone.levelAsset.doors.ForEach(d => d.doorPre = newDoor);
@@ -372,11 +369,11 @@ namespace BBTimes.Manager
             newManager.audSlap = baldiReference.slap;
             newManager.audLoseSounds = baldiReference.loseSounds;
 
-            newManager.timesScreen = AssetLoader.SpriteFromFile(Path.Combine(secretEndingPath, "secretTimesEnd.jpg"), Vector2.one * 0.5f);
-            newManager.audSeeYaSoon = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "Secret_BAL_EndSequence_End.wav")), "Vfx_SecBAL_EndSequence_SeeYa", SoundType.Voice, Color.green);
+            newManager.timesScreen = AssetLoader.SpriteFromFile(Path.Combine(SecretEndingPath, "secretTimesEnd.jpg"), Vector2.one * 0.5f);
+            newManager.audSeeYaSoon = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "Secret_BAL_EndSequence_End.wav")), "Vfx_SecBAL_EndSequence_SeeYa", SoundType.Voice, Color.green);
 
             newManager.audMan = newManager.gameObject.CreateAudioManager(15f, 25f).MakeAudioManagerNonPositional();
-            newManager.audHummmmm = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "SecretBaldi", "spookyNoisesForEnding.mp3")), string.Empty, SoundType.Music, Color.white);
+            newManager.audHummmmm = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(SecretEndingPath, "spookyNoisesForEnding.mp3")), string.Empty, SoundType.Music, Color.white);
             newManager.audHummmmm.subtitle = false;
 
             sceneObjectClone.manager = newManager;

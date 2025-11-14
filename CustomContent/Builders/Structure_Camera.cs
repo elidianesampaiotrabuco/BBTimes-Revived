@@ -3,6 +3,7 @@ using BBTimes.CompatibilityModule.EditorCompat;
 using BBTimes.CustomComponents;
 using BBTimes.CustomContent.Objects;
 using BBTimes.Extensions;
+using BBTimes.Plugin;
 using MTM101BaldAPI;
 using PixelInternalAPI.Extensions;
 using PlusStudioLevelLoader;
@@ -24,7 +25,7 @@ namespace BBTimes.CustomContent.Builders
 
 			var visionIndicator = ObjectCreationExtensions.CreateSpriteBillboard(this.GetSprite(15f, "tiledGrid.png"), false);
 			visionIndicator.gameObject.layer = 0;
-			visionIndicator.material.SetTexture("_LightMap", null); // No light affected, it's always bright
+			visionIndicator.material.SetTexture(Storage.SPRITESTANDARD_LIGHTMAP, null); // No light affected, it's always bright
 
 			visionIndicator.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
 			visionIndicator.transform.localScale = new(1f, 1.172f, 1f);

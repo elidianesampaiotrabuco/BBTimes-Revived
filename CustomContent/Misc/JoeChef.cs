@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using BBTimes.Plugin;
+using MTM101BaldAPI.Registers;
 using UnityEngine;
 
 namespace BBTimes.CustomContent.Misc
@@ -85,7 +87,20 @@ namespace BBTimes.CustomContent.Misc
 		readonly static List<WeightedItemObject> foods = [];
 		Pickup backupPickup;
 
-		public static void AddFood(ItemObject obj, int weight) =>
-			foods.Add(new() { selection = obj, weight = weight });
+		public static void SearchForFoodToAdd()
+		{
+			// Get normal food
+			foods.Add(new() { selection = ItemMetaStorage.Instance.FindByEnum(Items.Bsoda).value, weight = 25 });
+			foods.Add(new() { selection = ItemMetaStorage.Instance.FindByEnum(Items.DietBsoda).value, weight = 45 });
+			foods.Add(new() { selection = ItemMetaStorage.Instance.FindByEnum(Items.Apple).value, weight = 1 });
+			foods.Add(new() { selection = ItemMetaStorage.Instance.FindByEnum(Items.ZestyBar).value, weight = 75 });
+
+			// Get modded food
+			foreach (var itemMeta in ItemMetaStorage.Instance.All())
+			{
+				if (!itemMeta.tags.Contains(Storage.TAG_CHEFJOE_SELECTFOOD)) continue;
+				foods.Add(new() { selection = itemMeta.value, weight = itemMeta.value.value });
+			}
+		}
 	}
 }

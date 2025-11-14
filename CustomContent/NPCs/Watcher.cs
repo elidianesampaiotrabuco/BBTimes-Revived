@@ -343,7 +343,7 @@ namespace BBTimes.CustomContent.NPCs
 		public override void InPlayerSight(PlayerManager player)
 		{
 			base.InPlayerSight(player);
-			if (glimpzed)
+			if (!glimpzed)
 			{
 				sightedPlayer = player;
 				glimpzed = true;
@@ -486,11 +486,11 @@ namespace BBTimes.CustomContent.NPCs
 
 			ChangeNavigationState(targetState);
 		}
-		public override void PlayerInSight(PlayerManager player)
+
+		public override void Update()
 		{
-			base.PlayerInSight(player);
-			if (player == pm)
-				targetState.UpdatePosition(player.transform.position);
+			base.Update();
+			targetState.UpdatePosition(pm.transform.position);
 		}
 		public override void OnStateTriggerEnter(Collider other, bool validCollision)
 		{

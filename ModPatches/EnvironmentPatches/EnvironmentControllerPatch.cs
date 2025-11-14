@@ -78,17 +78,17 @@ namespace BBTimes.ModPatches.EnvironmentPatches
 		static IEnumerable<CodeInstruction> GetMyEvents(IEnumerable<CodeInstruction> i) =>
 			new CodeMatcher(i)
 			.MatchForward(true,
-				new(OpCodes.Ldarg_0),
-				new(OpCodes.Ldarg_0),
-				new(OpCodes.Ldarg_0),
-				new(CodeInstruction.LoadField(typeof(EnvironmentController), "events")),
-				new(OpCodes.Ldloc_0),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(List<RandomEvent>), "get_Item", [typeof(int)])),
-				new(OpCodes.Ldarg_0),
-				new(CodeInstruction.LoadField(typeof(EnvironmentController), "eventTimes")),
-				new(OpCodes.Ldloc_0),
-				new(OpCodes.Callvirt, AccessTools.Method(typeof(List<float>), "get_Item", [typeof(int)])),
-				new(CodeInstruction.Call(typeof(EnvironmentController), "EventTimer", [typeof(RandomEvent), typeof(float)])),
+				// new(OpCodes.Ldarg_0), // Not actually needed for StartEventTimers lol
+				// new(OpCodes.Ldarg_0),
+				// new(OpCodes.Ldarg_0),
+				// new(CodeInstruction.LoadField(typeof(EnvironmentController), "events")),
+				// new(OpCodes.Ldloc_0),
+				// new(OpCodes.Callvirt, AccessTools.Method(typeof(List<RandomEvent>), "get_Item", [typeof(int)])),
+				// new(OpCodes.Ldarg_0),
+				// new(CodeInstruction.LoadField(typeof(EnvironmentController), "eventTimes")),
+				// new(OpCodes.Ldloc_0),
+				// new(OpCodes.Callvirt, AccessTools.Method(typeof(List<float>), "get_Item", [typeof(int)])),
+				new(CodeInstruction.Call(typeof(EnvironmentController), "EventTimer", [typeof(RandomEvent), typeof(float), typeof(bool)])),
 				new(CodeInstruction.Call(typeof(MonoBehaviour), "StartCoroutine", [typeof(IEnumerator)]))
 				)
 			.Advance(1)
