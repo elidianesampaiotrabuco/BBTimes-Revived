@@ -39,7 +39,7 @@
     </Reference>
 
     <!-- Publicize directly when referencing -->
-    <Reference Include="C:\Program Files (x86)\Steam\steamapps\common\Baldi's Basics Plus\BALDI_Data\Managed\Assembly-CSharp.dll" Publicize="true" />
+    <Reference Include="D:\files\2026\March\Baldis.Basics.Plus.v0.14\Baldis.Basics.Plus.v0.14\BALDI_Data\Managed\Assembly-CSharp.dll" Publicize="true" />
     <Reference Include="CustomMainMenusAPI">
       <HintPath>References\CustomMainMenusAPI.dll</HintPath>
     </Reference>

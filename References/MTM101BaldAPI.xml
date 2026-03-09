@@ -595,6 +595,36 @@
             <param name="plug"></param>
             <param name="e"></param>
         </member>
+        <member name="T:MTM101BaldAPI.BooleanHandshake">
+            <summary>
+            Represents a boolean value that can either "agree" to be compared with another, or forcefully make the return value itself.
+            </summary>
+        </member>
+        <member name="F:MTM101BaldAPI.BooleanHandshake.AlwaysFalse">
+            <summary>
+            This will always return false in a comparison, even if the other is AlwaysTrue.
+            </summary>
+        </member>
+        <member name="F:MTM101BaldAPI.BooleanHandshake.AlwaysTrue">
+            <summary>
+            This will always return true in a comparison, even if the other is FalseIfAgree.
+            </summary>
+        </member>
+        <member name="F:MTM101BaldAPI.BooleanHandshake.IfAgree">
+            <summary>
+            This is the flag that represents if a value is agreeing with the other one.
+            </summary>
+        </member>
+        <member name="F:MTM101BaldAPI.BooleanHandshake.FalseIfAgree">
+            <summary>
+            This will return false in a comparison if the other is TrueIfAgree or AlwaysFalse.
+            </summary>
+        </member>
+        <member name="F:MTM101BaldAPI.BooleanHandshake.TrueIfAgree">
+            <summary>
+            This will return true in a comparison if the other is TrueIfAgree or AlwaysTrue.
+            </summary>
+        </member>
         <member name="F:MTM101BaldAPI.Components.Animation.CustomAnimation`2.frames">
             <summary>
             The amount of frames in the animation
@@ -637,6 +667,11 @@
         <member name="M:MTM101BaldAPI.Components.Animation.CustomAnimator`3.Stop">
             <summary>
             Stops the currently running animation and returns to the default animation if specified.
+            </summary>
+        </member>
+        <member name="M:MTM101BaldAPI.Components.Animation.CustomSpriteRotatorAnimator.LoadAngledAnimations(System.Collections.Generic.Dictionary{System.String,MTM101BaldAPI.Components.Animation.SpriteRotatedAnimation})">
+            <summary>
+            Loads the animations into the CustomAnimator
             </summary>
         </member>
         <member name="F:MTM101BaldAPI.Components.Animation.CustomVolumeAnimator.sensitivity">
@@ -801,22 +836,12 @@
             <param name="data"></param>
             <returns></returns>
         </member>
-        <member name="M:MTM101BaldAPI.ExtendedStickerData.CanBeCovered(StickerStateData)">
+        <member name="M:MTM101BaldAPI.ExtendedStickerData.CanStackWith(StickerStateData,StickerStateData)">
             <summary>
-            Returns true if this sticker can be covered/replaced.
+            Returns true if this sticker should stack with another sticker.
             </summary>
-            <param name="data"></param>
-            <returns></returns>
-        </member>
-        <member name="M:MTM101BaldAPI.ExtendedStickerData.CouldCoverSticker(StickerManager,StickerStateData,StickerStateData,System.Int32,System.Int32)">
-            <summary>
-            Returns true if the held sticker(sticker of this class) could cover another sticker, assuming the other sticker can be covered.
-            </summary>
-            <param name="manager"></param>
-            <param name="heldSticker"></param>
+            <param name="thisSticker"></param>
             <param name="otherSticker"></param>
-            <param name="heldStickerSlot"></param>
-            <param name="otherStickerSlot"></param>
             <returns></returns>
         </member>
         <member name="M:MTM101BaldAPI.ExtendedStickerData.CreateOrGetAppliedStateData(StickerStateData)">
@@ -1025,6 +1050,21 @@
             <param name="component"></param>
             <param name="swapReferencesOnSameObject">Whether fields referencing component will get swapped for our new component.</param>
             <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.Extensions.AssignRotationMapSprites(SpriteRotationMap,UnityEngine.Sprite[])">
+            <summary>
+            Sets the sprite array to a <see cref="T:SpriteRotationMap"/> that consists of sprites rotated from the front, to the left, to the behind, to the right, and then to the front.
+            </summary>
+            <param name="spriteRotationMap"></param>
+            <param name="sprites">The sprite array that contains an axis of sprites</param>
+        </member>
+        <member name="M:MTM101BaldAPI.Extensions.AssignRotationMapOverrideSprites(SpriteRotationMap,UnityEngine.Sprite[])">
+            <summary>
+            Sets the sprite array to a <see cref="T:SpriteRotationMap"/> that can override an already assigned sprite sheet map.
+            <para>This is useful for student variants since Student_0's sprites are used for the target sprites and the other student sprites overrides Student_0's sprite sheet map.</para>
+            </summary>
+            <param name="spriteRotationMap"></param>
+            <param name="sprites">The sprite array that contains an axis of sprites</param>
         </member>
         <member name="M:MTM101BaldAPI.Registers.MetaExtensions.ToValues``1(System.Collections.Generic.List{MTM101BaldAPI.Registers.IMetadata{``0}})">
             <summary>
@@ -1957,6 +1997,20 @@
             <summary>
             Marks this sticker as affecting the generator
             </summary>
+            <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.ObjectCreation.StickerBuilder`1.SetTagsArray(System.String[])">
+            <summary>
+            Sets the metadata tags for this sticker
+            </summary>
+            <param name="tags"></param>
+            <returns></returns>
+        </member>
+        <member name="M:MTM101BaldAPI.ObjectCreation.StickerBuilder`1.SetTags(System.String[])">
+            <summary>
+            Sets the metadata tags for this sticker
+            </summary>
+            <param name="tag"></param>
             <returns></returns>
         </member>
         <member name="M:MTM101BaldAPI.ObjectCreators.CreateMapTileShader(UnityEngine.Texture2D)">
