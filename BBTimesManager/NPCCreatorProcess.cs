@@ -358,24 +358,6 @@ namespace BBTimes.Manager
 			floorDatas[F1].NPCs.Add(new(npc, 50));
 			floorDatas[END].NPCs.Add(new(npc, 35));
 
-			// Penny
-			npc = new NPCBuilder<Penny>(plug.Info)
-				.SetMinMaxAudioDistance(30f, 110f)
-				.AddSpawnableRoomCategories(RoomCategory.Hall)
-				.SetEnum("Penny")
-				.SetMetaName("PST_PEN_Name")
-				.SetName("Penny")
-				.SetMetaTags([FACULTY_TAG])
-				.AddLooker()
-				.AddTrigger()
-				.Build()
-				.SetupNPCData("Penny", "PST_PEN_Name", "PST_PEN_Desc", -1.35f)
-				.MarkAsReplacement(30, Character.DrReflex);
-
-			npc.Navigator.SetRoomAvoidance(false);
-			floorDatas[F2].NPCs.Add(new(npc, 21));
-			floorDatas[END].NPCs.Add(new(npc, 35));
-
 			// Ser Oran
 			npc = new NPCBuilder<SerOran>(plug.Info)
 				.SetMinMaxAudioDistance(30f, 110f)
@@ -587,25 +569,6 @@ namespace BBTimes.Manager
 				.SetupNPCData("NoseMan", "PST_NOSE_Name", "PST_NOSE_Desc", -1.45f);
 
 			floorDatas[F2].NPCs.Add(new(npc, 20));
-
-			// Mimicry
-			npc = new NPCBuilder<Mimicry>(plug.Info)
-				.SetMinMaxAudioDistance(30f, 100f)
-				.SetEnum("Mimicry")
-				.SetMetaName("PST_Mimi_Name")
-				.SetName("Mimicry")
-				.SetMetaTags([STUDENT_TAG])
-				.AddTrigger()
-				.SetForcedSubtitleColor(new(0.546875f, 0.1015625f, 0.99609375f))
-				.AddLooker()
-				.SetMaxSightDistance(20f)
-				.Build()
-				.SetupNPCData("Mimicry", "PST_Mimi_Name", "PST_Mimi_Desc", -3.3f);
-
-			npc.looker.layerMask = LayerStorage.principalLookerMask;
-
-			floorDatas[F2].NPCs.Add(new(npc, 35));
-			floorDatas[END].NPCs.Add(new(npc, 20));
 
 			// Pran the Dancer
 			npc = new NPCBuilder<PranTheDancer>(plug.Info)
