@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿/*
+using System.Collections;
 using MTM101BaldAPI;
 using TMPro;
 using UnityEngine;
@@ -78,3 +79,4 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.Penny
 		int selected = 0;
 	}
 }
+*/
