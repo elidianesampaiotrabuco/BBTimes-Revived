@@ -640,6 +640,7 @@ namespace BBTimes.Extensions
 		// modified qop code
 
         // Token: 0x06000020 RID: 32 RVA: 0x000023B1 File Offset: 0x000005B1
+		/*
         public static int GetElevatorsCount(this EnvironmentController ec)
         {
             return ec.ElevatorManager.Elevators.Count;
@@ -650,6 +651,7 @@ namespace BBTimes.Extensions
         {
             return ec.ElevatorManager.Elevators.Count((Elevator elevator) => elevator.CurrentState == ElevatorState.Closed);
         }
+		*/
 
         //public static ElevatorState state;
 
