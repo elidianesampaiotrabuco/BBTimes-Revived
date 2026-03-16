@@ -34,12 +34,12 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				"CheeseMan", "CoolMop", "DetentionBot", "Dribble",
 				"EverettTreewood", "Faker", "Glubotrony",
 				"HappyHolidays", "InkArtist", "PuddingFan",
-				"Leapy", "Magicalstudent", "Mopliss", "Mimicry",
+				"Leapy", "Magicalstudent", "Mopliss",
 				"MrKreye", "Cactungus", "NoseMan", "OfficeChair",
-				"PencilBoy", "Phawillow", "Penny", "Pran",
+				"PencilBoy", "Phawillow", "Pran",
 				"Pix", "Quiker", "Rollingbot", "SerOran",
 				"ScienceTeacher", "Snowfolke", "Stunly",
-				"Superintendent", "Superintendentjr",
+				"Superintendent",
 				"Watcher", "VacuumCleaner", "Winterry", "ZapZap"
 			];
 
