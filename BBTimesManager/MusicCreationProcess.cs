@@ -26,6 +26,7 @@ namespace BBTimes.Manager
 				new SubtitleTimedKey() { key = "Vfx_BAL_AllNotebooks_5", time = 14.602f} // Tip: use audacity to know the audio length
 			];
 
+/*
 			var soundCRAZY = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_AllNotebooksFinal.wav")), "Vfx_BAL_CongratsNormal_0", SoundType.Effect, Color.green);
 			soundCRAZY.additionalKeys = [
 				new SubtitleTimedKey() { key = "Vfx_BAL_CongratsNormal_1", time = 2.17f},
@@ -67,5 +68,6 @@ namespace BBTimes.Manager
 
 
 		}
+*/
 	}
 }
