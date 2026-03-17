@@ -38,7 +38,7 @@ namespace BBTimes.Manager
 			];
 
 			// Update the all notebooks notification
-			GenericExtensions.FindResourceObjects<MainGameManager>().Do(man => man.allNotebooksNotification = man.name.StartsWith("Lvl2763_") ? soundCRAZY : sound); // hopefully the name pattern stays this way for enternity lol
+			GenericExtensions.FindResourceObjects<MainGameManager>().Do(man => man.allNotebooksNotification = man.name.StartsWith("Lvl99999_") ? soundCRAZY : sound); // hopefully the name pattern stays this way for enternity lol
 
 			/*
 						// Level Final Mode
