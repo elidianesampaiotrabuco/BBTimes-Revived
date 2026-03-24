@@ -492,9 +492,9 @@ namespace BBTimes.CustomContent.NPCs
 			base.Update();
 			targetState.UpdatePosition(pm.transform.position);
 		}
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (validCollision && other.CompareTag("Player") && other.gameObject == pm.gameObject)
 			{
 				// summon hallucinations

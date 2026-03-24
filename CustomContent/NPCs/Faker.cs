@@ -381,9 +381,9 @@ namespace BBTimes.CustomContent.NPCs
 			if (sighted <= 0)
 				f.ApplyScale(false);
 		}
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (sighted <= 0 && other.isTrigger && other.gameObject == pm.gameObject)
 			{
 				if (validCollision)

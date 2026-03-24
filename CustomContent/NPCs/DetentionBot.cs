@@ -273,9 +273,9 @@ namespace BBTimes.CustomContent.NPCs
 				bot.behaviorStateMachine.ChangeState(new DetentionBot_Wandering(bot));
 		}
 
-		public override void OnStateTriggerStay(Collider other, bool validCollision)
+		public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerStay(other, validCollision);
+			base.OnStateTriggerStay(otherEntity, other, validCollision);
 			if (other.gameObject == pm.gameObject)
 			{
 				bot.behaviorStateMachine.ChangeState(new DetentionBot_CarryEntity(bot, pm.plm.Entity, !validCollision, pm));

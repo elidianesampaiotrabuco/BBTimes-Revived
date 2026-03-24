@@ -370,9 +370,9 @@ namespace BBTimes.CustomContent.NPCs
 			ChangeNavigationState(new NavigationState_WanderRandom(stunly, 0));
 		}
 
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (!validCollision) return;
 
 			bool isPlayer = other.CompareTag("Player");

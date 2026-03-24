@@ -262,7 +262,7 @@ namespace BBTimes.CustomContent.NPCs
 				chair.StartCoroutine(Cooldown());
 		}
 
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
 			if (cooldown > 0f) return;
 

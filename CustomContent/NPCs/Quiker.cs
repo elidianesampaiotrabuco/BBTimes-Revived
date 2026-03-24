@@ -322,9 +322,9 @@ namespace BBTimes.CustomContent.NPCs
 			activeCooldown = Random.Range(qu.activeCooldownMin, qu.activeCooldownMax);
 		}
 
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (other.isTrigger && validCollision)
 			{
 				if (other.CompareTag("Player"))

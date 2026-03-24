@@ -113,9 +113,9 @@ namespace BBTimes.CustomContent.NPCs
 			pran.PlayIdleMusic();
 			ChangeNavigationState(new NavigationState_WanderRandom(pran, 0));
 		}
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (validCollision && cooldown <= 0f && other.isTrigger && (other.CompareTag("NPC") || other.CompareTag("Player")))
 				pran.behaviorStateMachine.ChangeState(new Pran_DanceWithMe(pran, other.GetComponent<Entity>()));
 		}

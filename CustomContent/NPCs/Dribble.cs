@@ -638,9 +638,9 @@ namespace BBTimes.CustomContent.NPCs
 				state.UpdatePosition(player.transform.position);
 		}
 
-		public override void OnStateTriggerEnter(Collider other, bool validCollision)
+		public override void OnStateTriggerEnter(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerEnter(other, validCollision);
+			base.OnStateTriggerEnter(otherEntity, other, validCollision);
 			if (other.gameObject == player.gameObject)
 			{
 				if (player.Tagged || !validCollision)

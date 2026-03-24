@@ -350,9 +350,9 @@ namespace BBTimes.CustomContent.NPCs
 			ChangeNavigationState(new NavigationState_WanderRounds(s, 0));
 		}
 
-		public override void OnStateTriggerStay(Collider other, bool validCollision)
+		public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerStay(other, validCollision);
+			base.OnStateTriggerStay(otherEntity, other, validCollision);
 			if (other.gameObject == pm.gameObject && (!validCollision || s.TryOverrideEntity(pm.plm.Entity)))
 				s.behaviorStateMachine.ChangeState(new Superintendent_DragEntityToClass(s, pm.plm.Entity, validCollision, pm));
 
@@ -402,9 +402,9 @@ namespace BBTimes.CustomContent.NPCs
 			ChangeNavigationState(new NavigationState_WanderRounds(s, 0));
 		}
 
-		public override void OnStateTriggerStay(Collider other, bool validCollision)
+		public override void OnStateTriggerStay(Entity otherEntity, Collider other, bool validCollision)
 		{
-			base.OnStateTriggerStay(other, validCollision);
+			base.OnStateTriggerStay(otherEntity, other, validCollision);
 			if (other.gameObject == target.gameObject && (!validCollision || s.TryOverrideEntity(target.Entity)))
 				s.behaviorStateMachine.ChangeState(new Superintendent_DragEntityToClass(s, target.Entity, validCollision, npc: target));
 
