@@ -152,9 +152,9 @@ namespace BBTimes.CustomContent.NPCs
 			CleanOutMods();
 		}
 
-		public override void VirtualOnTriggerEnter(Collider other)
+		public override void VirtualOnTriggerEnter(Entity otherEntity, Collider other)
 		{
-			base.VirtualOnTriggerEnter(other);
+			base.VirtualOnTriggerEnter(otherEntity, other);
 			if (cloggedUp || !sweeping) return;
 
 			if (other.isTrigger)

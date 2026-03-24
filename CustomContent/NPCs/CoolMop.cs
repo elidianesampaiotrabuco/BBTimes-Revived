@@ -109,9 +109,9 @@ namespace BBTimes.CustomContent.NPCs
 			}
 		}
 
-		public override void VirtualOnTriggerEnter(Collider other)
+		public override void VirtualOnTriggerEnter(Entity otherEntity, Collider other)
 		{
-			base.VirtualOnTriggerEnter(other);
+			base.VirtualOnTriggerEnter(otherEntity, other);
 			if (sweeping && other.isTrigger && (other.CompareTag("NPC") || other.CompareTag("Player")))
 				audMan.PlayRandomAudio(audGoofyHahahas);
 

@@ -69,7 +69,7 @@ namespace BBTimes.CustomContent.NPCs
 			isActiveAndSweeping = false;
 		}
 
-		public override void VirtualOnTriggerEnter(Collider other) // copypaste from gotta sweep's code
+		public override void VirtualOnTriggerEnter(Entity otherEntity, Collider other) // copypaste from gotta sweep's code
 		{
 			if (IsSleeping) return;
 
@@ -88,7 +88,7 @@ namespace BBTimes.CustomContent.NPCs
 				}
 			}
 		}
-		public override void VirtualOnTriggerExit(Collider other) // copypaste from gotta sweep's code
+		public override void VirtualOnTriggerExit(Entity otherEntity, Collider other) // copypaste from gotta sweep's code
 		{
 			if (other.isTrigger && (other.CompareTag("Player") || other.CompareTag("NPC")))
 			{
