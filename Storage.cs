@@ -97,6 +97,7 @@ namespace BBTimes.Plugin
 		guid_AnimationsPlus = "pixelguy.pixelmodding.baldiplus.newanimations",
 		guid_DecorationsPlus = "pixelguy.pixelmodding.baldiplus.newdecors",
 		guid_CustomMainMenusAPI = "pixelguy.pixelmodding.baldiplus.custommainmenusapi";
+		guid_Ukrainization = "Ukrainization";
 
 		// ------------------- Constant Floats ---------------------
 		public const float GaugeSprite_PixelsPerUnit = 1f;
