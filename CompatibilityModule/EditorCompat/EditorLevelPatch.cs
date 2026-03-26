@@ -40,7 +40,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
 				"Pix", "Quiker", "Rollingbot", "SerOran",
 				"ScienceTeacher", "Snowfolke", "Stunly",
 				"Superintendent",
-				"Watcher", "VacuumCleaner", "Winterry", "ZapZap"
+				"VacuumCleaner", "Winterry", "ZapZap"
 			];
 
 		// Random Events

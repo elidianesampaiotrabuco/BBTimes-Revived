@@ -169,22 +169,6 @@ namespace BBTimes.Manager
 			floorDatas[F2].NPCs.Add(new(npc, 35));
 			floorDatas[END].NPCs.Add(new(npc, 65));
 
-			// Watcher
-			npc = new NPCBuilder<Watcher>(plug.Info)
-				.SetMinMaxAudioDistance(30f, 120f)
-				.AddSpawnableRoomCategories(RoomCategory.Hall)
-				.SetEnum("Watcher")
-				.SetName("Watcher")
-				.SetMetaName("PST_Wch_Name")
-				.AddTrigger()
-				.AddLooker()
-				.SetMetaTags([NEITHER_TAG])
-				.EnableAcceleration()
-				.Build()
-				.SetupNPCData("Watcher", "PST_Wch_Name", "PST_Wch_Desc", 0f);
-			floorDatas[F3].NPCs.Add(new(npc, 35));
-			floorDatas[END].NPCs.Add(new(npc, 15));
-
 			// MGS
 			npc = new NPCBuilder<MagicalStudent>(plug.Info)
 				.SetMinMaxAudioDistance(40f, 200f)
