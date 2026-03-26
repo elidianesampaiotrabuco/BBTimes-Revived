@@ -1462,7 +1462,7 @@ namespace BBTimes.Manager
 				AssetLoader.TextureFromFile(GetRoomAsset("FocusRoom", "Focus_Room_Door_Closed.png"))));
 
 			Superintendent.AddAllowedRoom(sets.category);
-			CameraStand.allowedRoomsToSpawn.Add(sets.category);
+			//CameraStand.allowedRoomsToSpawn.Add(sets.category);
 			ChalkfacePatch.allowedClassroomCategories.Add(sets.category);
 			WormholeRoomFunctionPatches.allowedClassRooms.Add(sets.category);
 
@@ -1482,7 +1482,7 @@ namespace BBTimes.Manager
 				AssetLoader.TextureFromFile(GetRoomAsset("ExibitionRoom", "ExibitClassStandard_Closed.png"))));
 
 			Superintendent.AddAllowedRoom(sets.category);
-			CameraStand.allowedRoomsToSpawn.Add(sets.category);
+			//CameraStand.allowedRoomsToSpawn.Add(sets.category);
 			ChalkfacePatch.allowedClassroomCategories.Add(sets.category);
 			WormholeRoomFunctionPatches.allowedClassRooms.Add(sets.category);
 

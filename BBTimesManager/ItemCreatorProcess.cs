@@ -834,7 +834,7 @@ namespace BBTimes.Manager
 				.Build("UglyPicture");
 			((ITM_UglyPicture)uglyPictureItem.item).crumpledPaper = item;
 
-			((CameraStand)NPCMetaStorage.Instance.Find(x => x.info == plug.Info && x.character == cameraStandEnum).value).paperItem = uglyPictureItem;
+			//((CameraStand)NPCMetaStorage.Instance.Find(x => x.info == plug.Info && x.character == cameraStandEnum).value).paperItem = uglyPictureItem;
 
 			// FidgetSpinner
 			item = new ItemBuilder(plug.Info)

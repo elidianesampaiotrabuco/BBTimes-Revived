@@ -61,6 +61,7 @@ namespace BBTimes.CustomContent.CustomItems
 				}
 			}
 
+			/*
 			for (int i = 0; i < CameraStand.affectedByCamStand.Count; i++)
 			{
 				if (CameraStand.affectedByCamStand[i].Value == pm)
@@ -69,6 +70,7 @@ namespace BBTimes.CustomContent.CustomItems
 					CameraStand.affectedByCamStand[i].Key.DisableLatestTimer();
 				}
 			}
+			*/
 
 			foreach (var npc in pm.ec.Npcs)
 			{

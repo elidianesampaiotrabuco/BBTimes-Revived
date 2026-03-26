@@ -2,20 +2,22 @@
 
 namespace BBTimes.CustomComponents.NpcSpecificComponents.EverettTreewood
 {
-	using EverettTreewood = CustomContent.NPCs.EverettTreewood;
+	//using EverettTreewood = CustomContent.NPCs.EverettTreewood;
 
 	public class ChristmasDecoration : MonoBehaviour
 	{
+		/*
 		public void LinkToEverettTreewood(EverettTreewood wood)
 		{
 			this.wood = wood;
 			initialized = true;
 		}
+		*/
 
 		void OnTriggerEnter(Collider other)
 		{
-			if (!initialized || IsBroken || wood.gameObject == other.gameObject)
-				return;
+			//if (!initialized || IsBroken || wood.gameObject == other.gameObject)
+			//	return;
 
 			if (other.isTrigger && (other.CompareTag("NPC") || other.CompareTag("Player")))
 			{
@@ -23,7 +25,7 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.EverettTreewood
 				audMan.PlaySingle(audBreak);
 				collider.enabled = false;
 				IsBroken = true;
-				wood.QueueDecor(this);
+				//wood.QueueDecor(this);
 			}
 		}
 
@@ -45,6 +47,6 @@ namespace BBTimes.CustomComponents.NpcSpecificComponents.EverettTreewood
 		public bool IsBroken { get; private set; }
 		bool initialized = false;
 
-		EverettTreewood wood;
+		//EverettTreewood wood;
 	}
 }
