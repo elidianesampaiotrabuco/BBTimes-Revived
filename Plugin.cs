@@ -41,6 +41,7 @@ namespace BBTimes
 	[BepInDependency(Storage.guid_HookTweaks, BepInDependency.DependencyFlags.SoftDependency)]
 	[BepInDependency(Storage.guid_Advanced, BepInDependency.DependencyFlags.SoftDependency)]
 	[BepInDependency(Storage.guid_LevelStudio, BepInDependency.DependencyFlags.SoftDependency)]
+	[BepInDependency(Storage.guid_Ukrainization, BepInDependency.DependencyFlags.SoftDependency)]
 	// [BepInDependency("pixelguy.pixelmodding.baldiplus.infinitefloors", BepInDependency.DependencyFlags.SoftDependency)] not even here anymore
 	// [BepInDependency("mtm101.rulerp.baldiplus.endlessfloors", BepInDependency.DependencyFlags.SoftDependency)]
 	// [BepInDependency("Rad.cmr.baldiplus.arcaderenovations", BepInDependency.DependencyFlags.SoftDependency)]
