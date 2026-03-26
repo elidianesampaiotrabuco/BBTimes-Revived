@@ -49,6 +49,13 @@ namespace BBTimes
 	[BepInPlugin(ModInfo.PLUGIN_GUID, ModInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
 	public class BasePlugin : BaseUnityPlugin
 	{
+	    bool IsUkrainizationLoaded()
+	{
+        return Chainloader.PluginInfos.Values.Any(p =>
+            p.Instance != null &&
+            p.Instance.GetType().Namespace != null &&
+            p.Instance.GetType().Namespace.Contains("Ukrainization"));
+    }
 		IEnumerator SetupFinal()
 		{
 			yield return 3
@@ -168,7 +175,24 @@ namespace BBTimes
 			_modPath = AssetLoader.GetModPath(this);
 
 
-			AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
+            if (IsUkrainizationLoaded())
+            {
+                string ukrPath = Path.Combine(ModPath, "Language", "Ukrainian");
+                if (Directory.Exists(ukrPath))
+                {
+                    Logger.LogInfo("Ukrainization detected! Loading Ukrainian localization...");
+                    AssetLoader.LoadLocalizationFolder(ukrPath, Language.English);
+                }
+                else
+                {
+                    Logger.LogWarning("Ukrainization detected, but Ukrainian folder not found. Falling back to English.");
+                    AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
+                }
+            }
+            else
+            {
+                AssetLoader.LoadLocalizationFolder(Path.Combine(ModPath, "Language", "English"), Language.English);
+            }
 
 #if KOFI
 			MTM101BaldiDevAPI.AddWarningScreen(
