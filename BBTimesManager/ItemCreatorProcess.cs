@@ -34,7 +34,7 @@ namespace BBTimes.Manager
 			FOODTAG = Storage.FOOD_TAG,
 			DRINKTAG = Storage.DRINK_TAG;
 
-			var cameraStandEnum = EnumExtensions.GetFromExtendedName<Character>("Camerastand");
+			//var cameraStandEnum = EnumExtensions.GetFromExtendedName<Character>("Camerastand");
 			LayerMaskObject playerClickLayer = GenericExtensions.FindResourceObjectByName<LayerMaskObject>("PlayerClickLayerMask");
 
 			// Hammer
