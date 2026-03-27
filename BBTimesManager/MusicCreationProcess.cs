@@ -13,15 +13,10 @@ namespace BBTimes.Manager
 {
     internal static partial class BBTimesManager
     {
-        // This should be called during your mod's initialization
-        // or via a prefix on MainGameManager.Initialize
         static void GetMusics()
         {
-            // --- 1. Audio Mixer Setup ---
-            // We grab the "Effects" group for things like explosions and the "Master" or "Music" for loops
             AudioMixerGroup effectGroup = GenericExtensions.FindResourceObjectByName<AudioMixerGroup>("Effects");
 
-            // --- 2. All Notebooks Notification Sounds ---
             var soundNormal = ObjectCreators.CreateSoundObject(
                 AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_AllNotebooksNormal.wav")),
                 "Vfx_BAL_CongratsNormal_0",
@@ -52,19 +47,14 @@ namespace BBTimes.Manager
                 new() { key = "Vfx_BAL_AllNotebooks_5", time = 14.382f}
             };
 
-            // Apply these sounds to existing MainGameManager resources
             GenericExtensions.FindResourceObjects<MainGameManager>().Do(man =>
                 man.allNotebooksNotification = man.name.StartsWith("Lvl99999_") ? soundFinal : soundNormal);
 
-
-            // --- 3. Chaos/Escape Looping Music ---
-            // Chaos 0: Initial realization
             var loop0 = ScriptableObject.CreateInstance<LoopingSoundObject>();
             loop0.clips = new AudioClip[] { AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "Quiet_noise_loop.wav")) };
             loop0.mixer = effectGroup;
             MainGameManagerPatches.chaos0 = loop0;
 
-            // Chaos 1: Escalation
             var loop1 = ScriptableObject.CreateInstance<LoopingSoundObject>();
             loop1.clips = new AudioClip[] {
                 AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "Chaos_EarlyLoopStart.wav")),
@@ -73,7 +63,6 @@ namespace BBTimes.Manager
             loop1.mixer = effectGroup;
             MainGameManagerPatches.chaos1 = loop1;
 
-            // Chaos 2: Final Escape
             var loop2 = ScriptableObject.CreateInstance<LoopingSoundObject>();
             loop2.clips = new AudioClip[] {
                 AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "Chaos_FinalLoop.wav")),
@@ -82,8 +71,6 @@ namespace BBTimes.Manager
             loop2.mixer = effectGroup;
             MainGameManagerPatches.chaos2 = loop2;
 
-
-            // --- 4. Cutscene and Animation SFX ---
             MainGameManagerPatches.angryBal = ObjectCreators.CreateSoundObject(
                 AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_AngryGetOut.wav")),
                 "Vfx_BAL_ANGRY_0",

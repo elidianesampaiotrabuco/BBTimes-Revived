@@ -11,7 +11,6 @@
     <AssemblyVersion></AssemblyVersion>
     <FileVersion></FileVersion>
 
-    <!-- ✅ Output everything into Build folder -->
     <OutputPath>Build\</OutputPath>
   </PropertyGroup>
 
@@ -97,10 +96,8 @@
     </Reference>
   </ItemGroup>
 
-  <!-- ✅ Copy assets into Build folder -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
 
-    <!-- Clean old assets -->
     <RemoveDir Directories="$(TargetDir)pixelguy.pixelmodding.baldiplus.bbextracontent" />
 
     <ItemGroup>
