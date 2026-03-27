@@ -10,6 +10,9 @@
     <Configurations>Debug;Release;Cheat</Configurations>
     <AssemblyVersion></AssemblyVersion>
     <FileVersion></FileVersion>
+
+    <!-- ✅ Output everything into Build folder -->
+    <OutputPath>Build\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Cheat|AnyCPU'">
@@ -22,7 +25,7 @@
     <PackageReference Include="BepInEx.PluginInfoProps" Version="1.*" />
     <PackageReference Include="UnityEngine.Modules" Version="2020.3.38" IncludeAssets="compile" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.2" PrivateAssets="all" />
     <Reference Include="BaldisBasicsPlusAdvanced">
@@ -38,8 +41,8 @@
       <HintPath>References\BBPlusCustomMusics.dll</HintPath>
     </Reference>
 
-    <!-- Publicize directly when referencing -->
-    <Reference Include="D:\files\2026\March\Baldis.Basics.Plus.v0.14.1\Baldis.Basics.Plus.v0.14.1\BALDI_Data\Managed\Assembly-CSharp.dll" Publicize="true" />
+    <Reference Include="References\Assembly-CSharp.dll" Publicize="true" />
+
     <Reference Include="CustomMainMenusAPI">
       <HintPath>References\CustomMainMenusAPI.dll</HintPath>
     </Reference>
@@ -55,23 +58,21 @@
     <Reference Include="MTM101BaldAPI">
       <HintPath>References\MTM101BaldAPI.dll</HintPath>
     </Reference>
-	<Reference Include="PlusLevelStudio">
-	   <HintPath>References\PlusLevelStudio.dll</HintPath>
-	 </Reference>
-   <Reference Include="PlusStudioLevelFormat">
-	   <HintPath>References\PlusStudioLevelFormat.dll</HintPath>
-	 </Reference>
-   <Reference Include="PlusStudioLevelLoader">
-	   <HintPath>References\PlusStudioLevelLoader.dll</HintPath>
-	 </Reference>
-    
-	
-</ItemGroup>
-  
+    <Reference Include="PlusLevelStudio">
+      <HintPath>References\PlusLevelStudio.dll</HintPath>
+    </Reference>
+    <Reference Include="PlusStudioLevelFormat">
+      <HintPath>References\PlusStudioLevelFormat.dll</HintPath>
+    </Reference>
+    <Reference Include="PlusStudioLevelLoader">
+      <HintPath>References\PlusStudioLevelLoader.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
   <ItemGroup Condition="'$(TargetFramework.TrimEnd(`0123456789`))' == 'net'">
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.2" PrivateAssets="all" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <Reference Include="netstandard">
       <HintPath>References\netstandard.dll</HintPath>
@@ -95,8 +96,30 @@
       <HintPath>References\UnityEngine.UI.dll</HintPath>
     </Reference>
   </ItemGroup>
-  
+
+  <!-- ✅ Copy assets into Build folder -->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="echo no." />
+
+    <!-- Clean old assets -->
+    <RemoveDir Directories="$(TargetDir)pixelguy.pixelmodding.baldiplus.bbextracontent" />
+
+    <ItemGroup>
+      <ModAssets Include="Assets\pixelguy.pixelmodding.baldiplus.bbextracontent\**\*" />
+    </ItemGroup>
+
+    <MakeDir Directories="$(TargetDir)pixelguy.pixelmodding.baldiplus.bbextracontent" />
+
+    <Copy
+      SourceFiles="@(ModAssets)"
+      DestinationFiles="@(ModAssets->'$(TargetDir)pixelguy.pixelmodding.baldiplus.bbextracontent\%(RecursiveDir)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true"
+    />
+
   </Target>
+
+  <ItemGroup>
+    <Reference Update="@(Reference)">
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
 </Project>
