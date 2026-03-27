@@ -369,7 +369,7 @@ namespace BBTimes.ModPatches.EnvironmentPatches
         private static void REDAnimation(Elevator __instance, EnvironmentController ___ec)
         {
             var manager = Singleton<BaseGameManager>.Instance;
-            if (___ec.timeOut || manager.levelObject == null || manager is not MainGameManager || Singleton<CoreGameManager>.Instance.currentMode == Mode.Free)
+            if (___ec.timeOut || manager.levelObject == null || manager is not MainGameManager || Singleton<CoreGameManager>.Instance.currentMode == Mode.Free || BBTimesManager.plug.disableSchoolhouseEscape.Value)
                 return;
 
             if (!manager.AllNotebooksFound) return;
