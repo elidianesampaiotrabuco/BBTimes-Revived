@@ -146,19 +146,19 @@ namespace BBTimes.CompatibilityModule.EditorCompat
                 EditorInterface.AddObjectVisual("TimesGenericCornerLamp_" + i, man.Get<GameObject>("editorPrefab_TimesGenericCornerLamp_" + i), true);
 
             // SECRET ENDING OBJECTS
-            // EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
-            // EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
-            // EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
-            // EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
-            // EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
-            // EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
-            // EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
-            // EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
-            // EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
-            // EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
-            // for (int i = 1; i <= 6; i++)
-            // 	EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
-            // ReplaceEditorBasicObject(TimesPrefix + "SecretButton", EditorInterface.AddObjectVisual(TimesPrefix + "SecretButton", man.Get<GameObject>("editorPrefab_SecretButton"), true));
+            EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_SecretBaldi", man.Get<GameObject>("editorPrefab_Times_SecretBaldi"), 2f, Vector3.zero);
+            EditorInterface.AddObjectVisual("Times_InvisibleWall", man.Get<GameObject>("editorPrefab_Times_InvisibleWall"), true);
+            EditorInterface.AddObjectVisual("Times_CanBeDisabledInvisibleWall", man.Get<GameObject>("editorPrefab_Times_CanBeDisabledInvisibleWall"), true);
+            EditorInterface.AddObjectVisual("Times_ScrewingInvisibleWall", man.Get<GameObject>("editorPrefab_Times_ScrewingInvisibleWall"), true);
+            EditorInterface.AddObjectVisual("Times_KeyLockedInvisibleWall", man.Get<GameObject>("editorPrefab_Times_KeyLockedInvisibleWall"), true);
+            EditorInterface.AddObjectVisual("Times_SecretGenerator", man.Get<GameObject>("editorPrefab_Times_SecretGenerator"), true);
+            EditorInterface.AddObjectVisual("Times_GeneratorCylinder", man.Get<GameObject>("editorPrefab_Times_GeneratorCylinder"), true);
+            EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_theYAYComputer", man.Get<GameObject>("editorPrefab_Times_theYAYComputer"), 1f, Vector3.zero);
+            EditorInterface.AddObjectVisualWithCustomSphereCollider("Times_TrueLorePaper", man.Get<GameObject>("editorPrefab_Times_TrueLorePaper"), 1f, Vector3.zero);
+            EditorInterface.AddObjectVisual("Times_GeneratorLever", man.Get<GameObject>("editorPrefab_Times_GeneratorLever"), true);
+            for (int i = 1; i <= 6; i++)
+                 EditorInterface.AddObjectVisual($"Times_ContainedBaldi_F{i}", man.Get<GameObject>($"editorPrefab_Times_ContainedBaldi_F{i}"), true);
+            ReplaceEditorBasicObject(TimesPrefix + "SecretButton", EditorInterface.AddObjectVisual(TimesPrefix + "SecretButton", man.Get<GameObject>("editorPrefab_SecretButton"), true));
 
             // NPCs
             foreach (var npcName in allNpcs)
