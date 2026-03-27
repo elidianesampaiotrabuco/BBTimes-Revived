@@ -57,13 +57,6 @@ namespace BBTimes.CompatibilityModule
 				coolMop.slipDropCooldown = 0.5f;
 				return;
 			}
-
-			if (npc is Mopliss mopliss)
-			{
-				mopliss.roomsPerActivation = mopliss.ec.rooms.Count;
-				mopliss.slipperRadius = 12;
-				return;
-			}
 		}
 
 		//[HarmonyPatch(typeof(Mopliss), "Initialize")]
