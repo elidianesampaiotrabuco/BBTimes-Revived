@@ -34,7 +34,7 @@ namespace BBTimes.ModPatches
                 rectTransform.anchorMin = new Vector2(0.5f, 0.5f);
                 rectTransform.anchorMax = new Vector2(0.5f, 0.5f);
                 rectTransform.pivot = new Vector2(0.5f, 0.5f);
-                rectTransform.anchoredPosition = new Vector2(90f, 150f);
+                rectTransform.anchoredPosition = new Vector2(90f, -90f);
                 rectTransform.sizeDelta = new Vector2(300f, 50f);
             }
 
