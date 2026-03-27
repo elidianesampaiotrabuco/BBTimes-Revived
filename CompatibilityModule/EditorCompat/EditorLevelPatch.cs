@@ -122,8 +122,6 @@ namespace BBTimes.CompatibilityModule.EditorCompat
             EditorInterface.AddObjectVisual("sink", man.Get<GameObject>("editorPrefab_sink"), true);
             EditorInterface.AddObjectVisual("FancyComputerTable", man.Get<GameObject>("editorPrefab_FancyComputerTable"), true);
             EditorInterface.AddObjectVisualWithCustomSphereCollider("ComputerBillboard", man.Get<GameObject>("editorPrefab_ComputerBillboard"), 1f, Vector3.zero);
-            EditorInterface.AddObjectVisualWithCustomBoxCollider("StraightRunLine", man.Get<GameObject>("editorPrefab_StraightRunLine"), new(4.9f, 1f, 4.9f), Vector3.zero);
-            EditorInterface.AddObjectVisualWithCustomBoxCollider("CurvedRunLine", man.Get<GameObject>("editorPrefab_CurvedRunLine"), new(4.9f, 1f, 4.9f), Vector3.zero);
             EditorInterface.AddObjectVisual("Foresttree", man.Get<GameObject>("editorPrefab_Foresttree"), true);
             EditorInterface.AddObjectVisual("Campfire", man.Get<GameObject>("editorPrefab_Campfire"), true);
             EditorInterface.AddObjectVisual("Beartrap", man.Get<GameObject>("editorPrefab_Beartrap"), true);
@@ -426,7 +424,7 @@ namespace BBTimes.CompatibilityModule.EditorCompat
             var objectTools = new List<ObjectData>
             {
                 new("bathStall", true, 5f), new("bathDoor", true, "doors"), new("sink", false), new("Toilet", false), new("FancyComputerTable", true), new("ComputerBillboard", false, 5f),
-                new("StraightRunLine", true), new("CurvedRunLine", true), new("Foresttree", false), new("Campfire", false),
+                new("Foresttree", false), new("Campfire", false),
                 new("Beartrap", false), new("KitchenCabinet", false), new("JoeChef", true, 5f), new("FocusedStudent", false, 5f),
                 new("ComputerTeleporter", false), new("DustShroom", false), new("SensitiveVase", false, 4.2f),
                 new("TimesItemDescriptor", false, 5f), new("SnowyPlaygroundTree", false), new("SnowPile", false),

@@ -278,7 +278,7 @@ namespace BBTimes.Manager
 				selectedSprite = AssetLoader.SpriteFromTexture2D(AssetLoader.TextureFromFile(Path.Combine(MiscPath, TextureFolder, GetAssetName("mainMenu.png"))), 1f);
 				speechMenu = ObjectCreators.CreateSoundObject(AssetLoader.AudioClipFromFile(Path.Combine(MiscPath, AudioFolder, "BAL_Speech.wav")), "Vfx_BAL_BalMainMenuSpeech_1", SoundType.Voice, Color.green);
 				speechMenu.additionalKeys = [
-					new() { key = "Vfx_BAL_BalMainMenuSpeech_2", time = 5.205f }
+					new() { key = "Vfx_BAL_BalMainMenuSpeech_2", time = 3.965f }
 					];
 			}
 
