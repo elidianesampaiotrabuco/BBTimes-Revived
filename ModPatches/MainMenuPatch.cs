@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using HarmonyLib;
 using TMPro;
+using Ukrainization;
 using UnityEngine;
 
 namespace BBTimes.ModPatches
@@ -44,11 +45,16 @@ namespace BBTimes.ModPatches
                 textComponent.alignment = TextAlignmentOptions.Right;
                 textComponent.isRightToLeftText = false;
 
-                TextLocalizer localizer = textComponent.gameObject.GetComponent<TextLocalizer>();
-                if (localizer == null)
+                Ukrainization.TextLocalizer existingLocalizer =
+                    textComponent.gameObject.GetComponent<Ukrainization.TextLocalizer>();
+
+                if (existingLocalizer != null)
                 {
-                    localizer = textComponent.gameObject.AddComponent<TextLocalizer>();
+                    GameObject.Destroy(existingLocalizer);
                 }
+
+                TextLocalizer localizer =
+                    textComponent.gameObject.AddComponent<TextLocalizer>();
 
                 localizer.key = "BBTimes_ModInfo";
                 localizer.GetLocalizedText(localizer.key);
