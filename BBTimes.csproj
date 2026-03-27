@@ -40,7 +40,9 @@
       <HintPath>References\BBPlusCustomMusics.dll</HintPath>
     </Reference>
 
-    <Reference Include="References\Assembly-CSharp.dll" Publicize="true" />
+    <Reference Include="Assembly-CSharp" Publicize="true">
+      <HintPath>References\Assembly-CSharp.dll</HintPath>
+    </Reference>
 
     <Reference Include="CustomMainMenusAPI">
       <HintPath>References\CustomMainMenusAPI.dll</HintPath>
