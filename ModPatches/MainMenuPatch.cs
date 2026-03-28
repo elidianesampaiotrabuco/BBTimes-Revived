@@ -3,7 +3,7 @@ using HarmonyLib;
 using TMPro;
 using Ukrainization;
 using UnityEngine;
-using BBTimes;
+using BBTimes.Plugin;
 using BepInEx.Bootstrap;
 
 namespace BBTimes.ModPatches
