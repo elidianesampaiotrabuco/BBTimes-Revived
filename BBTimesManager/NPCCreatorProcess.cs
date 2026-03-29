@@ -332,20 +332,6 @@ namespace BBTimes.Manager
             floorDatas[F1].NPCs.Add(new(npc, 25));
             floorDatas[END].NPCs.Add(new(npc, 45));
 
-            // Cheese McSwiss
-            npc = new NPCBuilder<CheeseMan>(plug.Info)
-                .SetMinMaxAudioDistance(30f, 100f)
-                .SetEnum("CheeseMan")
-                .SetMetaTags([STUDENT_TAG])
-                .SetMetaName("PST_CheeseMan_Name")
-                .SetName("CheeseMan")
-                .AddTrigger()
-                .Build()
-                .SetupNPCData("CheeseMan", "PST_CheeseMan_Name", "PST_CheeseMan_Desc", -1.86f);
-
-            floorDatas[F2].NPCs.Add(new(npc, 35));
-            floorDatas[END].NPCs.Add(new(npc, 50));
-
             // Detention Bot
             npc = new NPCBuilder<DetentionBot>(plug.Info)
                 .SetMinMaxAudioDistance(35f, 120f)

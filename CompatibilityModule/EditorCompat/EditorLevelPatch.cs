@@ -30,18 +30,17 @@ namespace BBTimes.CompatibilityModule.EditorCompat
         public const string TimesPrefix = "times_";
         // NPCs
         static readonly string[] allNpcs = [
-            "ZeroPrize", "Adverto", "Bubbly",
-                "CheeseMan", "CoolMop", "DetentionBot",
-                "Faker", "Glubotrony",
-                "HappyHolidays", "InkArtist", "PuddingFan",
-                "Leapy", "Magicalstudent",
-                "MrKreye", "Cactungus", "NoseMan",
-                "PencilBoy", "Phawillow", "Pran",
-                "Pix", "Quiker", "SerOran",
-                "ScienceTeacher", "Snowfolke", "Stunly",
-                "Superintendent",
-                "VacuumCleaner", "Winterry"
-            ];
+            "ZeroPrize", "Adverto", "Bubbly", "CoolMop", "DetentionBot",
+            "Faker", "Glubotrony",
+            "HappyHolidays", "InkArtist", "PuddingFan",
+            "Leapy", "Magicalstudent",
+            "MrKreye", "Cactungus", "NoseMan",
+            "PencilBoy", "Phawillow", "Pran",
+            "Pix", "Quiker", "SerOran",
+            "ScienceTeacher", "Snowfolke", "Stunly",
+            "Superintendent",
+            "VacuumCleaner", "Winterry"
+        ];
 
         // Random Events
         static readonly string[] allEvents = [
