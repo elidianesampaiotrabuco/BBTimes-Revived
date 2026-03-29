@@ -959,9 +959,6 @@ namespace BBTimes
 
         public const string PLUGIN_NAME = "BB+ Extra Content";
 
-        public const string PLUGIN_VERSION = "1.4.2.1";
+        public const string PLUGIN_VERSION = "1.4.2.2";
     }
-
-    // Some cheats
-
 }
