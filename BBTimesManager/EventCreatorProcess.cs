@@ -45,23 +45,6 @@ namespace BBTimes.Manager
 			floorDatas[F3].Events.Add(new(e, 25));
 			floorDatas[END].Events.Add(new(e, 35));
 
-
-			// Curtains Closed
-			e = new RandomEventBuilder<CurtainsClosedEvent>(plug.Info)
-				.SetEnum("Curtainsclosed")
-				.SetMinMaxTime(60f, 80f)
-				.SetName("CurtainsClosed")
-				.SetMeta(RandomEventFlags.Permanent | RandomEventFlags.AffectsGenerator)
-				.Build()
-				.SetupEvent();
-
-
-			floorDatas[F2].Events.Add(new(e, 55));
-			floorDatas[F3].Events.Add(new(e, 45));
-			floorDatas[F4].Events.Add(new(e, 32, LevelType.Factory));
-			floorDatas[F5].Events.Add(new(e, 15, LevelType.Factory));
-			floorDatas[END].Events.Add(new(e, 77));
-
 			// Hologram Past
 			e = new RandomEventBuilder<HologramPastEvent>(plug.Info)
 				.SetEnum("Hologrampast")
