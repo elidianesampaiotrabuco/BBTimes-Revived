@@ -24,23 +24,6 @@ namespace BBTimes.Manager
 
             NPC npc;
 
-            // Office Chair
-            //npc = CreatorExtensions.CreateNPC<OfficeChair, OfficeChairCustomData>("OfficeChair", 35f, 60f, [RoomCategory.Office, RoomCategory.Faculty], [], "PST_OFC_Name", "PST_OFC_Desc", true, ignorePlayerOnSpawn: true, spriteYOffset:-2f).AddMeta(plug, "OfficeChair", NPCFlags.Standard).value;
-            npc = new NPCBuilder<OfficeChair>(plug.Info)
-                .SetMinMaxAudioDistance(20f, 80f)
-                .AddSpawnableRoomCategories(RoomCategory.Office, RoomCategory.Faculty)
-                .IgnorePlayerOnSpawn()
-                .SetEnum("OfficeChair")
-                .SetName("Office Chair")
-                .SetMetaName("PST_OFC_Name")
-                .AddTrigger()
-                .SetMetaTags([NEITHER_TAG])
-                .Build()
-                .SetupNPCData("OfficeChair", "PST_OFC_Name", "PST_OFC_Desc", -0.75f);
-
-            floorDatas[F1].NPCs.Add(new(npc, 35));
-            floorDatas[END].NPCs.Add(new(npc, 60));
-
             // Happy Holidays
             npc = new NPCBuilder<HappyHolidays>(plug.Info)
                 .SetMinMaxAudioDistance(25f, 100f)
@@ -152,22 +135,6 @@ namespace BBTimes.Manager
 
             floorDatas[F2].NPCs.Add(new(npc, 55));
             floorDatas[END].NPCs.Add(new(npc, 45));
-
-            // Rolling Bot
-            npc = new NPCBuilder<RollingBot>(plug.Info)
-                .SetMinMaxAudioDistance(30f, 110f)
-                .AddSpawnableRoomCategories(RoomCategory.Hall)
-                .SetEnum("Rollingbot")
-                .SetName("Rollingbot")
-                .SetMetaName("PST_Rollbot_Name")
-                .AddTrigger()
-                .DisableAutoRotation()
-                .SetMetaTags([NEITHER_TAG])
-                .Build()
-                .SetupNPCData("RollingBot", "PST_Rollbot_Name", "PST_Rollbot_Desc", -1.88f);
-
-            floorDatas[F2].NPCs.Add(new(npc, 35));
-            floorDatas[END].NPCs.Add(new(npc, 65));
 
             // MGS
             npc = new NPCBuilder<MagicalStudent>(plug.Info)
@@ -363,24 +330,6 @@ namespace BBTimes.Manager
                 .MarkAsReplacement(35, Character.Cumulo);
 
             floorDatas[F1].NPCs.Add(new(npc, 25));
-            floorDatas[END].NPCs.Add(new(npc, 45));
-
-            // Zap Zap
-            npc = new NPCBuilder<ZapZap>(plug.Info)
-                .SetMinMaxAudioDistance(30f, 100f)
-                .AddSpawnableRoomCategories(RoomCategory.Office, RoomCategory.Faculty)
-                .SetEnum("ZapZap")
-                .SetMetaTags([NEITHER_TAG])
-                .SetMetaName("PST_ZapZap_Name")
-                .SetName("ZapZap")
-                .AddTrigger()
-                .Build()
-                .SetupNPCData("ZapZap", "PST_ZapZap_Name", "PST_ZapZap_Desc", -1.0018f)
-                .MarkAsReplacement(40, EnumExtensions.GetFromExtendedName<Character>("Rollingbot"));
-
-            npc.Navigator.SetRoomAvoidance(false);
-
-            floorDatas[F2].NPCs.Add(new(npc, 25));
             floorDatas[END].NPCs.Add(new(npc, 45));
 
             // Cheese McSwiss

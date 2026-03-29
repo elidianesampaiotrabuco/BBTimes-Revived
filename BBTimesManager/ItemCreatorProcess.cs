@@ -269,34 +269,6 @@ namespace BBTimes.Manager
             Cactungus.AddHittableItem(item.itemType);
             ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 75 });
 
-            // Pogostick
-            item = new ItemBuilder(plug.Info)
-                .SetItemComponent<ITM_Pogostick>()
-                .SetGeneratorCost(65)
-                .SetShopPrice(550)
-                .SetNameAndDescription("POGST_Name3", "POGST_Desc")
-                .SetMeta(ItemFlags.CreatesEntity | ItemFlags.Persists | ItemFlags.MultipleUse, [])
-                .Build("Pogostick");
-            //CreatorExtensions.CreateItem<ITM_Pogostick, PogostickCustomData>("Pogostick", "POGST_Name3", "POGST_Desc", 475, 25);
-            meta = item.GetMeta();
-            floorDatas[F2].Items.Add(new(item, 25));
-            floorDatas[F3].Items.Add(new(item, 20));
-            floorDatas[END].Items.Add(new(item, 15));
-            floorDatas[F1].ShopItems.Add(new() { selection = item, weight = 25 });
-            floorDatas[F2].ShopItems.Add(new() { selection = item, weight = 35 });
-            floorDatas[F3].ShopItems.Add(new() { selection = item, weight = 30 });
-            floorDatas[END].ShopItems.Add(new() { selection = item, weight = 25 });
-            floorDatas[F4].Items.Add(new(item, 15));
-            floorDatas[F5].Items.Add(new(item, 15));
-            floorDatas[F4].ShopItems.Add(new() { selection = item, weight = 15 });
-            floorDatas[F5].ShopItems.Add(new() { selection = item, weight = 15 });
-            ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 45 });
-            ResourceManager.AddMysteryItem(new() { selection = item, weight = 45 });
-            secondItem = item.DuplicateItem(meta, "POGST_Name2");
-            ((ITM_Pogostick)item.item).pogoStickReplacement = secondItem;
-            ((ITM_Pogostick)secondItem.item).pogoStickReplacement = secondItem.DuplicateItem(meta, "POGST_Name1");
-            meta.itemObjects = [.. meta.itemObjects.Reverse()];
-
             // BearTrap
             item = new ItemBuilder(plug.Info)
                 .SetItemComponent<ITM_Beartrap>()
@@ -391,9 +363,6 @@ namespace BBTimes.Manager
             floorDatas[F2].ForcedItems.Add(new(item));
             ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 35 });
             EventMachine.AddItemToTrigger(item.itemType);
-            OfficeChair.AddFixableItem(item.itemType);
-            RollingBot.AddFixableItem(item.itemType);
-            ZapZap.AddDeactivator(item.itemType);
             DetentionBot.AddDisablingItem(item.itemType);
             PuddingFan.AddDisablingItem(item.itemType);
             ItemAlarm.disablingItems.Add(item.itemType);
@@ -526,30 +495,6 @@ namespace BBTimes.Manager
             floorDatas[END].ShopItems.Add(new() { selection = item, weight = 50 });
             floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 80 });
             ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 15 });
-
-            // Comically Large Trumpet Item
-            item = new ItemBuilder(plug.Info)
-                .SetItemComponent<ITM_ComicallyLargeTrumpet>()
-                .SetGeneratorCost(35)
-                .SetShopPrice(400)
-                .SetNameAndDescription("ComicLargTrum_Name", "ComicLargTrum_Desc")
-                .SetMeta(ItemFlags.Persists, [])
-                .Build("ComicallyLargeTrumpet");
-
-            floorDatas[F1].Items.Add(new(item, 15));
-            floorDatas[F2].Items.Add(new(item, 35));
-            floorDatas[F3].Items.Add(new(item, 45));
-            floorDatas[F4].Items.Add(new(item, 30)); // Loud, disruptive, fits Factory/Laboratory
-            floorDatas[F5].Items.Add(new(item, 30)); // Fits Maintenance (noise, disruption)
-            floorDatas[END].Items.Add(new(item, 25));
-            floorDatas[F1].ShopItems.Add(new() { selection = item, weight = 65 });
-            floorDatas[F2].ShopItems.Add(new() { selection = item, weight = 45 });
-            floorDatas[F3].ShopItems.Add(new() { selection = item, weight = 35 });
-            floorDatas[F4].ShopItems.Add(new() { selection = item, weight = 25 });
-            floorDatas[F5].ShopItems.Add(new() { selection = item, weight = 25 });
-            floorDatas[END].ShopItems.Add(new() { selection = item, weight = 25 });
-            floorDatas[F2].FieldTripItems.Add(new() { selection = item, weight = 76 });
-            ResourceManager.AddWeightedItemToCrazyMachine(new() { selection = item, weight = 25 });
 
             // Magnet Item
             item = new ItemBuilder(plug.Info)

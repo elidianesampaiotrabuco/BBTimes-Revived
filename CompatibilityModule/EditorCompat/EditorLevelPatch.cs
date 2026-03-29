@@ -35,17 +35,17 @@ namespace BBTimes.CompatibilityModule.EditorCompat
                 "Faker", "Glubotrony",
                 "HappyHolidays", "InkArtist", "PuddingFan",
                 "Leapy", "Magicalstudent",
-                "MrKreye", "Cactungus", "NoseMan", "OfficeChair",
+                "MrKreye", "Cactungus", "NoseMan",
                 "PencilBoy", "Phawillow", "Pran",
-                "Pix", "Quiker", "Rollingbot", "SerOran",
+                "Pix", "Quiker", "SerOran",
                 "ScienceTeacher", "Snowfolke", "Stunly",
                 "Superintendent",
-                "VacuumCleaner", "Winterry", "ZapZap"
+                "VacuumCleaner", "Winterry"
             ];
 
         // Random Events
         static readonly string[] allEvents = [
-                "Principalout", "FrozenEvent", "CurtainsClosed", "HologramPast", "SkateboardDay", "Earthquake", "SuperFans", "LightningEvent", "SuperMysteryRoom", "NatureEvent"
+                "Principalout", "FrozenEvent", "HologramPast", "SkateboardDay", "Earthquake", "SuperFans", "LightningEvent", "SuperMysteryRoom", "NatureEvent"
             ];
         // Skyboxes
         static readonly string[] allSkyboxes = [
@@ -433,20 +433,19 @@ namespace BBTimes.CompatibilityModule.EditorCompat
             for (int i = 1; i <= 8; i++) objectTools.Add(new("TimesGenericOutsideFlower_" + i, false));
             for (int i = 1; i <= 4; i++) objectTools.Add(new("TimesGenericCornerLamp_" + i, false));
 
-            // SECRET ENDING OBJECTS
-            // objectTools.Add(new("Times_SecretBaldi", true, 5f));
-            // objectTools.Add(new("Times_InvisibleWall", true, 5f));
-            // objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
-            // objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
-            // objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
-            // objectTools.Add(new("Times_SecretGenerator", true, 5f));
-            // objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
-            // objectTools.Add(new("Times_theYAYComputer", true, 5f));
-            // objectTools.Add(new("Times_TrueLorePaper", true, 5f));
-            // objectTools.Add(new("Times_GeneratorLever", true, 5f));
-            // for (int i = 1; i <= 6; i++)
-            // 	objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
-            // EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
+            objectTools.Add(new("Times_SecretBaldi", true, 5f));
+            objectTools.Add(new("Times_InvisibleWall", true, 5f));
+            objectTools.Add(new("Times_CanBeDisabledInvisibleWall", true, 5f));
+            objectTools.Add(new("Times_ScrewingInvisibleWall", true, 5f));
+            objectTools.Add(new("Times_KeyLockedInvisibleWall", true, 5f));
+            objectTools.Add(new("Times_SecretGenerator", true, 5f));
+            objectTools.Add(new("Times_GeneratorCylinder", true, 5f));
+            objectTools.Add(new("Times_theYAYComputer", true, 5f));
+            objectTools.Add(new("Times_TrueLorePaper", true, 5f));
+            objectTools.Add(new("Times_GeneratorLever", true, 5f));
+            for (int i = 1; i <= 6; i++)
+                objectTools.Add(new($"Times_ContainedBaldi_F{i}", true, 5f));
+            EditorInterfaceModes.AddToolToCategory(mode, "objects", new StructureOnWallPlacementTool(TimesPrefix + "SecretButton", null));
 
             foreach (var pair in objectTools)
             {
